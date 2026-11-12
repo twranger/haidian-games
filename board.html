@@ -56,7 +56,13 @@ var G={
  souvenir:{name:'紀念品交換日',lesson:'第 2 課',groups:[['yellow','黃組','#C99A2E'],['cyan','青組','#2A6F68']],
   rows:['第一關寫下 0～49 點','50～99 點','100～199 點','200 點或更多','第二關有交換']}
 };
-var ORDER=['coinstall','souvenir','forkraft','glasses','pondwall','cookiejar','hoopshot'];
+G.label={name:'小小評審團',lesson:'第 2 節',groups:[['a','甲組','#205E86'],['b','乙組','#A8441A']],avg:'替小安的短文打的分數（平均，滿分 10 分）',
+  rows:['替小安的短文打 7 分以上','猜小安下次比賽會得獎']};
+G.labelquest={name:'標籤闖關',lesson:'第 2 節',groups:[['a','潛力高手','#205E86'],['b','需要加強','#A8441A']],avg:'答對的題數（平均，一共 10 題）',
+  rows:['答對 7 題以上','答對 4 題以下']};
+G.rewrite={name:'標籤改寫工坊',lesson:'第 2 節',groups:[['all','全班','#205E86']],
+  rows:['三張卡片都只說「這一次」：0～1 題','2 題','3 題','4 題全部','選過罵「整個人」的卡片']};
+var ORDER=['label','labelquest','rewrite','coinstall','souvenir','forkraft','glasses','pondwall','cookiejar','hoopshot'];
 var K=LIVE.key,B=LIVE.ls('hdboard-v1'),GM=location.hash.match(/game=([a-z]+)/);
 if(!B||location.hash.indexOf('new')>=0||(K&&B.room!==K)){B={room:K||String(1000+Math.floor(Math.random()*9000)),cur:null,res:{}};LIVE.ls('hdboard-v1',B);try{history.replaceState(null,'','#host')}catch(e){}}
 
@@ -64,7 +70,7 @@ if(GM&&G[GM[1]])B.cur=GM[1];
 if(!B.cur){B.cur='cookiejar'}
 var conn=LIVE.connect(['hdboard/'+B.room+'/in'],function(t,d){
  if(d.t!=='res'||!G[d.game])return;var r=B.res[d.game]=B.res[d.game]||{};
- r[d.cid]={g:d.g||'all',rows:(d.rows||[]).map(Boolean)};LIVE.ls('hdboard-v1',B);
+ r[d.cid]={g:d.g||'all',rows:(d.rows||[]).map(Boolean),v:d.v==null?null:+d.v};LIVE.ls('hdboard-v1',B);
  conn.pub('hdboard/'+B.room+'/ack',{cid:d.cid,game:d.game});
  if(d.game!==B.cur){B.cur=d.game}render()},function(){render()});
 function pick(k){B.cur=k;LIVE.ls('hdboard-v1',B);render()}
@@ -72,13 +78,16 @@ function clearGame(){if(confirm('要清空「'+G[B.cur].name+'」這一班的結
 function newRoom(){if(K){if(confirm('換下一班：要把每個遊戲的結果全部清空嗎？')){B.res={};LIVE.ls('hdboard-v1',B);render()}return}if(confirm('要全部重置、開新房號嗎？（換下一班時用）')){location.hash='#host-new';location.reload()}}
 window.pick=pick;window.clearGame=clearGame;window.newRoom=newRoom;
 function render(){var g=G[B.cur],R=B.res[B.cur]||{},list=Object.keys(R).map(function(k){return R[k]});
- var h='<div class="top"><div><p class="kick">生存智慧・全班統計看板</p><h1>'+g.name+'</h1>'+
+ var h='<div class="top"><div><p class="kick">全班統計看板</p><h1>'+g.name+'</h1>'+
   '<p class="mu">'+(K?'學生用簡報上的連結玩，做完會自動送到這裡，不用房號。':'學生做完遊戲以後，在最後一頁輸入右邊的房號，按「送出結果」。')+'</p></div>'+
   '<div style="text-align:right">'+(K?'<p class="mu">自動蒐集中</p>':'<p class="mu">房號</p><p class="roomcode">'+B.room+'</p>')+'<p class="net'+(conn.ok()?'':' off')+'">連線：<b>'+(conn.ok()?'正常':'連線中…')+'</b></p>'+
   '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn" onclick="clearGame()">清空這個遊戲</button><button class="btn" onclick="newRoom()">'+(K?'換下一班（全部清空）':'換下一班（全部重置）')+'</button></div></div></div>';
  h+='<div class="tabs">'+ORDER.map(function(k){var n=Object.keys(B.res[k]||{}).length;return '<button class="tab'+(k===B.cur?' on':'')+'" onclick="pick(\''+k+'\')">'+G[k].lesson+' '+G[k].name+(n?'<span class="n">'+n+'</span>':'')+'</button>'}).join('')+'</div>';
  var cnt={};g.groups.forEach(function(x){cnt[x[0]]=list.filter(function(r){return g.groups.length===1||r.g===x[0]}).length});
  h+='<div class="card"><div class="legend">'+g.groups.map(function(x){return '<span><span class="sw" style="background:'+x[2]+'"></span>'+x[1]+'：'+cnt[x[0]]+' 人</span>'}).join('')+'</div>';
+ if(g.avg){h+='<div class="q"><p class="lab">'+g.avg+'</p><div class="bars">'+g.groups.map(function(x){
+   var vs=list.filter(function(r){return (g.groups.length===1||r.g===x[0])&&r.v!=null}).map(function(r){return r.v}),a=vs.length?Math.round(vs.reduce(function(p,q){return p+q},0)/vs.length*10)/10:null;
+   return '<div class="bar"><span class="tr"><span class="f" style="display:block;width:'+(a==null?0:a*10)+'%;background:'+x[2]+'"></span></span><span class="num" style="color:'+x[2]+'">'+(a==null?'—':a+' 分')+'</span></div>'}).join('')+'</div></div>'}
  g.rows.forEach(function(lab,i){
   h+='<div class="q"><p class="lab">'+lab+'</p><div class="bars">'+g.groups.map(function(x){
    var n=list.filter(function(r){return (g.groups.length===1||r.g===x[0])&&r.rows[i]}).length,tot=cnt[x[0]]||0,pc=tot?Math.round(n/tot*100):0;

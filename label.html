@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
 <title>小小評審團</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
@@ -37,6 +40,7 @@ td.n{text-align:right;font-weight:900;white-space:nowrap}
 
 <main class="wrap" id="app" aria-live="polite"></main>
 
+<script src="live.js"></script>
 <script>
 (function(){
 "use strict";
@@ -98,6 +102,7 @@ function done(){
   var t=el('table');
   [['你給的分數',st.s+' 分'],['小安下次會得獎嗎？',st.p]].forEach(function(r){var tr=el('tr');tr.append(el('td',null,r[0]),el('td','n',r[1]));t.appendChild(tr)});
   app.append(h,c,t,el('p','lead','先不要給別的同學看。'));
+  if(window.LIVE)app.append(LIVE.box('label',{g:st.g==='甲'?'a':'b',rows:[st.s>=7,st.p==='會得獎'],v:st.s}));
 }
 if(st.s!=null&&st.p)done();else intro();
 })();

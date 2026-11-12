@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
 <title>標籤闖關</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
@@ -41,6 +44,7 @@ h2{font-size:clamp(26px,4.4vw,40px);font-weight:900;margin:0;line-height:1.4;tex
 
 <main class="wrap" id="app" aria-live="polite"></main>
 
+<script src="live.js"></script>
 <script>
 (function(){
 "use strict";
@@ -131,6 +135,7 @@ function end(){
   var h=el('h2',null,'闖關結束！請停在這一頁，等其他同學。');
   var c=el('div','card');c.append(el('p','lead','你答對了'),el('p','big',st.score+' / 10'),el('div','badge '+st.g,'你的玩家等級：'+C.name));
   app.append(h,c,el('p','lead','先不要給別的同學看。'));
+  if(window.LIVE)app.append(LIVE.box('labelquest',{g:st.g==='A'?'a':'b',rows:[st.score>=7,st.score<=4],v:st.score}));
 }
 if(st.fin)end();else if(st.i!=null&&st.i>0)ask();else intro();
 })();

@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
 <title>標籤改寫工坊</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
@@ -54,13 +57,14 @@ td .line{display:block;margin:2px 0}
 
 <main class="wrap" id="app" aria-live="polite"></main>
 
+<script src="live.js"></script>
 <script>
 (function(){
 "use strict";
 var app=document.getElementById('app');
 var KEY='label-rewrite-v1';
-var ROW=['這一次發生了什麼事？','下一次可以怎麼做？','怎麼知道有沒有進步？'];
-var RK=['這一次','下一次','怎麼知道有進步'];
+var ROW=['這一次發生了什麼事？','下一次可以怎麼做？','怎麼檢查有沒有進步？'];
+var RK=['① 發生了什麼事','② 下次怎麼做','③ 怎麼檢查'];
 var TAG={S:'這一次',V:'空泛',P:'整個人'};
 /* each row: [P(整個人), V(空泛), S(這一次・具體)] */
 var Q=[
@@ -83,15 +87,15 @@ var Q=[
 ];
 var TY=['P','V','S'];
 var FB=[
- {P:'這塊積木說的是「整個人」。聽的人很容易覺得「我就是這樣，改不了」，也不知道到底是哪一件事出了問題。',
-  V:'這塊積木說的是這一次，可是很空泛。聽的人知道「好像不太好」，卻不知道是哪裡不好。',
-  S:'這塊積木說出一件看得到、說得出來的事。聽的人知道問題出在哪裡，也比較不會覺得自己整個人被罵。'},
- {P:'這塊積木要對方「變成另一種人」。這是一個很大的目標，聽的人不知道明天第一步要做什麼。',
-  V:'這塊積木有方向，可是很空泛。「更好」「快一點」要怎麼做，聽的人還是要自己猜。',
-  S:'這塊積木說出一個明天就做得到的動作，聽的人可以馬上試試看。'},
- {P:'這塊積木要等「整個人都變了」才算進步，可能要等很久，中間的小進步也很容易被忽略。',
-  V:'這塊積木有提到結果，可是很空泛。「好一點」是多好？每個人想的可能不一樣。',
-  S:'這塊積木給了一個看得到、數得出來的方法，做完馬上就能檢查有沒有進步。'}
+ {P:'這張卡片說的是「整個人」。聽的人很容易覺得「我就是這樣，改不了」，也不知道到底是哪一件事出了問題。',
+  V:'這張卡片說的是這一次，可是很空泛。聽的人知道「好像不太好」，卻不知道是哪裡不好。',
+  S:'這張卡片說出一件看得到、說得出來的事。聽的人知道問題出在哪裡，也比較不會覺得自己整個人被罵。'},
+ {P:'這張卡片要對方「變成另一種人」。這是一個很大的目標，聽的人不知道明天第一步要做什麼。',
+  V:'這張卡片有方向，可是很空泛。「更好」「快一點」要怎麼做，聽的人還是要自己猜。',
+  S:'這張卡片說出一個明天就做得到的動作，聽的人可以馬上試試看。'},
+ {P:'這張卡片要等「整個人都變了」才算進步，可能要等很久，中間的小進步也很容易被忽略。',
+  V:'這張卡片有提到結果，可是很空泛。「好一點」是多好？每個人想的可能不一樣。',
+  S:'這張卡片給了一個看得到、數得出來的方法，做完馬上就能檢查有沒有進步。'}
 ];
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}}
 function save(v){try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}}
@@ -108,12 +112,23 @@ function allS(q){return [0,1,2].every(function(r){return ty(q,r)==='S'})}
 
 function intro(){
   app.innerHTML='';
+  var a=el('div','card');
+  a.append(el('p','case','先看一個例子'),
+    el('p','lead','阿明把水壺忘在操場。有人對他說：'),
+    el('p','label','「你就是愛忘東西。」'),
+    el('p','lead','這句話在罵<b>整個人</b>。阿明聽了只會難過，不知道要改什麼。'),
+    el('p','lead','換成下面三句，就清楚多了：'));
+  var f=el('div','final');
+  [['① 發生了什麼事','今天你的水壺留在操場的司令台上。'],['② 下次怎麼做','下次離開操場前，先摸一下書包的側袋。'],['③ 怎麼檢查','這個星期每天放學前，看看水壺在不在。']].forEach(function(x){
+    var d=el('div','fl cS');d.append(el('div','k','<span>'+x[0]+'</span>'),el('p','s',x[1]));f.appendChild(d)});
+  a.appendChild(f);
   var c=el('div','card');
-  c.append(el('p','lead','有時候我們會聽到「你就是＿＿」這種話。這種話像一張標籤，貼在整個人身上。'),
-           el('p','lead','今天你是工坊的師傅。每一題有一張標籤，請你從三排「句子積木」裡，每排挑一塊，組成一句新的話：'),
-           el('p','lead','① 這一次發生了什麼事？（看得到的）<br>② 下一次可以怎麼做？<br>③ 怎麼知道有沒有進步？'),
-           el('p','lead','每一塊積木都可以用。挑了以後，畫面會告訴你這塊積木有什麼作用。一共 4 題。'));
-  app.append(el('h1',null,'標籤改寫工坊'),c,btn('開始','btn',function(){st.go=true;save(st);render()}));
+  c.append(el('p','case','換你試試看'),
+    el('p','lead','<b>1.</b> 每一題有一句罵「整個人」的話，和當時發生的事。'),
+    el('p','lead','<b>2.</b> 畫面上有三張卡片，選一張你覺得最好的。一共選三次：發生了什麼事、下次怎麼做、怎麼檢查。'),
+    el('p','lead','<b>3.</b> 選了以後，畫面會告訴你這張卡片好在哪裡，或哪裡還不夠。不滿意可以換。'),
+    el('p','lead','一共 4 題。'));
+  app.append(el('h1',null,'標籤改寫工坊'),a,c,btn('開始','btn',function(){st.go=true;save(st);render();window.scrollTo(0,0)}));
 }
 function head(q){
   var c=el('div','card');
@@ -121,7 +136,7 @@ function head(q){
   return c;
 }
 function build(q){
-  var c=el('div','card');c.appendChild(el('p','case','你正在組的句子'));
+  var c=el('div','card');c.appendChild(el('p','case','你要對他說的三句話'));
   var s=el('div','slots');
   for(var r=0;r<3;r++){
     var t=txt(q,r);var d=el('div','slot'+(r===st.row?' now':''));
@@ -131,14 +146,14 @@ function build(q){
 }
 function pickRow(){
   var q=st.i,r=st.row;app.innerHTML='';
-  app.append(el('p','case','第 '+(q+1)+' 題，共 '+Q.length+' 題　・　第 '+(r+1)+' 排積木，共 3 排'),head(q),build(q));
-  app.appendChild(el('h2',null,'第 '+(r+1)+' 排：'+ROW[r]));
+  app.append(el('p','case','第 '+(q+1)+' 題，共 '+Q.length+' 題　・　第 '+(r+1)+' 步，共 3 步'),head(q),build(q));
+  app.appendChild(el('h2',null,'第 '+(r+1)+' 步：'+ROW[r]+'選一張你覺得最好的卡片。'));
   var g=el('div','opts');var fb=el('div');fb.style.display='flex';fb.style.flexDirection='column';fb.style.gap='12px';
   function show(k){
     Array.prototype.forEach.call(g.children,function(x){x.classList.toggle('pick',+x.dataset.k===k)});
     fb.innerHTML='';
-    fb.appendChild(el('p','note','<b>這塊積木的作用：</b>'+FB[r][TY[k]]+'<small>每一塊積木都可以用。想換一塊，直接點別塊就好。</small>'));
-    var nx=btn(r<2?'放上去，看下一排積木':'放上去，看看組好的句子','btn',function(){st.pk[q][r]=k;st.cur=null;st.row++;save(st);render();window.scrollTo(0,0)});
+    fb.appendChild(el('p','note','<b>這張卡片：</b>'+FB[r][TY[k]]+'<small>想換一張，直接點別張就好。</small>'));
+    var nx=btn(r<2?'就用這一張，下一步':'就用這一張，看看三句話','btn',function(){st.pk[q][r]=k;st.cur=null;st.row++;save(st);render();window.scrollTo(0,0)});
     fb.appendChild(nx);
   }
   st.ord[q][r].forEach(function(k){
@@ -150,7 +165,7 @@ function pickRow(){
 }
 function result(){
   var q=st.i;app.innerHTML='';
-  app.appendChild(el('p','case','第 '+(q+1)+' 題，共 '+Q.length+' 題　・　組好了！'));
+  app.appendChild(el('p','case','第 '+(q+1)+' 題，共 '+Q.length+' 題　・　三句話選好了！'));
   var c=el('div','card');
   c.appendChild(el('p','old','原本的標籤：<s>'+Q[q].l+'</s>'));
   var f=el('div','final');
@@ -158,27 +173,28 @@ function result(){
     d.append(el('div','k','<span>'+RK[r]+'</span><span class="tag c'+t+'">'+(t==='P'?'說的是「整個人」':t==='V'?'說的是這一次，但很空泛':'說的是「這一次」')+'</span>'),el('p','s',txt(q,r)));f.appendChild(d)}
   c.appendChild(f);
   var n={S:0,V:0,P:0};[0,1,2].forEach(function(r){n[ty(q,r)]++});
-  var v=allS(q)?'這句話三塊都在說「這一次」：看得到發生了什麼、知道下一步、也有辦法檢查。':
-    '這句話有 '+n.S+' 塊說「這一次」、'+n.V+' 塊比較空泛、'+n.P+' 塊說的是「整個人」。';
+  var v=allS(q)?'三張卡片都在說「這一次」：看得到發生了什麼、知道下一步、也有辦法檢查。':
+    '你選的三張卡片裡，'+n.S+' 張說「這一次」、'+n.V+' 張比較空泛、'+n.P+' 張說的是「整個人」。';
   c.appendChild(el('p','verdict',v));
   app.appendChild(c);
   app.appendChild(el('p','note','想一想：如果你是'+Q[q].s.match(/(小傑|阿哲|小琪|小宇)/)[0]+'，聽到這句話，明天會想怎麼做？'));
-  app.appendChild(btn('重新組這一題','btn ghost',function(){st.pk[q]=[];st.row=0;st.cur=null;save(st);render();window.scrollTo(0,0)}));
-  app.appendChild(btn(q<Q.length-1?'下一題':'看看我組的四句話','btn',function(){st.i++;st.row=0;st.cur=null;save(st);render();window.scrollTo(0,0)}));
+  app.appendChild(btn('這一題重新選','btn ghost',function(){st.pk[q]=[];st.row=0;st.cur=null;save(st);render();window.scrollTo(0,0)}));
+  app.appendChild(btn(q<Q.length-1?'下一題':'看看我選的結果','btn',function(){st.i++;st.row=0;st.cur=null;save(st);render();window.scrollTo(0,0)}));
 }
 function end(){
   app.innerHTML='';
   var k=0;Q.forEach(function(_,q){if(allS(q))k++});
   var np=0;Q.forEach(function(_,q){[0,1,2].forEach(function(r){if(ty(q,r)==='P')np++})});
   var top=el('div','card');
-  top.append(el('p','lead','三塊積木都是「這一次」的題數'),el('p','big',k+' / '+Q.length+' 題'),
-    el('p','lead','你一共用了 <b>'+np+'</b> 塊「整個人」積木（全部 12 塊）。'));
+  top.append(el('p','lead','三張卡片都只說「這一次」的題數'),el('p','big',k+' / '+Q.length+' 題'),
+    el('p','lead','你一共選了 <b>'+np+'</b> 張罵「整個人」的卡片（一共選 12 張）。'));
   var t=el('table');
   Q.forEach(function(x,q){var tr=el('tr');var h='';
     for(var r=0;r<3;r++){var y=ty(q,r);h+='<span class="line"><span class="tag c'+y+'">'+TAG[y]+'</span> '+(txt(q,r)||'—')+'</span>'}
     tr.append(el('td','k','第 '+(q+1)+' 題<br>'+x.l),el('td',null,h));t.appendChild(tr)});
   var c=el('div','card');c.appendChild(t);
   app.append(el('h2',null,'做完了！請停在這一頁，等其他同學。'),top,c);
+  if(window.LIVE)app.append(LIVE.box('rewrite',{rows:[k<=1,k===2,k===3,k===4,np>0]}));
 }
 function render(){
   if(!st.go){intro();return}
