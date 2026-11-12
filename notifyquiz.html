@@ -21,28 +21,45 @@
 @keyframes drop{from{transform:translateY(-120%)}to{transform:none}}
 @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .gacha{position:fixed;inset:0;z-index:40;background:#1E242B;color:#FAF7F2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-weight:900}
-.gacha .orb{width:160px;height:160px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FBE3B8,#F2A65A 60%,#C77D2E);animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg) scale(1.1)}}
+.gacha{padding:20px;text-align:center}.gacha .orb2{animation:bob .6s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-14px) scale(1.08)}}
+.gacha .btn{font-size:30px;padding:18px 44px}
 .rank{display:flex;flex-direction:column;gap:6px}
 .rk{display:flex;align-items:center;gap:10px;font-weight:900;font-size:24px}
 .rk .no{width:44px;text-align:right;color:#94A3B8}.rk .who{width:90px}
 .rk .barw{flex:1;background:#EEE9E1;border-radius:10px;height:34px;overflow:hidden}.rk .barw i{display:block;height:100%;background:#2A6F68;border-radius:10px}
 .huge{font-size:clamp(50px,7vw,96px);font-weight:900;line-height:1.1}
 .cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media (prefers-reduced-motion:reduce){.note,.gacha .orb{animation:none}}
+@media (prefers-reduced-motion:reduce){.note,.gacha .orb2{animation:none}}
 </style>
 </head>
 <body>
 <script>
 var DUR=60,NOTE=[7,15,23,31,39,47,54],SHOW=3.5,GACHA=4,PT=10,GIFT=5;
 var MSG=[['免費抽一次！','限時 3 秒，點我領獎'],['你被標註了！','小美在留言裡提到你'],['每日登入獎勵','再不領就消失了'],['好友送你一顆愛心','點我回送'],['限時寶箱出現！','只剩 3 秒'],['有人按你讚','看看是誰'],['最後一次免費抽！','錯過就沒了']];
+var SC=[{k:'orb',load:'抽獎中……',res:'恭喜抽到：魚飼料 1 包',btn:'收下',pt:5},
+ {k:'chat',load:'正在打開留言……',res:'<b>小美：</b>@你 這張照片也太好笑了吧<br><b>阿哲：</b>哈哈哈哈',btn:'回一個讚',pt:0},
+ {k:'cal',load:'正在簽到……',res:'簽到成功！連續登入 3 天',btn:'領取獎勵',pt:5},
+ {k:'heart',load:'愛心飛過來了……',res:'阿哲送你一顆愛心',btn:'回送一顆愛心',pt:0},
+ {k:'box',load:'寶箱打開中……',res:'獲得：金幣 3 枚',btn:'收下',pt:5},
+ {k:'like',load:'正在打開……',res:'阿哲、小美和其他 3 個人<br>說你的貼文讚',btn:'知道了',pt:0},
+ {k:'orb',load:'抽獎中……',res:'銘謝惠顧，這次沒有抽到',btn:'關閉',pt:0}];
+var LOAD=2.5;
+function art(k,spin){var c={orb:'#F2A65A',chat:'#06C755',cal:'#205E86',heart:'#E11D48',box:'#C99A2E',like:'#3B82F6'}[k],
+ p={orb:'<circle cx="60" cy="60" r="44" fill="'+c+'"/><circle cx="46" cy="46" r="12" fill="#FBE3B8"/>',
+  chat:'<rect x="14" y="20" width="92" height="64" rx="16" fill="'+c+'"/><path d="M34 84 l-6 22 l26 -22 z" fill="'+c+'"/><circle cx="42" cy="52" r="6" fill="#fff"/><circle cx="60" cy="52" r="6" fill="#fff"/><circle cx="78" cy="52" r="6" fill="#fff"/>',
+  cal:'<rect x="16" y="24" width="88" height="80" rx="12" fill="#fff" stroke="'+c+'" stroke-width="8"/><rect x="16" y="24" width="88" height="24" rx="10" fill="'+c+'"/><path d="M40 76 l14 14 l28 -30" stroke="'+c+'" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  heart:'<path d="M60 100 C10 66 22 22 60 44 C98 22 110 66 60 100 Z" fill="'+c+'"/>',
+  box:'<rect x="16" y="52" width="88" height="52" rx="8" fill="'+c+'"/><path d="M12 52 q48 -44 96 0 z" fill="#E0B84A"/><rect x="52" y="44" width="16" height="30" rx="4" fill="#1E242B"/>',
+  like:'<circle cx="60" cy="60" r="48" fill="'+c+'"/><path d="M40 86 v-32 h10 l12 -26 q10 0 8 12 l-2 12 h16 q8 0 6 8 l-6 22 q-2 4 -8 4 z" fill="#fff"/>'}[k];
+ return '<svg class="'+(spin?'orb2':'')+'" width="150" height="150" viewBox="0 0 120 120" aria-hidden="true">'+p+'</svg>'}
 // 所有人題目一樣（固定的亂數）
 var QS=(function(){var s=20261,r=function(){s=(s*1103515245+12345)%2147483648;return s/2147483648},o=[];
  for(var i=0;i<80;i++){var a=2+Math.floor(r()*8),b=2+Math.floor(r()*8),plus=r()<0.6,x=plus?a+b:Math.max(a,b)-Math.min(a,b),t=plus?a+' ＋ '+b:Math.max(a,b)+' － '+Math.min(a,b);
   var w1=x+1+Math.floor(r()*2),w2=Math.max(0,x-1-Math.floor(r()*2));if(w2===x)w2=x+3;var op=[x,w1,w2].sort(function(){return r()-0.5});o.push({t:t,a:x,o:op})}return o})();
 function players(H){return Object.keys(H.seats).length}
 function lt(g){var m=window._lt||(window._lt={});if(!m[g.t0])m[g.t0]=Date.now();return m[g.t0]}
-function rankList(g){var S=g.sc||{};return Object.keys(S).map(function(k){return {s:+k,v:S[k].s,n:S[k].n}}).sort(function(a,b){return b.v-a.v||a.s-b.s})}
+function rankList(g){var S=g.sc||{};return Object.keys(S).map(function(k){return {s:+k,v:S[k].s,n:S[k].n,l:S[k].l||0}}).sort(function(a,b){return b.v-a.v||a.s-b.s})}
 function rankHTML(list){var max=Math.max(50,list.length?list[0].v:50);return '<div class="rank">'+list.slice(0,10).map(function(x,i){return '<div class="rk"><span class="no">'+(i+1)+'</span><span class="who">'+x.s+' 號</span><div class="barw"><i style="width:'+Math.max(2,x.v/max*100)+'%"></i></div><span style="width:90px">'+x.v+' 分</span></div>'}).join('')+'</div>'}
 function grp(list,f){var a=list.filter(f);var s=0;a.forEach(function(x){s+=x.v});return {n:a.length,avg:a.length?Math.round(s/a.length):null}}
 ROOM.start({
@@ -51,7 +68,7 @@ ROOM.start({
  init:function(H){H.g={}},
  onStart:function(H){H.g={sc:{}};H.ph='ready'},
  pub:function(H){var g=H.g;return {g:{t0:g.t0,top:H.ph==='reveal'?rankList(g).slice(0,3):null}}},
- onMsg:function(H,d,seat){if(d.t==='sc'&&(H.ph==='play'||H.ph==='wait')){H.g.sc[seat]={s:Math.max(0,Math.min(2000,+d.s||0)),n:+d.n||0,q:+d.q||0};return false}},
+ onMsg:function(H,d,seat){if(d.t==='sc'&&(H.ph==='play'||H.ph==='wait')){H.g.sc[seat]={s:Math.max(0,Math.min(2000,+d.s||0)),n:+d.n||0,q:+d.q||0,l:+d.l||0};return false}},
  tick:function(H){var g=H.g;if(H.ph==='play'){if(Date.now()-g.t0>=DUR*1000){H.ph='wait';g.w=Date.now();}return true}
   if(H.ph==='wait'&&Date.now()-g.w>=2500){H.ph='reveal';return true}},
  act:{go:function(H){H.g.t0=Date.now();H.g.sc={};H.ph='play'},cmp:function(H){H.ph='cmp'}},
@@ -61,35 +78,36 @@ ROOM.start({
   else if(H.ph==='play')h+='<div class="card dark"><p class="stat">搶答中　<span style="color:#F2A65A">還剩 '+Math.max(0,Math.ceil(DUR-(Date.now()-g.t0)/1000))+' 秒</span></p></div><div class="card"><h2>即時排行榜</h2>'+(L.length?rankHTML(L):'<p class="lead">加油！</p>')+'</div>';
   else if(H.ph==='wait')h+='<div class="card dark"><p class="huge">時間到！</p><p class="stat">計算成績中……</p></div>';
   else if(H.ph==='reveal')h+='<div class="card dark"><p class="huge">時間到！</p><p class="stat">最後的排行榜</p></div><div class="card">'+rankHTML(L)+'</div>';
-  else{var a=grp(L,function(x){return x.n===0}),b=grp(L,function(x){return x.n>=1&&x.n<=2}),c=grp(L,function(x){return x.n>=3}),tot=0;L.forEach(function(x){tot+=x.n});
+  else{var a=grp(L,function(x){return x.n===0}),b=grp(L,function(x){return x.n>=1&&x.n<=2}),c=grp(L,function(x){return x.n>=3}),tot=0,lost=0,cl=0;L.forEach(function(x){tot+=x.n;if(x.n){lost+=x.l;cl++}});var avl=cl?Math.round(lost/cl):0;
    var box=function(t,gp,col){return '<div class="card"><h2>'+t+'</h2><p class="huge" style="color:'+col+'">'+(gp.avg==null?'—':gp.avg+' 分')+'</p><p class="stat">'+gp.n+' 人的平均</p></div>'};
    h+='<div class="card dark"><p class="stat">比賽中一共跳出 '+NOTE.length+' 次通知，全班一共點了 <span style="color:#F2A65A;font-size:56px">'+tot+'</span> 次。</p></div>'+
     '<div class="cmp">'+box('一次都沒點',a,'#2A6F68')+box('點了 1～2 次',b,'#C99A2E')+box('點了 3 次以上',c,'#D95D39')+'</div>'+
-    '<div class="card warm"><p style="font-size:24px">每點一次通知，抽獎動畫要等 '+GACHA+' 秒，只拿到 '+GIFT+' 分；同樣的 '+GACHA+' 秒，本來可以答對兩三題，拿 20～30 分。通知用<b>紅點、倒數、「再不領就消失」</b>來搶你的注意力，這些都是設計好的。寫功課時手機放在旁邊，也是一樣的事。</p></div>'}
+    '<div class="card"><p class="stat">點過通知的人，平均有 <span style="color:#D95D39">'+avl+' 秒</span>花在通知上（比賽一共只有 60 秒）。</p></div><div class="card warm"><p style="font-size:24px">每點一次通知，要等畫面跑完、再按一個鈕，至少花 3～4 秒，最多只拿到 5 分，有的什麼都沒有；同樣的時間，本來可以答對兩三題，拿 20～30 分。通知用<b>紅點、倒數、「再不領就消失」</b>來搶你的注意力，這些都是設計好的。寫功課時手機放在旁邊，也是一樣的事。</p></div>'}
   return h},
  studentView:function(ST,me,api){var g=ST.g||{},k='n'+g.t0,L=api.local[k]||{s:0,n:0,q:0,i:0,seen:{}},h='';window._nq={ph:ST.ph,t0:g.t0,api:api,k:k};
   if(ST.ph==='ready')h+='<h1>準備搶答！</h1><p class="lead">等老師按開始。答對一題 10 分。</p>';
   else if(ST.ph==='play'){var e=(Date.now()-lt(g))/1000;
    if(e>=DUR)h+='<h1>時間到！</h1><div class="card"><p class="stat">我的分數：'+L.s+' 分</p></div>';
    else{var Q=QS[L.i%QS.length];
-    h+='<div class="hud"><span>分數 <b>'+L.s+'</b></span><span>剩 <b id="nqleft">'+Math.max(0,Math.ceil(DUR-e))+'</b> 秒</span></div><div class="q">'+Q.t+' ＝ ？</div><div class="ans">'+Q.o.map(function(v){return '<button class="btn gh" data-act="ans" data-arg="'+v+'">'+v+'</button>'}).join('')+'</div>'+(L.fb?'<p class="lead" style="text-align:center;font-weight:900;color:'+(L.fb==='o'?'#2A6F68':'#D95D39')+'">'+(L.fb==='o'?'答對！+10':'答錯了')+'</p>':'');
-    if(L.gu&&Date.now()<L.gu)h+='<div class="gacha"><div class="orb"></div><p style="font-size:34px">抽獎中……</p><p style="font-size:20px;color:#94A3B8">請稍候</p></div>';
+    h+='<div class="hud"><span>分數 <b>'+L.s+'</b></span><span>剩 <b id="nqleft">'+Math.max(0,Math.ceil(DUR-e))+'</b> 秒</span></div><div class="q">'+Q.t+' ＝ ？</div><div class="ans">'+Q.o.map(function(v){return '<button class="btn gh" data-act="ans" data-arg="'+v+'">'+v+'</button>'}).join('')+'</div>'+(L.fb?'<p class="lead" style="text-align:center;font-weight:900;color:'+(L.fb==='o'?'#2A6F68':'#D95D39')+'">'+(L.fb==='o'?'答對！+10':L.fb==='x'?'答錯了':L.fb)+'</p>':'');
+    if(L.sc){var X=SC[L.sc.i],wait=(Date.now()-L.sc.t)/1000<LOAD;h+='<div class="gacha">'+art(X.k,wait)+(wait?'<p style="font-size:34px">'+X.load+'</p><p style="font-size:20px;color:#94A3B8">請稍候</p>':'<p style="font-size:30px;line-height:1.6">'+X.res+'</p><p style="font-size:24px;color:#F2A65A">'+(X.pt?'+'+X.pt+' 分':'沒有加分')+'</p><button class="btn" data-act="closeN">'+X.btn+'</button>')+'<p style="font-size:18px;color:#94A3B8">搶答還在倒數中……</p></div>'}
     else{var ni=-1;for(var i=0;i<NOTE.length;i++)if(e>=NOTE[i]&&e<NOTE[i]+SHOW&&!L.seen[i])ni=i;
      if(ni>=0)h+='<button class="note" data-act="note" data-arg="'+ni+'"><span class="ic" style="position:relative"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M3 13h18M12 9c-2-4-7-3-5 0M12 9c2-4 7-3 5 0"/></svg><span class="dot">1</span></span><span style="display:flex;flex-direction:column"><b>'+MSG[ni][0]+'</b><span>'+MSG[ni][1]+'</span></span></button>'}}}
   else if(ST.ph==='wait')h+='<h1>時間到！</h1><div class="card"><p class="stat">我的分數：'+L.s+' 分</p></div>';
-  else h+='<h1>我的成績</h1><div class="card"><p class="stat">'+L.s+' 分</p><p>答了 '+L.q+' 題，點了 '+L.n+' 次通知。</p></div><p class="lead">看大螢幕。</p>';
+  else h+='<h1>我的成績</h1><div class="card"><p class="stat">'+L.s+' 分</p><p>答了 '+L.q+' 題，點了 '+L.n+' 次通知'+(L.lost?'，一共花了 '+L.lost+' 秒在通知上':'')+'。</p></div><p class="lead">看大螢幕。</p>';
   return h},
- sact:{ans:function(ST,me,api,v){var g=ST.g,k='n'+g.t0,L=api.local[k]||{s:0,n:0,q:0,i:0,seen:{}};if((Date.now()-lt(g))/1000>=DUR||(L.gu&&Date.now()<L.gu))return;
+ sact:{ans:function(ST,me,api,v){var g=ST.g,k='n'+g.t0,L=api.local[k]||{s:0,n:0,q:0,i:0,seen:{}};if((Date.now()-lt(g))/1000>=DUR||L.sc)return;
    var Q=QS[L.i%QS.length];if(+v===Q.a){L.s+=PT;L.fb='o'}else L.fb='x';L.q++;L.i++;api.local={};api.local[k]=L;api.save()},
-  note:function(ST,me,api,i){var g=ST.g,k='n'+g.t0,L=api.local[k]||{s:0,n:0,q:0,i:0,seen:{}};L.seen[i]=1;L.n++;L.gu=Date.now()+GACHA*1000;L.s+=GIFT;L.fb='';api.local={};api.local[k]=L;api.save()}}
+  note:function(ST,me,api,i){var g=ST.g,k='n'+g.t0,L=api.local[k]||{s:0,n:0,q:0,i:0,seen:{}};if(L.sc)return;L.seen[i]=1;L.n++;L.sc={i:+i,t:Date.now()};L.fb='';api.local={};api.local[k]=L;api.save()},
+  closeN:function(ST,me,api){var g=ST.g,k='n'+g.t0,L=api.local[k];if(!L||!L.sc)return;var used=Math.round((Date.now()-L.sc.t)/100)/10,X=SC[L.sc.i];if(used<LOAD)return;L.s+=X.pt;L.lost=Math.round(((L.lost||0)+used)*10)/10;L.fb='剛剛那則通知花了你 '+used+' 秒，'+(X.pt?'拿到 '+X.pt+' 分':'沒有加分');L.sc=null;api.local={};api.local[k]=L;api.save()}}
 });
 // 學生端：通知出現／消失、抽獎結束、時間到 → 重畫；每 2 秒回報分數
 (function(){if(location.hash.indexOf('host')>=0)return;var key='',lastSent='';
  setInterval(function(){var b=window._nq;if(!b||!window._lt||!window._lt[b.t0])return;var e=(Date.now()-window._lt[b.t0])/1000,L=b.api.local[b.k]||{};
   var el=document.getElementById('nqleft');if(el)el.textContent=Math.max(0,Math.ceil(DUR-e));
   var ni=-1;for(var i=0;i<NOTE.length;i++)if(e>=NOTE[i]&&e<NOTE[i]+SHOW)ni=i;
-  var k=b.ph+'|'+ni+'|'+(L.gu&&Date.now()<L.gu?1:0)+'|'+(e>=DUR?1:0);if(k!==key){key=k;if(window.ROOM.redraw)ROOM.redraw()}},200);
- setInterval(function(){var b=window._nq;if(!b||(b.ph!=='play'&&b.ph!=='wait'))return;var L=b.api.local[b.k];if(!L)return;var s=L.s+'|'+L.n+'|'+L.q;if(s!==lastSent){lastSent=s;b.api.send({t:'sc',s:L.s,n:L.n,q:L.q})}},1500);
+  var k=b.ph+'|'+ni+'|'+(L.sc?((Date.now()-L.sc.t)/1000<LOAD?'w':'r')+L.sc.i:0)+'|'+(e>=DUR?1:0);if(k!==key){key=k;if(window.ROOM.redraw)ROOM.redraw()}},200);
+ setInterval(function(){var b=window._nq;if(!b||(b.ph!=='play'&&b.ph!=='wait'))return;var L=b.api.local[b.k];if(!L)return;var s=L.s+'|'+L.n+'|'+L.q+'|'+(L.lost||0);if(s!==lastSent){lastSent=s;b.api.send({t:'sc',s:L.s,n:L.n,q:L.q,l:L.lost||0})}},1500);
 })();
 </script>
 </body>
