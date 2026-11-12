@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>連勝保衛戰・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.two .btn{font-size:clamp(22px,5vw,32px);padding:20px 6px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.two .btn small{font-size:clamp(16px,3.4vw,20px);font-weight:700}
+.hud{background:#1E242B;color:#FAF7F2;border-radius:16px;padding:10px 16px;display:flex;justify-content:space-between;gap:10px;font-weight:900;font-size:20px;flex-wrap:wrap}
+.hud b{color:#F2A65A}
+.days{display:flex;gap:6px;justify-content:center}
+.days i{flex:1;max-width:64px;height:44px;border-radius:10px;background:#E3DED7;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:900;color:#fff}
+.days i.on{background:#D95D39}.days i.gift{background:#C99A2E}.days i.off{background:#94A3B8}
+.pop{position:fixed;inset:0;background:rgba(30,36,43,.6);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+.pop .box{background:#fff;border-radius:22px;padding:22px;max-width:520px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.huge{font-size:clamp(50px,7vw,96px);font-weight:900;line-height:1.1}
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:900px){.cmp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script>
+var DAYS=7,LOGIN=5,PLAY=30,GIFT=100,SEC=10;
+function players(H){return Object.keys(H.seats).length}
+function flame(sz){return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z" fill="#F2A65A"/></svg>'}
+function P(g,s){return g.p[s]||(g.p[s]={streak:0,alive:1,d:0,brk:0})}
+function daysBar(p,day){var o='<div class="days">';for(var i=1;i<=DAYS;i++){var c=p.alive&&i<=p.streak?'on':(!p.alive&&i<=p.brk-1?'off':'');o+='<i class="'+(i===DAYS?(c||'gift'):c)+'">'+(i===DAYS?'禮':i)+'</i>'}return o+'</div>'}
+function grpAvg(list,f){var a=list.filter(f),s=0;a.forEach(function(x){s+=x.d});return {n:a.length,avg:a.length?Math.round(s/a.length):null}}
+ROOM.start({
+ key:'streakkeep',title:'連勝保衛戰',kick:'生存智慧 第 2 課・損失厭惡　全班連線',studentUrl:'streakkeep.html',
+ rules:'<p>一共 <b>7 天</b>。每一天，你要選一個：</p><p><b>登入簽到</b>：拿 5 鑽，連續登入的天數 +1。<b>連續登入滿 7 天，第 7 天送「大禮包」100 鑽。</b></p><p><b>今天去玩別的</b>：拿 30 鑽，可是連續登入就斷了，之後拿不到大禮包。</p><p>最後比誰的鑽石最多。</p>',
+ init:function(H){H.g={}},
+ onStart:function(H){H.g={p:{},day:1,ch:{},log:[]};Object.keys(H.seats).forEach(function(s){P(H.g,s)});H.g.deadline=Date.now()+SEC*1000;H.ph='choose'},
+ onJoin:function(H,s){if(H.g.p)P(H.g,s)},
+ pub:function(H){var g=H.g;return {g:{day:g.day,p:g.p,last:g.last,decided:Object.keys(g.ch||{}).length}}},
+ onMsg:function(H,d,seat){if(d.t==='ch'&&H.ph==='choose'&&(d.v==='in'||d.v==='out')){H.g.ch[seat]=d.v;return true}},
+ tickText:function(H){var l=Math.max(0,Math.ceil((H.g.deadline-Date.now())/1000));return l?'建議 '+l+' 秒內決定':'可以過這一天了'},
+ act:{
+  night:function(H){var g=H.g;if(H.ph!=='choose')return false;var brk=[],kept=0;
+   Object.keys(H.seats).forEach(function(s){var p=P(g,s),c=g.ch[s]||(p.alive?'in':'out');   // 沒選：連勝中的人自動簽到（就像 App 會提醒你）
+    if(c==='in'){p.d+=LOGIN;if(p.alive){p.streak++;kept++;if(g.day===DAYS){p.d+=GIFT;p.gift=1}}}
+    else{p.d+=PLAY;if(p.alive){p.alive=0;p.brk=g.day;brk.push(+s)}}});
+   g.last={day:g.day,brk:brk,kept:kept};g.log.push({day:g.day,kept:kept,brk:brk.length});H.ph='reveal'},
+  next:function(H){var g=H.g;if(H.ph!=='reveal')return false;if(g.day>=DAYS){H.ph='sum';return}g.day++;g.ch={};g.deadline=Date.now()+SEC*1000;H.ph='choose'}
+ },
+ keys:{d:'night'},
+ bar:function(H){if(H.ph==='choose')return '<button class="btn" data-act="night">這一天結束（D）</button>';if(H.ph==='reveal')return '<button class="btn te" data-act="next">'+(H.g.day>=DAYS?'7 天結束，看結果':'下一天')+'</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='',seats=Object.keys(H.seats).map(Number).sort(function(a,b){return a-b});
+  if(H.ph==='choose'||H.ph==='reveal'){var rv=H.ph==='reveal',alive=seats.filter(function(s){return P(g,s).alive}).length;
+   h+='<div class="card dark"><p class="stat">第 '+g.day+' 天（一共 '+DAYS+' 天）</p><p style="font-size:22px">登入簽到：5 鑽、連勝 +1，連續 7 天送大禮包 100 鑽。　今天去玩別的：30 鑽，可是連勝中斷。</p>'+
+    (rv?'<p class="stat">今天有 <span style="color:#F2A65A">'+g.last.brk.length+' 人</span>的連勝中斷了'+(g.last.brk.length?'：'+g.last.brk.join('、')+' 號':'')+'</p>':'<p>已經決定：'+Object.keys(g.ch).length+' / '+N+' 人　<span id="hdtick" style="color:#F2A65A"></span></p>')+'</div>'+
+    '<div class="card"><h2>連勝還在的：'+alive+' / '+N+' 人</h2><div class="crowd">'+seats.map(function(s){var p=P(g,s);return ROOM.avatar(s,p.alive?'#D95D39':'#94A3B8',p.alive?'連 '+p.streak+' 天':'斷了')}).join('')+'</div></div>';
+  } else {var list=seats.map(function(s){var p=P(g,s);return {s:s,d:p.d,gift:p.gift,brk:p.brk}}),a=grpAvg(list,function(x){return x.gift}),b=grpAvg(list,function(x){return !x.gift&&x.brk>=4}),c=grpAvg(list,function(x){return !x.gift&&x.brk>0&&x.brk<=3});
+   var box=function(t,sub,gp,col){return '<div class="card"><h2>'+t+'</h2><p class="lead">'+sub+'</p><p class="huge" style="color:'+col+'">'+(gp.avg==null?'—':gp.avg)+'</p><p class="stat" style="font-size:22px">'+gp.n+' 人，平均拿到的鑽石</p></div>'};
+   h+='<div class="card dark"><p class="stat">7 天結束。誰拿到的鑽石最多？</p></div><div class="cmp">'+box('守住連勝 7 天','每天 5 鑽，加大禮包 100 鑽，最多 135 鑽',a,'#D95D39')+box('第 4～7 天才斷','守了很久，最後還是斷了',b,'#94A3B8')+box('前 3 天就不守了','每天玩別的 30 鑽，7 天最多 210 鑽',c,'#2A6F68')+'</div>'+
+    '<div class="card"><table><tr><th></th>'+g.log.map(function(x){return '<th>第 '+x.day+' 天</th>'}).join('')+'</tr><tr><td>當天連勝中斷的人</td>'+g.log.map(function(x){return '<td><b>'+x.brk+'</b></td>'}).join('')+'</tr></table></div>'+
+    '<div class="card warm"><p style="font-size:24px">規則一開始就寫了：每天玩別的，7 天有 210 鑽；守住連勝，最多只有 135 鑽。可是「連勝中斷」四個字，看起來像<b>失去</b>一樣東西，很多人就捨不得斷。這就是<b>損失厭惡</b>。App 的「連續登入」「連續打卡」就是利用這一點，讓你每天都回來。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},p=(g.p||{})[me]||{streak:0,alive:1,d:0},h='',k='c'+g.day,cur=api.local[k],ask=api.local.ask===g.day;
+  var hud='<div class="hud"><span>鑽石 <b>'+p.d+'</b></span><span>'+(p.alive?'連續登入 <b>'+p.streak+'</b> 天':'連勝已經中斷')+'</span></div>';
+  if(ST.ph==='choose'){h+=hud+'<p class="lead">第 '+g.day+' 天（一共 '+DAYS+' 天）</p>'+daysBar(p,g.day)+
+    '<h2>今天要做什麼？</h2><div class="two"><button class="btn '+(cur==='in'?'on':'')+'" data-act="go" data-arg="in">登入簽到<small>+5 鑽'+(p.alive?'，連勝 +1':'')+(p.alive&&g.day===DAYS?'，領大禮包 100 鑽':'')+'</small></button>'+
+    '<button class="btn '+(cur==='out'?'te on':'gh')+'" data-act="go" data-arg="out">今天去玩別的<small>+30 鑽'+(p.alive?'，連勝中斷':'')+'</small></button></div>'+
+    '<p class="lead">'+(cur?'你選了「'+(cur==='in'?'登入簽到':'去玩別的')+'」，這一天結束前可以改。':p.alive?'還沒選。沒選的話，系統會自動幫你簽到。':'還沒選。沒選就當作去玩別的。')+'</p>';
+   if(ask)h+='<div class="pop"><div class="box">'+flame(72)+'<h2 style="color:#D95D39">確定要中斷嗎？</h2><p style="font-size:22px">你會<b>失去 '+p.streak+' 天的連續登入</b>，也拿不到 7 日大禮包了！</p><button class="btn" data-act="keep">不要！我要守住連勝</button><button class="btn gh sm" data-act="quit">還是要去玩別的</button></div></div>'}
+  else if(ST.ph==='reveal'){var L=g.last||{},brk=(L.brk||[]).indexOf(me)>=0;
+   h+=hud+daysBar(p,g.day)+(brk?'<div class="card warm"><p class="stat" style="color:#D95D39">你的連勝中斷了！</p><p>今天拿到 30 鑽。</p></div>':'<div class="card"><p class="stat">'+(p.gift?'連續 7 天！你領到大禮包 100 鑽！':p.alive?'連續登入 '+p.streak+' 天！':'今天過完了。')+'</p></div>')+'<p class="lead">今天有 '+(L.brk||[]).length+' 人的連勝中斷了。看大螢幕。</p>'}
+  else h+='<h1>7 天結束了！</h1><div class="card"><p class="stat">我一共拿到 '+p.d+' 鑽</p><p>'+(p.gift?'你守住了 7 天連勝。':'你的連勝在第 '+p.brk+' 天中斷。')+'</p></div><p class="lead">看大螢幕。</p>';
+  return h},
+ sact:{go:function(ST,me,api,v){var g=ST.g,p=(g.p||{})[me]||{},k='c'+g.day;
+   if(v==='out'&&p.alive&&p.streak>0&&api.local[k]!=='out'){api.local.ask=g.day;api.save();return}
+   var keep={};keep[k]=v;api.local=keep;api.send({t:'ch',v:v});api.save()},
+  keep:function(ST,me,api){var g=ST.g,k='c'+g.day,o={};o[k]='in';api.local=o;api.send({t:'ch',v:'in'});api.save()},
+  quit:function(ST,me,api){var g=ST.g,k='c'+g.day,o={};o[k]='out';api.local=o;api.send({t:'ch',v:'out'});api.save()}}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>抽卡保底・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.two .btn{font-size:clamp(24px,5.5vw,34px);padding:22px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.two .btn small{font-size:clamp(16px,3.4vw,20px);font-weight:700}
+.hud{background:#1E242B;color:#FAF7F2;border-radius:16px;padding:10px 16px;display:flex;justify-content:space-between;gap:10px;font-weight:900;font-size:20px;flex-wrap:wrap}
+.hud b{color:#F2A65A}
+.pity{height:26px;border-radius:13px;background:#E3DED7;overflow:hidden}.pity i{display:block;height:100%;background:linear-gradient(90deg,#F2A65A,#D95D39)}
+.cardimg{display:block;width:150px;height:auto;margin:0 auto}
+.huge{font-size:clamp(50px,7vw,96px);font-weight:900;line-height:1.1}
+.cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1.4fr;gap:16px}
+@media (max-width:900px){.cmp{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script>
+var START=1000,COST=100,VALUE=300,PITY=10,RATE=0.08,SEC=12;
+function players(H){return Object.keys(H.seats).length}
+function cardSVG(){return '<svg class="cardimg" viewBox="0 0 150 210" role="img" aria-label="傳說魚王卡"><rect x="4" y="4" width="142" height="202" rx="14" fill="#1E242B" stroke="#F2A65A" stroke-width="6"/><circle cx="75" cy="92" r="46" fill="#F2A65A" opacity=".25"/><path d="M36 92 q34 -34 68 0 q-34 34 -68 0 z" fill="#F2A65A"/><path d="M104 92 l24 -20 v40 z" fill="#F2A65A"/><circle cx="56" cy="88" r="5" fill="#1E242B"/><path d="M52 52 l8 -14 l10 12 l10 -14 l10 14 l10 -12 l6 14 z" fill="#F2C14E"/><text x="75" y="178" text-anchor="middle" font-size="22" font-weight="900" fill="#F2A65A" font-family="Noto Sans TC,sans-serif">傳說魚王</text></svg>'}
+function fin(p){return START-(p.n||0)*COST+(p.got?VALUE:0)}
+function P(g,s){return g.p[s]||(g.p[s]={n:0,got:0,out:0})}
+function grpAvg(list,f){var a=list.filter(f),s=0;a.forEach(function(x){s+=x.v});return {n:a.length,avg:a.length?Math.round(s/a.length):null}}
+ROOM.start({
+ key:'gachapity',title:'抽卡保底',kick:'生存智慧 第 3 課・沉沒成本　全班連線',studentUrl:'gachapity.html',
+ rules:'<p>每個人有 <b>1000 鑽石</b>。卡池裡有一張「<b>傳說魚王</b>」，這張卡拿到以後可以換 <b>300 鑽</b>。</p><p>抽一次要 <b>100 鑽</b>，每次抽中的機會不高。<b>抽滿 10 次一定會中（保底）</b>。每一回合，你可以選「再抽一次」或「不抽了」。最後比誰剩下的鑽石最多（卡算 300 鑽）。</p>',
+ init:function(H){H.g={}},
+ onStart:function(H){H.g={p:{},round:1,want:{},log:[]};Object.keys(H.seats).forEach(function(s){P(H.g,s)});H.g.deadline=Date.now()+SEC*1000;H.ph='choose'},
+ onJoin:function(H,s){if(H.g.p)P(H.g,s)},
+ pub:function(H){var g=H.g;return {g:{round:g.round,p:g.p,last:g.last,decided:Object.keys(g.want||{}).length}}},
+ onMsg:function(H,d,seat){var g=H.g,p=P(g,seat);if(d.t==='want'&&H.ph==='choose'&&!p.got&&p.n<PITY){g.want[seat]=d.v==='y';return true}},
+ tickText:function(H){var l=Math.max(0,Math.ceil((H.g.deadline-Date.now())/1000));return l?'建議 '+l+' 秒內決定':'可以開獎了'},
+ act:{
+  open:function(H){var g=H.g;if(H.ph!=='choose')return false;var pulled=[],hit=[];
+   Object.keys(H.seats).forEach(function(s){var p=P(g,s);if(p.got)return;if(g.want[s]&&p.n<PITY){p.n++;pulled.push(+s);if(p.n>=PITY||Math.random()<RATE){p.got=1;p.at=p.n;hit.push(+s)}}});
+   g.last={r:g.round,pulled:pulled,hit:hit};g.log.push({r:g.round,n:pulled.length,hit:hit.length});H.ph='reveal'},
+  next:function(H){var g=H.g;if(H.ph!=='reveal')return false;if(g.round>=PITY||!g.last.pulled.length){H.ph='sum';return}g.round++;g.want={};g.deadline=Date.now()+SEC*1000;H.ph='choose'},
+  sum:function(H){H.ph='sum'}
+ },
+ keys:{o:'open'},
+ bar:function(H){var g=H.g;if(H.ph==='choose')return '<button class="btn" data-act="open">開獎！（O）</button><button class="btn gh" data-act="sum">結束，看結果</button>';
+  if(H.ph==='reveal')return '<button class="btn te" data-act="next">'+(g.round>=PITY||!g.last.pulled.length?'看最後結果':'下一回合')+'</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='',seats=Object.keys(H.seats).map(Number).sort(function(a,b){return a-b});
+  function crowd(){return '<div class="crowd">'+seats.map(function(s){var p=P(g,s);var col=p.got?'#C99A2E':p.n===0?'#94A3B8':p.n>=6?'#D95D39':'#F2A65A';return ROOM.avatar(s,col,p.got?'抽到！':p.n?'抽 '+p.n+' 次':'沒抽')}).join('')+'</div>'}
+  if(H.ph==='choose'||H.ph==='reveal'){var rv=H.ph==='reveal',L=g.last;
+   h+='<div class="card dark"><p class="stat">第 '+g.round+' 回合（最多 '+PITY+' 回合）　抽一次 <span style="color:#F2A65A">100 鑽</span>，傳說魚王可以換 <span style="color:#F2A65A">300 鑽</span>，抽滿 10 次保底</p>'+
+    (rv?'<p class="stat">這一回合 '+L.pulled.length+' 人抽，<span style="color:#F2A65A">'+L.hit.length+' 人抽到</span>'+(L.hit.length?'：'+L.hit.join('、')+' 號':'')+'</p>':'<p>已經決定：'+Object.keys(g.want).length+' / '+seats.filter(function(s){return !P(g,s).got}).length+' 人　<span id="hdtick" style="color:#F2A65A"></span>　（沒選就當作不抽）</p>')+'</div>'+
+    '<div class="card"><h2>每個人抽了幾次（顏色越紅，抽越多次）</h2>'+crowd()+'</div>';
+  } else {var list=seats.map(function(s){var p=P(g,s);return {s:s,n:p.n,got:p.got,v:fin(p)}}),a=grpAvg(list,function(x){return x.n===0}),b=grpAvg(list,function(x){return x.n>=1&&x.n<=3}),c=grpAvg(list,function(x){return x.n>=4&&x.n<=9}),d=grpAvg(list,function(x){return x.n>=10});
+   var gotL=list.filter(function(x){return x.got}),spent=0;gotL.forEach(function(x){spent+=x.n*COST});
+   var box=function(t,gp,col){return '<div class="card"><h2>'+t+'</h2><p class="huge" style="color:'+col+';font-size:clamp(40px,5vw,72px)">'+(gp.avg==null?'—':gp.avg)+'</p><p class="stat" style="font-size:22px">'+gp.n+' 人，平均剩下的鑽石</p></div>'};
+   h+='<div class="card dark"><p class="stat">大家一開始都有 1000 鑽。最後剩下多少？（抽到的卡算 300 鑽）</p></div><div class="cmp">'+box('一次都沒抽',a,'#2A6F68')+box('抽 1～3 次',b,'#C99A2E')+box('抽 4～9 次',c,'#D95D39')+box('抽到保底 10 次',d,'#B8322A')+'</div>'+
+    '<div class="card"><p class="stat">抽到傳說魚王的有 '+gotL.length+' 人，平均花了 <span style="color:#D95D39">'+(gotL.length?Math.round(spent/gotL.length):0)+' 鑽</span>，換到一張值 300 鑽的卡。</p></div>'+
+    '<div class="card warm"><p style="font-size:24px">抽了 5 次沒中的人，常常會想：「都花 500 鑽了，現在停下來太虧，再抽就保底了。」可是那 500 鑽已經拿不回來了，這就是<b>沉沒成本</b>。<b>歸零想一次</b>：如果你現在一次都沒抽過，你會花 100 鑽，去抽一張只值 300 鑽、又很難中的卡嗎？</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},p=(g.p||{})[me]||{n:0},h='',rest=START-p.n*COST,k='w'+g.round,cur=api.local[k];
+  var hud='<div class="hud"><span>鑽石 <b>'+rest+'</b></span><span>已經抽 <b>'+p.n+'</b> 次</span><span>已經花掉 <b>'+p.n*COST+'</b></span></div>';
+  if(ST.ph==='choose'){
+   if(p.got)h+=cardSVG()+'<h1 style="text-align:center">你抽到傳說魚王了！</h1><div class="card"><p class="stat">你抽了 '+p.n+' 次，花了 '+p.n*COST+' 鑽，卡可以換 300 鑽。</p></div><p class="lead">看大螢幕，看看其他人。</p>';
+   else{h+=hud+'<p class="lead">第 '+g.round+' 回合　傳說魚王可以換 300 鑽</p>'+(p.n?'<div class="card warm"><p style="font-weight:900">保底進度：'+p.n+' / '+PITY+'　再 '+(PITY-p.n)+' 次一定中！</p><div class="pity"><i style="width:'+p.n*10+'%"></i></div></div>':'')+
+    '<h2>要不要'+(p.n?'再':'')+'抽一次？</h2><div class="two"><button class="btn '+(cur==='y'?'on':'')+'" data-act="want" data-arg="y">'+(p.n?'再抽一次':'抽一次')+'<small>花 100 鑽</small></button><button class="btn '+(cur==='n'?'te on':'gh')+'" data-act="want" data-arg="n">不抽了<small>留住鑽石</small></button></div>'+
+    '<p class="lead">'+(cur?'你選了「'+(cur==='y'?'抽':'不抽')+'」，開獎前可以改。':'還沒選。沒選就當作不抽。')+'</p>'}}
+  else if(ST.ph==='reveal'){var L=g.last||{},did=(L.pulled||[]).indexOf(me)>=0,hit=(L.hit||[]).indexOf(me)>=0;
+   if(hit)h+=cardSVG()+'<h1 style="text-align:center">抽到了！傳說魚王！</h1><div class="card"><p class="stat">你一共抽了 '+p.n+' 次，花了 '+p.n*COST+' 鑽。</p></div>';
+   else if(did)h+=hud+'<h1>沒抽到……</h1><div class="card warm"><p class="stat">你已經花了 '+p.n*COST+' 鑽。</p><p>保底進度 '+p.n+' / '+PITY+'，再 '+(PITY-p.n)+' 次一定中！</p><div class="pity"><i style="width:'+p.n*10+'%"></i></div></div>';
+   else h+=hud+'<h1>'+(p.got?'你已經抽到了':'這一回合你沒抽')+'</h1>';
+   h+='<p class="lead">這一回合 '+(L.pulled||[]).length+' 人抽，'+(L.hit||[]).length+' 人抽到。看大螢幕。</p>'}
+  else h+='<h1>結束了！</h1><div class="card"><p class="stat">我最後有 '+fin(p)+' 鑽</p><p>抽了 '+p.n+' 次，花了 '+p.n*COST+' 鑽'+(p.got?'，抽到的卡換 300 鑽':'，沒有抽到')+'。</p></div><p class="lead">看大螢幕。</p>';
+  return h},
+ sact:{want:function(ST,me,api,v){var g=ST.g,k='w'+g.round;api.local={};api.local[k]=v;api.send({t:'want',v:v});api.save()}}
+});
+</script>
+</body>
+</html>
