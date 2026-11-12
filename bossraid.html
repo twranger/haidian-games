@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>全班打王・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.hp{height:38px;border-radius:12px;background:#E3DED7;overflow:hidden}.hp i{display:block;height:100%;border-radius:12px;transition:width .25s}
+.atk{font:inherit;width:100%;border:0;border-radius:28px;background:#D95D39;color:#fff;font-size:clamp(44px,12vw,80px);font-weight:900;padding:60px 0;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.atk:active{transform:scale(.97);background:#B8482A}
+.sos{position:fixed;right:10px;top:10px;z-index:30;font:inherit;font-size:15px;font-weight:700;border:2px solid #94A3B8;background:#fff;color:#475569;border-radius:12px;padding:8px 12px;touch-action:manipulation}
+.huge{font-size:clamp(50px,7vw,96px);font-weight:900;line-height:1.1}
+.boss{display:block;width:min(46vw,520px);height:auto;margin:0 auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+</style>
+</head>
+<body>
+<script>
+var SIG=[5,11,17],WIN=4,MAXT=45,PER=220;
+function players(H){return Object.keys(H.seats).length}
+function need(N){return Math.max(1,Math.ceil(N*0.25))}
+function bossSVG(p,dead){return '<svg class="boss" viewBox="0 0 400 360" role="img" aria-label="大魔王"><ellipse cx="200" cy="330" rx="150" ry="20" fill="#000" opacity=".12"/>'+
+ '<path d="M90 110 L60 30 L140 80 Z M310 110 L340 30 L260 80 Z" fill="#5B2A6E"/><ellipse cx="200" cy="200" rx="150" ry="130" fill="'+(dead?'#94A3B8':'#7B3F98')+'"/>'+
+ (dead?'<path d="M130 160 l40 40 m0 -40 l-40 40 M230 160 l40 40 m0 -40 l-40 40" stroke="#1E242B" stroke-width="10" stroke-linecap="round"/>':'<circle cx="150" cy="180" r="26" fill="#fff"/><circle cx="250" cy="180" r="26" fill="#fff"/><circle cx="154" cy="186" r="11" fill="#1E242B"/><circle cx="246" cy="186" r="11" fill="#1E242B"/><path d="M118 146 l56 16 M282 146 l-56 16" stroke="#1E242B" stroke-width="9" stroke-linecap="round"/>')+
+ '<path d="M140 260 q60 '+(dead?'-30':'36')+' 120 0" stroke="#1E242B" stroke-width="9" fill="none" stroke-linecap="round"/></svg>'}
+function hpBar(v,max,c){return '<div class="hp"><i style="width:'+Math.max(0,v/max*100)+'%;background:'+c+'"></i></div>'}
+function newRun(H){var g=H.g,N=players(H);g.t0=Date.now();g.max=N*PER;g.hp=g.max;g.team=3;g.hits={};g.res=[];g.sig=-1;g.pressed={};g.end='';g.try=(g.try||0)+1;H.ph='play'}
+function finish(H,how){var g=H.g;g.end=how;g.used=Math.round((Date.now()-g.t0)/100)/10;(g.runs=g.runs||[]).push({n:g.try,end:how,res:g.res.slice(),used:g.used,team:g.team});H.ph='end'}
+ROOM.start({
+ key:'bossraid',title:'全班打王',kick:'第 1 節・注意力　全班連線',studentUrl:'bossraid.html',
+ rules:'<p>全班是同一隊，一起打大魔王！在平板上<b>狂點「攻擊！」</b>，把魔王的血打到 0 就贏了。</p><p>隊伍有 3 顆心。心全部沒了，全隊就輸了。</p>',
+ init:function(H){H.g={}},
+ onStart:function(H){H.g={runs:[],try:0};H.ph='ready'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,hp:g.hp,max:g.max,team:g.team,sig:H.ph==='play'?g.sig:-1,end:g.end,try:g.try,res:H.ph==='end'||H.ph==='sum'?g.res:null,need:need(players(H))}}},
+ onMsg:function(H,d,seat){var g=H.g;if(H.ph!=='play')return false;
+  if(d.t==='hit'){var n=Math.max(0,Math.min(15,+d.n||0));g.hits[seat]=(g.hits[seat]||0)+n;g.hp=Math.max(0,g.hp-n);return false}
+  if(d.t==='sos'&&g.sig>=0&&+d.k===g.sig){g.pressed[seat]=1;return false}return false},
+ tick:function(H){var g=H.g;if(H.ph!=='play')return false;var e=(Date.now()-g.t0)/1000,N=players(H);
+  if(g.hp<=0){finish(H,'win');return true}
+  var cur=-1;for(var i=0;i<SIG.length;i++)if(e>=SIG[i]&&e<SIG[i]+WIN)cur=i;
+  if(g.sig>=0&&cur!==g.sig){var c=Object.keys(g.pressed).length,ok=c>=need(N);g.res.push({k:g.sig,c:c,ok:ok});if(!ok)g.team--;g.pressed={}}
+  g.sig=cur;
+  if(g.res.length===SIG.length&&g.team>0&&e>=SIG[SIG.length-1]+WIN){}
+  if(g.team<=0){finish(H,'wipe');return true}
+  if(e>=MAXT){finish(H,'time');return true}
+  return true},
+ act:{go:function(H){newRun(H)},again:function(H){newRun(H)},sum:function(H){H.ph='sum'}},
+ bar:function(H){if(H.ph==='ready')return '<button class="btn" data-act="go">開打！</button>';
+  if(H.ph==='end')return '<button class="btn" data-act="again">再挑戰一次（先討論 30 秒）</button><button class="btn te" data-act="sum">看結論</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='';
+  if(H.ph==='ready')h+='<div class="card dark"><p class="huge">全班一起打大魔王</p><p class="stat">狂點「攻擊！」，把血打到 0！</p></div>'+bossSVG(1,false);
+  else if(H.ph==='play'){var e=(Date.now()-g.t0)/1000;
+   h+='<div class="grid2"><div>'+bossSVG(g.hp/g.max,false)+'</div><div class="card"><h2>大魔王的血</h2>'+hpBar(g.hp,g.max,'#7B3F98')+'<p class="stat">'+g.hp+' / '+g.max+'</p><h2>隊伍的心</h2><p class="huge" style="color:#D95D39">'+'♥'.repeat(Math.max(0,g.team))+'<span style="color:#E3DED7">'+'♥'.repeat(3-Math.max(0,g.team))+'</span></p>'+
+    (g.res.length&&!g.res[g.res.length-1].ok&&e<SIG[g.res.length-1]+WIN+3?'<p class="stat" style="color:#D95D39">有隊友倒下了！隊伍少一顆心！</p>':'')+'<p class="lead">已經打了 '+Math.floor(e)+' 秒</p></div></div>'}
+  else if(H.ph==='end'){var w=g.end==='win';
+   h+='<div class="card '+(w?'cool':'warm')+'"><p class="huge" style="color:'+(w?'#2A6F68':'#D95D39')+'">'+(w?'打贏了！':g.end==='wipe'?'全隊倒下了……':'時間到，沒打完')+'</p><p class="stat">魔王還剩 '+g.hp+' / '+g.max+' 滴血。</p></div>'+
+    '<div class="card"><h2>其實，平板右上角出現過「隊友求救」的小按鈕</h2><table><tr><th></th><th>出現的時間</th><th>按到的人</th><th>需要</th><th>結果</th></tr>'+
+    (g.res.length?g.res.map(function(r){return '<tr><td>第 '+(r.k+1)+' 次求救</td><td>第 '+SIG[r.k]+' 秒，出現 '+WIN+' 秒</td><td><b>'+r.c+' 人</b></td><td>'+need(N)+' 人</td><td><b style="color:'+(r.ok?'#2A6F68':'#D95D39')+'">'+(r.ok?'救到了':'沒救到，少一顆心')+'</b></td></tr>'}).join(''):'<tr><td colspan="5">求救還沒出現，魔王就被打倒了。</td></tr>')+'</table></div>'}
+  else{h+='<div class="card"><h2>每一次挑戰的結果</h2><table><tr><th></th><th>結果</th><th>求救被救到幾次</th><th>剩下的心</th></tr>'+(g.runs||[]).map(function(r){return '<tr><td>第 '+r.n+' 次挑戰</td><td><b style="color:'+(r.end==='win'?'#2A6F68':'#D95D39')+'">'+(r.end==='win'?'打贏了（'+r.used+' 秒）':r.end==='wipe'?'全隊倒下':'時間到')+'</b></td><td>'+r.res.filter(function(x){return x.ok}).length+' / '+r.res.length+' 次</td><td>'+Math.max(0,r.team)+' 顆</td></tr>'}).join('')+'</table></div>'+
+    '<div class="card dark"><p style="font-size:26px">求救按鈕一直在畫面右上角，可是大家專心狂點「攻擊」，眼睛盯著中間的大按鈕，就沒有「看見」它。這就是<b style="color:#F2A65A">不注意盲視</b>。</p><p style="font-size:26px">打遊戲時專心打王，沒看到小地圖和隊友的訊號；專心滑手機，沒聽到媽媽在叫你，都是一樣的事。知道了以後，可以分工：有人專心打，有人負責看。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},h='';window._bs={ph:ST.ph,sig:g.sig,t0:g.t0};window._api=api;
+  if(ST.ph==='ready')h+='<h1>準備打王！</h1><p class="lead">等老師說開打，就狂點「攻擊！」</p>';
+  else if(ST.ph==='play'){var done=(window._sosDone||{})[g.t0+'_'+g.sig];
+   h+=(g.sig>=0&&!done?'<button class="sos" data-sos="'+g.sig+'">隊友求救：按這裡</button>':'')+
+    '<p class="lead">大魔王的血</p>'+hpBar(g.hp,g.max,'#7B3F98')+'<p class="lead">隊伍的心：<b style="color:#D95D39;font-size:30px">'+'♥'.repeat(Math.max(0,g.team))+'</b></p><button class="atk" data-hit="1">攻擊！</button><p class="lead" style="text-align:center">我打了 <b id="myhits">'+(window._hits||0)+'</b> 下</p>'}
+  else if(ST.ph==='end')h+='<h1>'+(g.end==='win'?'打贏了！':g.end==='wipe'?'全隊倒下了……':'時間到')+'</h1><div class="card"><p class="stat">我打了 '+(window._hits||0)+' 下</p><p>你有看到右上角的「隊友求救」嗎？</p></div><p class="lead">看大螢幕。</p>';
+  else h+='<h1>看大螢幕！</h1>';
+  return h},
+ sact:{}
+});
+// 連點不靠框架的 click（畫面會一直重畫），自己接 pointerdown；每 0.8 秒把累積的次數送出去一次
+(function(){if(location.hash.indexOf('host')>=0)return;var buf=0;window._hits=0;window._sosDone={};
+ function send(o){if(window._api)window._api.send(o)}
+ document.addEventListener('pointerdown',function(e){var b=window._bs||{};if(b.ph!=='play')return;
+  var s=e.target.closest('[data-sos]');if(s){var k=+s.getAttribute('data-sos');window._sosDone[b.t0+'_'+k]=1;send({t:'sos',k:k});s.remove();return}
+  if(e.target.closest('[data-hit]')){if(window._t0!==b.t0){window._t0=b.t0;window._hits=0}buf++;window._hits++;var m=document.getElementById('myhits');if(m)m.textContent=window._hits}});
+ setInterval(function(){if(buf>0){var n=Math.min(15,buf);buf-=n;send({t:'hit',n:n})}},800);
+})();
+</script>
+</body>
+</html>
