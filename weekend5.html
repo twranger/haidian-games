@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>週末只有 5 小時・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.hud{position:sticky;top:0;z-index:5;background:#1E242B;color:#FAF7F2;border-radius:16px;padding:10px 16px;display:flex;justify-content:space-between;gap:10px;font-weight:900;font-size:20px;flex-wrap:wrap}
+.hud b{color:#F2A65A}
+.act{border:3px solid #E3DED7;background:#fff;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.act.x2{border-color:#F2A65A;background:#FFF7E6}
+.act .nm{flex:1;display:flex;flex-direction:column}
+.act .nm b{font-size:24px;line-height:1.3}.act .nm span{font-size:17px;color:#475569}
+.act .hrs{display:flex;gap:4px}
+.act .hrs i{width:22px;height:30px;border-radius:6px;background:#E3DED7}.act .hrs i.on{background:#2A6F68}
+.pm{font:inherit;width:54px;height:54px;border-radius:14px;border:0;font-size:32px;font-weight:900;color:#fff;background:#2A6F68;touch-action:manipulation}
+.pm.minus{background:#94A3B8}.pm[disabled]{opacity:.3}
+.tag2{font-size:15px;font-weight:900;color:#fff;background:#D95D39;border-radius:999px;padding:1px 10px;margin-left:6px}
+.rank{display:flex;flex-direction:column;gap:6px}
+.rk{display:flex;align-items:center;gap:10px;font-weight:900;font-size:24px}
+.rk .no{width:44px;text-align:right;color:#94A3B8}.rk .who{width:90px}
+.rk .barw{flex:1;background:#EEE9E1;border-radius:10px;height:34px;overflow:hidden}.rk .barw i{display:block;height:100%;background:#2A6F68;border-radius:10px}
+.bars{display:flex;align-items:flex-end;gap:14px;height:210px}
+.bars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-weight:900;font-size:22px}
+.bars .c span.b{display:block;width:100%;border-radius:8px 8px 0 0;background:#2A6F68}
+.huge{font-size:clamp(46px,6.5vw,88px);font-weight:900;line-height:1.15}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script>
+var HOURS=5,SEC=50;
+// 每一種活動，第 1、2、3、4、5 個小時各值幾點（越做越多，新的一小時就沒那麼值得）
+var A=[{id:'game',nm:'打遊戲',v:[4,3,2,2,1]},{id:'ball',nm:'練球',v:[4,3,2,1,0]},{id:'study',nm:'寫作業、讀書',v:[5,3,2,1,1]},{id:'friend',nm:'陪朋友',v:[4,2,1,0,0]}];
+var WK=[{t:'第 1 個週末：普通的週末',d:'沒有特別的事。',x:{}},
+ {t:'第 2 個週末：星期一要小考！',d:'「寫作業、讀書」每一個小時的點數變成 2 倍。',x:{study:2}},
+ {t:'第 3 個週末：遊戲出雙倍活動，好朋友也只有這個週末有空',d:'「打遊戲」和「陪朋友」每一個小時的點數都變成 2 倍。魚與熊掌，你要怎麼分？',x:{game:2,friend:2}}];
+function val(w,i,h){return A[i].v[h]*(WK[w].x[A[i].id]||1)}          // 第 w 週、活動 i 的第 h+1 個小時值幾點
+function score(w,al){var s=0;for(var i=0;i<4;i++)for(var h=0;h<(al[i]||0);h++)s+=val(w,i,h);return s}
+function best(w){var all=[];for(var i=0;i<4;i++)for(var h=0;h<5;h++)all.push(val(w,i,h));all.sort(function(a,b){return b-a});var s=0;for(var k=0;k<HOURS;k++)s+=all[k];return s}
+function players(H){return Object.keys(H.seats).length}
+function sum(a){return (a||[]).reduce(function(x,y){return x+y},0)}
+// 你花掉的小時裡最不值得的一個，和你放棄的小時裡最值得的一個
+function swap(w,al){var lo=null,hi=null;for(var i=0;i<4;i++){var n=al[i]||0;if(n>0){var v=val(w,i,n-1);if(!lo||v<lo.v)lo={i:i,h:n,v:v}}if(n<5){var u=val(w,i,n);if(!hi||u>hi.v)hi={i:i,h:n+1,v:u}}}return {lo:lo,hi:hi}}
+function ranks(g){var S=g.tot||{};return Object.keys(S).map(function(k){return {s:+k,v:S[k]}}).sort(function(a,b){return b.v-a.v||a.s-b.s})}
+function rankHTML(list){var max=Math.max(20,list.length?list[0].v:20);return '<div class="rank">'+list.slice(0,8).map(function(x,i){return '<div class="rk"><span class="no">'+(i+1)+'</span><span class="who">'+x.s+' 號</span><div class="barw"><i style="width:'+Math.max(2,x.v/max*100)+'%"></i></div><span style="width:90px">'+x.v+' 點</span></div>'}).join('')+'</div>'}
+ROOM.start({
+ key:'weekend5',title:'週末只有 5 小時',kick:'生存智慧 第 1 課・機會成本　全班連線',studentUrl:'weekend5.html',
+ rules:'<p>這個週末，你只有 <b>5 個小時</b>可以自己安排。有四件事可以做：打遊戲、練球、寫作業讀書、陪朋友。</p><p>每做一個小時就得到點數（開心、進步，都算在裡面）。<b>同一件事做越久，新的一個小時就越不值得</b>：例如打遊戲第 1 個小時 4 點，第 5 個小時只剩 1 點。</p><p>把 5 個小時分好，比誰的點數最多。一共 3 個週末。</p>',
+ init:function(H){H.g={}},
+ onStart:function(H){H.g={w:0,al:{},tot:{},hist:[]};H.g.deadline=Date.now()+SEC*1000;H.ph='choose'},
+ pub:function(H){var g=H.g;return {g:{w:g.w,n:Object.keys(g.al||{}).length,last:g.last,tot:g.tot,done:H.ph!=='choose'}}},
+ onMsg:function(H,d,seat){if(d.t==='al'&&H.ph==='choose'&&+d.w===H.g.w){var a=(d.a||[]).slice(0,4).map(function(x){return Math.max(0,Math.min(5,+x||0))});if(a.length===4&&sum(a)<=HOURS){H.g.al[seat]=a;return true}}},
+ tickText:function(H){var l=Math.max(0,Math.ceil((H.g.deadline-Date.now())/1000));return l?'建議 '+l+' 秒內分好':'時間到，可以算分了'},
+ act:{
+  open:function(H){var g=H.g;if(H.ph!=='choose')return false;var w=g.w,sc={},avg=[0,0,0,0],n=0,top=best(w),hit=0;
+   Object.keys(H.seats).forEach(function(s){var a=g.al[s]||[0,0,0,0];sc[s]=score(w,a);g.tot[s]=(g.tot[s]||0)+sc[s];if(g.al[s]){n++;for(var i=0;i<4;i++)avg[i]+=a[i]}if(sc[s]===top)hit++});
+   g.last={w:w,sc:sc,al:g.al,avg:avg.map(function(x){return n?Math.round(x/n*10)/10:0}),best:top,hit:hit,n:n};g.hist.push({w:w,best:top,hit:hit});H.ph='reveal'},
+  next:function(H){var g=H.g;if(H.ph!=='reveal')return false;if(g.w>=WK.length-1){H.ph='sum';return}g.w++;g.al={};g.deadline=Date.now()+SEC*1000;H.ph='choose'}
+ },
+ keys:{o:'open'},
+ bar:function(H){if(H.ph==='choose')return '<button class="btn" data-act="open">時間到，算分！（O）</button>';if(H.ph==='reveal')return '<button class="btn te" data-act="next">'+(H.g.w>=WK.length-1?'看 3 個週末的總排行':'下一個週末')+'</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='',w=g.w;
+  function table(){return '<table><tr><th>活動</th><th>第 1 小時</th><th>第 2</th><th>第 3</th><th>第 4</th><th>第 5</th></tr>'+A.map(function(a,i){var x2=WK[w].x[a.id];return '<tr'+(x2?' style="background:#FFF7E6"':'')+'><td><b>'+a.nm+'</b>'+(x2?'<span class="tag2">2 倍</span>':'')+'</td>'+[0,1,2,3,4].map(function(k){return '<td>'+val(w,i,k)+' 點</td>'}).join('')+'</tr>'}).join('')+'</table>'}
+  if(H.ph==='choose')h+='<div class="card dark"><p class="stat">'+WK[w].t+'</p><p style="font-size:24px">'+WK[w].d+'</p><p>已經分好：'+Object.keys(g.al).length+' / '+N+' 人　<span id="hdtick" style="color:#F2A65A"></span></p></div><div class="card"><h2>每一件事，每一個小時值幾點</h2>'+table()+'</div>';
+  else if(H.ph==='reveal'){var L=g.last,mx=Math.max(1,Math.max.apply(null,L.avg)),list=Object.keys(L.sc).map(function(k){return {s:+k,v:L.sc[k]}}).sort(function(a,b){return b.v-a.v||a.s-b.s});
+   h+='<div class="card dark"><p class="stat">'+WK[w].t+'</p><p style="font-size:24px">5 個小時最多可以拿到 <b style="color:#F2A65A;font-size:40px">'+L.best+'</b> 點。全班 '+N+' 人裡，有 <b style="color:#F2A65A;font-size:40px">'+L.hit+'</b> 人拿到。</p></div>'+
+    '<div class="grid2"><div class="card"><h2>全班平均，每件事花了幾個小時</h2><div class="bars">'+A.map(function(a,i){return '<div class="c"><span>'+L.avg[i]+'</span><span class="b" style="height:'+(L.avg[i]/mx*150)+'px"></span><small>'+a.nm+'</small></div>'}).join('')+'</div></div>'+
+    '<div class="card"><h2>這個週末的排行</h2>'+rankHTML(list)+'</div></div>'+
+    '<div class="card warm"><p style="font-size:24px">每個人的平板上會寫：你花掉的 5 個小時裡，最不值得的是哪一個小時；你放棄的小時裡，最值得的又是哪一個。<b>放棄的裡面最值得的那一個，就是那一個小時的機會成本。</b></p></div>'}
+  else{h+='<div class="card dark"><p class="stat">3 個週末的總排行</p></div><div class="card">'+rankHTML(ranks(g))+'</div>'+
+    '<div class="card"><table><tr><th></th><th>最多可以拿到</th><th>拿到最高分的人</th></tr>'+g.hist.map(function(x){return '<tr><td>'+WK[x.w].t+'</td><td><b>'+x.best+' 點</b></td><td><b>'+x.hit+' 人</b></td></tr>'}).join('')+'</table></div>'+
+    '<div class="card warm"><p style="font-size:24px">時間只有 5 個小時，給了這件事，就不能給那件事。把 5 個小時全部拿去做同一件事的人，後面幾個小時都只拿到 1、2 點，卻放棄了別的事「第 1 個小時」的 4、5 點。<b>每多花一個小時，都要問：這一個小時拿去做別的，會不會更值得？</b>被你放棄的那個最值得的選擇，就是機會成本。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},w=g.w||0,k='a'+w,al=api.local[k]||[0,0,0,0],h='',used=sum(al);
+  if(ST.ph==='choose'){h+='<div class="hud"><span>還剩 <b>'+(HOURS-used)+'</b> 小時</span><span>目前 <b>'+score(w,al)+'</b> 點</span></div><p class="lead" style="font-weight:900;color:#1E242B">'+WK[w].t+'</p><p class="lead">'+WK[w].d+'</p>';
+   A.forEach(function(a,i){var n=al[i],x2=WK[w].x[a.id],nx=n<5?val(w,i,n):null;
+    h+='<div class="act'+(x2?' x2':'')+'"><button class="pm minus" data-act="chg" data-arg="'+i+',-1" '+(n>0?'':'disabled')+'>−</button><div class="nm"><b>'+a.nm+(x2?'<span class="tag2">2 倍</span>':'')+'　'+n+' 小時</b><span>'+(nx==null?'已經 5 小時了':'再多 1 小時：+'+nx+' 點')+'</span><div class="hrs">'+[0,1,2,3,4].map(function(q){return '<i class="'+(q<n?'on':'')+'"></i>'}).join('')+'</div></div><button class="pm" data-act="chg" data-arg="'+i+',1" '+(used<HOURS&&n<5?'':'disabled')+'>＋</button></div>'});
+   h+='<p class="lead">'+(used===HOURS?'5 個小時都分好了，算分前可以再改。':'還有 '+(HOURS-used)+' 個小時沒有用，沒用到的小時是 0 點。')+'</p>'}
+  else if(ST.ph==='reveal'){var L=g.last||{},mine=(L.al||{})[me]||[0,0,0,0],sc=(L.sc||{})[me]||0,sw=swap(L.w,mine);
+   h+='<h1>'+WK[L.w].t.split('：')[0]+'：你拿到 '+sc+' 點</h1><div class="card"><p>'+A.map(function(a,i){return a.nm+' '+mine[i]+' 小時'}).join('、')+'</p><p class="lead">5 個小時最多可以拿到 '+L.best+' 點。</p></div>';
+   if(sum(mine)<HOURS)h+='<div class="card warm"><p class="stat">你有 '+(HOURS-sum(mine))+' 個小時沒有用到。</p><p>空著的小時是 0 點，拿去做任何一件事都比較值得。</p></div>';
+   else if(sw.lo&&sw.hi&&sw.hi.v>sw.lo.v)h+='<div class="card warm"><p style="font-size:22px">你花掉的小時裡，最不值得的是「<b>'+A[sw.lo.i].nm+'的第 '+sw.lo.h+' 個小時</b>」，只有 <b>+'+sw.lo.v+' 點</b>。</p><p style="font-size:22px">你放棄的小時裡，最值得的是「<b>'+A[sw.hi.i].nm+'的第 '+sw.hi.h+' 個小時</b>」，有 <b>+'+sw.hi.v+' 點</b>。</p><p style="font-size:22px;font-weight:900;color:#D95D39">這 '+sw.hi.v+' 點，就是那一個小時的機會成本。換過去，會多 '+(sw.hi.v-sw.lo.v)+' 點。</p></div>';
+   else h+='<div class="card cool"><p class="stat">分得很好！</p><p>你花掉的每一個小時，都比你放棄的任何一個小時值得（或一樣值得）。</p></div>';
+   h+='<div class="card"><p>3 個週末加起來，我目前有：<b>'+((g.tot||{})[me]||0)+' 點</b></p></div><p class="lead">看大螢幕。</p>'}
+  else h+='<h1>3 個週末結束了！</h1><div class="card"><p class="stat">我一共拿到 '+((g.tot||{})[me]||0)+' 點</p></div><p class="lead">看大螢幕的總排行。</p>';
+  return h},
+ sact:{chg:function(ST,me,api,arg){if(ST.ph!=='choose')return;var g=ST.g,w=g.w||0,k='a'+w,al=(api.local[k]||[0,0,0,0]).slice(),p=arg.split(','),i=+p[0],d=+p[1];
+   if(d>0&&(sum(al)>=HOURS||al[i]>=5))return;if(d<0&&al[i]<=0)return;al[i]+=d;var o={};o[k]=al;api.local=o;api.send({t:'al',w:w,a:al});api.save()}}
+});
+</script>
+</body>
+</html>
