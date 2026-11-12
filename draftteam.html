@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>夢幻隊伍選秀・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.hud{position:sticky;top:0;z-index:5;background:#1E242B;color:#FAF7F2;border-radius:16px;padding:10px 16px;display:flex;justify-content:space-between;gap:10px;font-weight:900;font-size:20px}
+.hud b{color:#F2A65A}
+.ppl{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pc{border:3px solid #E3DED7;background:#fff;border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.pc.star{border-color:#F2A65A;background:linear-gradient(160deg,#FFF7E6,#FFE9C7)}
+.pc .nm{font-size:22px;font-weight:900}.pc .hd{font-size:17px;font-weight:900;color:#D95D39;line-height:1.3}
+.pc .fine{font-size:11px;line-height:1.35;color:#A0A6AD}
+.task{border:3px solid #E3DED7;background:#fff;border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.task b{font-size:22px}
+.pick{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pick .btn{font-size:clamp(16px,3.6vw,20px);padding:12px 0}
+.rank{display:flex;flex-direction:column;gap:6px}
+.rk{display:flex;align-items:center;gap:10px;font-weight:900;font-size:24px}
+.rk .no{width:44px;text-align:right;color:#94A3B8}.rk .who{width:90px}
+.rk .barw{flex:1;background:#EEE9E1;border-radius:10px;height:34px;overflow:hidden}.rk .barw i{display:block;height:100%;background:#2A6F68;border-radius:10px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:210px}
+.bars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-weight:900;font-size:20px}
+.bars .c span.b{display:block;flex:none;width:100%;border-radius:8px 8px 0 0;background:#94A3B8}.bars .c small{flex:none;line-height:1.6}.bars .c.top span.b{background:#D95D39}
+.huge{font-size:clamp(46px,6.5vw,88px);font-weight:900;line-height:1.15}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:900px){.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script>
+var DUR=70;
+var T=[{id:'acct',nm:'園遊會算帳',q:'要算得又快又準'},{id:'poster',nm:'畫班級海報',q:'要畫得好看'},{id:'relay',nm:'大隊接力最後一棒',q:'要跑得快'}];
+// hd：大字的亮點；fine：角落的小字（真正和三件事有關的紀錄）；s：三件事的真實表現（1～10）
+var C=[{id:'kai',nm:'阿凱',hd:'20 萬訂閱的遊戲實況主！',star:1,fine:'數學小考 58 分｜美勞作業常常沒交｜100 公尺 19 秒',s:{acct:3,poster:2,relay:3}},
+ {id:'mei',nm:'小美',hd:'全校畫畫比賽第一名',star:1,fine:'數學小考 65 分｜100 公尺 20 秒',s:{acct:4,poster:10,relay:2}},
+ {id:'zhe',nm:'阿哲',hd:'田徑隊隊長',star:1,fine:'數學小考 70 分｜美勞成績普通｜100 公尺 14 秒',s:{acct:5,poster:4,relay:10}},
+ {id:'jie',nm:'小傑',hd:'班長，人緣最好',star:1,fine:'數學小考 80 分｜美勞成績普通｜100 公尺 17 秒',s:{acct:7,poster:5,relay:5}},
+ {id:'an',nm:'小安',hd:'',fine:'珠算檢定通過，數學小考 98 分｜美勞成績普通｜100 公尺 18 秒',s:{acct:10,poster:5,relay:4}}];
+var BY={};C.forEach(function(c){BY[c.id]=c});
+function players(H){return Object.keys(H.seats).length}
+function score(p){var s=0;T.forEach(function(t){if(p&&BY[p[t.id]])s+=BY[p[t.id]].s[t.id]});return s}
+function lt(g){var m=window._lt||(window._lt={});if(!m[g.t0])m[g.t0]=Date.now();return m[g.t0]}
+function rankList(g){var P=g.pk||{};return Object.keys(P).map(function(k){return {s:+k,v:score(P[k])}}).sort(function(a,b){return b.v-a.v||a.s-b.s})}
+function rankHTML(list){return '<div class="rank">'+list.slice(0,8).map(function(x,i){return '<div class="rk"><span class="no">'+(i+1)+'</span><span class="who">'+x.s+' 號</span><div class="barw"><i style="width:'+Math.max(2,x.v/30*100)+'%"></i></div><span style="width:90px">'+x.v+' 分</span></div>'}).join('')+'</div>'}
+function counts(g,tid){var n={};C.forEach(function(c){n[c.id]=0});Object.keys(g.pk||{}).forEach(function(k){var v=g.pk[k][tid];if(n[v]!=null)n[v]++});return n}
+ROOM.start({
+ key:'draftteam',title:'夢幻隊伍選秀',kick:'第 2 節・月暈效應　全班連線',studentUrl:'draftteam.html',
+ rules:'<p>園遊會快到了！班上有三件事要找人負責：<b>算帳、畫海報、大隊接力最後一棒</b>。</p><p>有 5 位同學可以選。請你替每一件事選一個人（同一個人可以負責好幾件事）。</p><p>每件事做得越好，分數越高，三件事滿分 30 分。<b>70 秒內選好，全班比誰的隊伍最強！</b></p>',
+ init:function(H){H.g={}},
+ onStart:function(H){H.g={pk:{}};H.ph='ready'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,n:Object.keys(g.pk||{}).length,open:H.ph==='real'||H.ph==='sum'}}},
+ onMsg:function(H,d,seat){if(d.t==='pk'&&H.ph==='play'&&d.p){var p={};T.forEach(function(t){if(BY[d.p[t.id]])p[t.id]=d.p[t.id]});H.g.pk[seat]=p;return true}},
+ tick:function(H){if(H.ph==='play'&&Date.now()-H.g.t0>=DUR*1000){H.ph='pop';return true}},
+ tickText:function(H){return '還剩 '+Math.max(0,Math.ceil(DUR-(Date.now()-H.g.t0)/1000))+' 秒'},
+ act:{go:function(H){H.g.t0=Date.now();H.ph='play'},pop:function(H){H.ph='pop'},real:function(H){H.ph='real'},sum:function(H){H.ph='sum'}},
+ bar:function(H){if(H.ph==='ready')return '<button class="btn" data-act="go">開始選秀！（70 秒）</button>';if(H.ph==='play')return '<button class="btn gh" data-act="pop">大家都選好了，提早結束</button>';
+  if(H.ph==='pop')return '<button class="btn" data-act="real">園遊會當天……看看他們真正的表現</button>';if(H.ph==='real')return '<button class="btn te" data-act="sum">為什麼會選錯人？</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='',P=g.pk||{},ks=Object.keys(P);
+  function cards(showS){return '<div class="g3" style="grid-template-columns:repeat(5,1fr)">'+C.map(function(c){return '<div class="pc'+(c.star?' star':'')+'"><span class="nm">'+c.nm+'</span><span class="hd">'+(c.hd||'&nbsp;')+'</span>'+(showS?'<span style="font-size:17px;line-height:1.5">'+c.fine.split('｜').join('<br>')+'</span>':'')+'</div>'}).join('')+'</div>'}
+  if(H.ph==='ready')h+='<div class="card dark"><p class="huge">夢幻隊伍選秀</p><p class="stat">算帳、畫海報、接力最後一棒，各選一個人！</p></div>'+cards(false);
+  else if(H.ph==='play')h+='<div class="card dark"><p class="stat">選秀中　<span id="hdtick" style="color:#F2A65A"></span>　已經選好：'+ks.filter(function(k){return Object.keys(P[k]).length===3}).length+' / '+N+' 人</p></div>'+cards(false)+'<div class="card"><p class="lead">每個人的詳細資料在平板上。三件事滿分 30 分。</p></div>';
+  else if(H.ph==='pop'){h+='<div class="card dark"><p class="huge">時間到！</p><p class="stat">先看人氣：每一件事，最多人選誰？</p></div><div class="g3">'+T.map(function(t){var n=counts(g,t.id),mx=1,top='';C.forEach(function(c){if(n[c.id]>mx)mx=n[c.id]});C.forEach(function(c){if(!top&&n[c.id]===mx&&n[c.id]>0)top=c.id});
+    return '<div class="card"><h2>'+t.nm+'</h2><div class="bars">'+C.map(function(c){return '<div class="c'+(c.id===top?' top':'')+'"><span>'+(n[c.id]||'')+'</span><span class="b" style="height:'+(n[c.id]/mx*110)+'px"></span><small>'+c.nm+'</small></div>'}).join('')+'</div></div>'}).join('')+'</div>'}
+  else if(H.ph==='real'){h+='<div class="card dark"><p class="stat">園遊會當天，每個人做每件事的真正表現（滿分 10 分）</p></div><div class="card"><table><tr><th></th>'+T.map(function(t){return '<th>'+t.nm+'</th>'}).join('')+'<th>平板上的小字</th></tr>'+
+    C.map(function(c){return '<tr><td><b>'+c.nm+'</b><br><span style="font-size:16px;color:#D95D39">'+(c.hd||'（沒有特別的頭銜）')+'</span></td>'+T.map(function(t){var v=c.s[t.id];return '<td><b style="font-size:30px;color:'+(v>=9?'#2A6F68':v<=3?'#D95D39':'#1E242B')+'">'+v+'</b></td>'}).join('')+'<td style="font-size:16px">'+c.fine+'</td></tr>'}).join('')+'</table></div>'+
+    '<div class="card"><h2>隊伍分數排行（滿分 30 分）</h2>'+rankHTML(rankList(g))+'</div>'}
+  else{var kaiAny=ks.filter(function(k){return T.some(function(t){return P[k][t.id]==='kai'})}).length,meiAcct=ks.filter(function(k){return P[k].acct==='mei'||P[k].acct==='kai'||P[k].acct==='zhe'}).length,same=ks.filter(function(k){return P[k].acct&&P[k].acct===P[k].poster&&P[k].poster===P[k].relay}).length,full=ks.filter(function(k){return score(P[k])===30}).length;
+   var box=function(t,v,col){return '<div class="card"><h2>'+t+'</h2><p class="huge" style="color:'+col+'">'+v+' 人</p></div>'};
+   h+='<div class="card dark"><p class="stat">全班 '+ks.length+' 人的選擇</p></div><div class="g3">'+box('選了實況主阿凱（至少一件事）',kaiAny,'#D95D39')+box('把算帳交給實況主、畫畫第一名或田徑隊長',meiAcct,'#D95D39')+box('拿到滿分 30 分',full,'#2A6F68')+'</div>'+
+    '<div class="card"><p class="stat">三件事都選同一個人的：'+same+' 人</p></div>'+
+    '<div class="card warm"><p style="font-size:24px">「20 萬訂閱」「全校第一名」「隊長」這些大字很亮眼，可是訂閱多，和會不會算帳沒有關係；畫畫第一名，也不代表跑得快。每個人的數學分數、跑步秒數，一直寫在卡片最下面的小字裡。<b>一個地方很亮眼，就覺得他什麼都很厲害，這叫做「月暈效應」。</b>要選人做一件事，就看和那件事有關的紀錄。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='p'+g.t0,p=api.local[k]||{},h='';
+  if(ST.ph==='ready')h+='<h1>準備選秀！</h1><p class="lead">等老師按開始。替算帳、畫海報、接力最後一棒各選一個人。</p>';
+  else if(ST.ph==='play'){var left=Math.max(0,Math.ceil(DUR-(Date.now()-lt(g))/1000));
+   h+='<div class="hud"><span>已經選 <b>'+Object.keys(p).length+'</b> / 3 件事</span><span>剩 <b id="dtleft">'+left+'</b> 秒</span></div><div class="ppl">'+C.map(function(c){return '<div class="pc'+(c.star?' star':'')+'"><span class="nm">'+c.nm+'</span>'+(c.hd?'<span class="hd">'+c.hd+'</span>':'')+'<span class="fine">'+c.fine+'</span></div>'}).join('')+'</div>';
+   T.forEach(function(t){h+='<div class="task"><b>'+t.nm+'<span style="font-size:16px;font-weight:500;color:#475569">　'+t.q+'</span></b><div class="pick">'+C.map(function(c){return '<button class="btn '+(p[t.id]===c.id?'te on':'gh')+'" data-act="pk" data-arg="'+t.id+','+c.id+'">'+c.nm+'</button>'}).join('')+'</div></div>'});
+   h+='<p class="lead">'+(Object.keys(p).length===3?'三件事都選好了，時間到以前可以改。':'還有事情沒選人，沒選的那件事是 0 分。')+'</p>'}
+  else if(ST.ph==='pop')h+='<h1>時間到！</h1><div class="card"><p>'+T.map(function(t){return t.nm+'：'+(BY[p[t.id]]?BY[p[t.id]].nm:'沒選')}).join('<br>')+'</p></div><p class="lead">看大螢幕。</p>';
+  else{h+='<h1>我的隊伍：'+score(p)+' 分（滿分 30）</h1>';T.forEach(function(t){var c=BY[p[t.id]];if(!c){h+='<div class="card warm"><p><b>'+t.nm+'</b>：沒有選人，0 分。</p></div>';return}var v=c.s[t.id],best=C.slice().sort(function(a,b){return b.s[t.id]-a.s[t.id]})[0];
+    h+='<div class="card '+(v>=9?'cool':v<=5?'warm':'')+'"><p style="font-size:22px"><b>'+t.nm+'</b>：你選了'+c.nm+'，<b>'+v+' 分</b>。</p>'+(best.id!==c.id?'<p class="lead">最適合的是'+best.nm+'（'+best.s[t.id]+' 分）。小字寫著：'+best.fine+'</p>':'<p class="lead">選得好！他就是最適合的人。</p>')+'</div>'});h+='<p class="lead">看大螢幕。</p>'}
+  return h},
+ sact:{pk:function(ST,me,api,arg){if(ST.ph!=='play')return;var g=ST.g,k='p'+g.t0,p=Object.assign({},api.local[k]||{}),a=arg.split(',');p[a[0]]=a[1];var o={};o[k]=p;api.local=o;api.send({t:'pk',p:p});api.save()}}
+});
+setInterval(function(){var e=document.getElementById('dtleft'),m=window._lt;if(e&&m){var t0=Object.keys(m).pop();e.textContent=Math.max(0,Math.ceil(DUR-(Date.now()-m[t0])/1000))}},500);
+</script>
+</body>
+</html>
