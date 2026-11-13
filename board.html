@@ -68,22 +68,23 @@ if(!B||location.hash.indexOf('new')>=0||(K&&B.room!==K)){B={room:K||String(1000+
 
 if(GM&&G[GM[1]])B.cur=GM[1];
 if(!B.cur){B.cur='cookiejar'}
-var conn=LIVE.connect(['hdboard/'+B.room+'/in'],function(t,d){
- if(d.t!=='res'||!G[d.game])return;var r=B.res[d.game]=B.res[d.game]||{};
+var conn=LIVE.connect(['hdboard/'+B.room+'/in','hdboard/'+B.room+'/epoch'],function(t,d){
+ if(/\/epoch$/.test(t)){var ts=+d.ts||0;if(ts>(B.ep||0)){B.ep=ts;B.res={};LIVE.ls('hdboard-v1',B);render()}return}
+ if(d.t!=='res'||!G[d.game])return;if(B.ep&&(+d.ep||0)<B.ep)return;var r=B.res[d.game]=B.res[d.game]||{};
  r[d.cid]={g:d.g||'all',rows:(d.rows||[]).map(Boolean),v:d.v==null?null:+d.v};LIVE.ls('hdboard-v1',B);
  conn.pub('hdboard/'+B.room+'/ack',{cid:d.cid,game:d.game});
  if(d.game!==B.cur){B.cur=d.game}render()},function(){render()});
 function pick(k){B.cur=k;LIVE.ls('hdboard-v1',B);render()}
 /* 送出換班訊號：學生平板上 3 分鐘以上沒動過的遊戲進度會自動清掉（fresh.js） */
-function epoch(){try{conn.pub('hdboard/'+B.room+'/epoch',{ts:Date.now()},true)}catch(e){}}
-function clearGame(){if(confirm('要清空「'+G[B.cur].name+'」這一班的結果嗎？')){B.res[B.cur]={};epoch();LIVE.ls('hdboard-v1',B);render()}}
-function newRoom(){if(K){if(confirm('換下一班：要把每個遊戲的結果全部清空嗎？')){B.res={};epoch();LIVE.ls('hdboard-v1',B);render()}return}if(confirm('要全部重置、開新房號嗎？（換下一班時用）')){location.hash='#host-new';location.reload()}}
+function epoch(){var ts=Date.now();B.ep=ts;try{conn.pub('hdboard/'+B.room+'/epoch',{ts:ts},true)}catch(e){}}
+function clearGame(){if(confirm('要清空「'+G[B.cur].name+'」這一班的結果嗎？')){B.res[B.cur]={};LIVE.ls('hdboard-v1',B);render()}}
+function newRoom(){if(K){if(confirm('清空紀錄、換新班級？\n所有遊戲的結果都會清空；學生平板（包括已經進來的）都會被退出、回到開頭，之前的紀錄不再計入。')){B.res={};epoch();LIVE.ls('hdboard-v1',B);render()}return}if(confirm('要全部重置、開新房號嗎？（換下一班時用）')){location.hash='#host-new';location.reload()}}
 window.pick=pick;window.clearGame=clearGame;window.newRoom=newRoom;
 function render(){var g=G[B.cur],R=B.res[B.cur]||{},list=Object.keys(R).map(function(k){return R[k]});
  var h='<div class="top"><div><p class="kick">全班統計看板</p><h1>'+g.name+'</h1>'+
   '<p class="mu">'+(K?'學生用簡報上的連結玩，做完會自動送到這裡，不用房號。':'學生做完遊戲以後，在最後一頁輸入右邊的房號，按「送出結果」。')+'</p></div>'+
   '<div style="text-align:right">'+(K?'<p class="mu">自動蒐集中</p>':'<p class="mu">房號</p><p class="roomcode">'+B.room+'</p>')+'<p class="net'+(conn.ok()?'':' off')+'">連線：<b>'+(conn.ok()?'正常':'連線中…')+'</b></p>'+
-  '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn" onclick="clearGame()">清空這個遊戲</button><button class="btn" onclick="newRoom()">'+(K?'換下一班（全部清空）':'換下一班（全部重置）')+'</button></div></div></div>';
+  '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn" onclick="clearGame()">清空這個遊戲</button><button class="btn" onclick="newRoom()">'+(K?'清空紀錄・換新班級':'換下一班（全部重置）')+'</button></div></div></div>';
  h+='<div class="tabs">'+ORDER.map(function(k){var n=Object.keys(B.res[k]||{}).length;return '<button class="tab'+(k===B.cur?' on':'')+'" onclick="pick(\''+k+'\')">'+G[k].lesson+' '+G[k].name+(n?'<span class="n">'+n+'</span>':'')+'</button>'}).join('')+'</div>';
  var cnt={};g.groups.forEach(function(x){cnt[x[0]]=list.filter(function(r){return g.groups.length===1||r.g===x[0]}).length});
  h+='<div class="card"><div class="legend">'+g.groups.map(function(x){return '<span><span class="sw" style="background:'+x[2]+'"></span>'+x[1]+'：'+cnt[x[0]]+' 人</span>'}).join('')+'</div>';

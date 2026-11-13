@@ -84,7 +84,7 @@ if(location.hash.indexOf('host')>=0){
   H.pairs=H.pairs.map(function(p){return p.chooser===0?{cutter:p.cutter,chooser:0,cut:null,pick:null}:{cutter:p.chooser,chooser:p.cutter,cut:null,pick:null}});H.r=2;H.ph='play';save()};
  window.finish=function(){H.hist.push({r:H.r,pairs:JSON.parse(JSON.stringify(H.pairs))});H.ph='sum';save()};
  window.replay=function(){if(confirm('同一班重玩：重新配對，座號保留。')){H.ph='lobby';H.pairs=[];H.hist=[];H.r=1;save()}};
- window.newRoom=function(){if(confirm(K?'要清空這一班的紀錄，換下一班嗎？學生的平板會自動回到選座號。':'要全部重置、開新房號嗎？（換下一班時用）')){conn.pub(T+'state',{ts:Date.now(),ph:'closed',seats:{},pairs:[]},true);setTimeout(function(){if(K){ls('hdcut-host',null);location.hash='#host'}else{location.hash='#host-new'}location.reload()},400)}};
+ window.newRoom=function(){if(confirm(K?'清空紀錄、換新班級？\n已經進來的學生都會被退出、回到選座號，之前的紀錄不再計入。':'要全部重置、開新房號嗎？（換下一班時用）')){conn.pub(T+'state',{ts:Date.now(),ph:'closed',seats:{},pairs:[]},true);if(K)conn.pub('hdboard/'+K+'/epoch',{ts:Date.now()},true);setTimeout(function(){if(K){ls('hdcut-host',null);location.hash='#host'}else{location.hash='#host-new'}location.reload()},400)}};
  window.release=function(s){if(H.ph==='lobby'&&confirm('要把 '+s+' 號空出來嗎？')){delete H.seats[s];save()}};
  function got(p){if(p.cut==null||!p.pick)return null;var L=p.cut,R=LEN-p.cut;return {chooser:p.pick==='L'?L:R,cutter:p.pick==='L'?R:L}}
  function stats(pairs){var done=pairs.filter(function(p){return got(p)}),even=done.filter(function(p){return p.cut===10}).length,
@@ -96,7 +96,7 @@ if(location.hash.indexOf('host')>=0){
   return '<div class="hist">'+keys.map(function(k){var v=cnt[k]||0;return '<div class="c'+(k==='10'?' mid':'')+'"><small>'+v+' 組</small><span class="b" style="height:'+(v/mx*150)+'px"></span><small>'+k+'</small></div>'}).join('')+'</div><p class="lead" style="text-align:center">比較小的那一塊有幾公分（切成兩塊 10 公分，就是最右邊）</p>'}
  function render(){var n=Object.keys(H.seats).length,h='<div class="wrap host"><div class="top"><div><p class="kick">第 4 課・活動三　全班配對</p><h1>我切你選</h1>'+
   (K?'<p class="lead">學生用簡報上的「全班版」連結進來，按自己的座號就能進場。</p></div>':'<p class="lead">學生網址：games.twranger.com/cutlive.html　輸入房號 →</p></div>')+'<div style="text-align:right">'+(K?'<p class="lead">免房號</p>':'<p class="lead">房號</p><p class="roomcode">'+H.room+'</p>')+''+netHTML(conn.ok())+
-  '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn gh sm" onclick="replay()">同一班重玩</button><button class="btn gh sm" onclick="newRoom()">換下一班（全部重置）</button></div></div></div>';
+  '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn gh sm" onclick="replay()">同一班重玩</button><button class="btn gh sm" onclick="newRoom()">清空紀錄・換新班級</button></div></div></div>';
   if(H.ph==='lobby'){
    h+='<div class="card"><h2>已經進場：'+n+' 人</h2><div class="pairs">'+Object.keys(H.seats).map(Number).sort(function(a,b){return a-b}).map(function(s){return '<div class="pr" onclick="release('+s+')">'+s+' 號</div>'}).join('')+'</div><p class="net">選錯座號的同學：點他的座號，就能空出來。人數是單數時，最後一位會和「電腦小芸」一組。</p></div>'+
     '<div class="card"><p>規則：兩個人分一條 20 公分的蛋糕。<b>一個人切，另一個人先挑</b>，切的人拿剩下的那一塊。</p></div>'+

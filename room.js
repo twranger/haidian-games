@@ -63,7 +63,7 @@ R.start=function(cfg){
    startGame:function(){if(cfg.onStart)cfg.onStart(H);save()},
    release:function(s){if(H.ph==='lobby'&&confirm('要把 '+s+' 號空出來，讓別台平板重新選嗎？')){delete H.seats[s];save()}},
    replay:function(){if(confirm('同一班重玩：從頭開始，已經進場的座號會保留。')){var s=H.seats;H.g={};H.ph='lobby';cfg.init(H);H.seats=s;save()}},
-   newRoom:function(){if(confirm(K?'換下一班：要清空這一班的紀錄嗎？學生的平板會自動回到選座號。':'要全部重置、開新房號嗎？（換下一班時用）')){
+   newRoom:function(){if(confirm(K?'清空紀錄、換新班級？\n已經進來的學生都會被退出、回到選座號，之前的紀錄不再計入。':'要全部重置、開新房號嗎？（換下一班時用）')){
     conn.pub(T+'state',{ph:'closed',seats:{},ts:Date.now()},true);if(K)conn.pub('hdboard/'+K+'/epoch',{ts:Date.now()},true);setTimeout(function(){if(K){ls(hkey,null);location.hash='#host'}else location.hash='#host-new';location.reload()},400)}}
   };
   function onAct(e){var el=e.target.closest('[data-act]');if(!el||el.disabled)return;e.preventDefault();var a=el.getAttribute('data-act'),arg=el.getAttribute('data-arg');
@@ -73,7 +73,7 @@ R.start=function(cfg){
   function draw(){var n=Object.keys(H.seats).length,h='<div class="wrap host"><div class="top"><div><p class="kick">'+cfg.kick+'</p><h1>'+cfg.title+'</h1>'+
    '<p class="lead">'+(K?'學生用簡報上的「全班連線版」連結進來，按自己的座號就能進場。':'學生網址：games.twranger.com/'+cfg.studentUrl+'　輸入房號 →')+'</p></div>'+
    '<div style="text-align:right">'+(K?'<p class="lead">免房號</p>':'<p class="lead">房號</p><p class="roomcode">'+H.room+'</p>')+net(conn.ok())+
-   '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn gh sm" data-act="replay">同一班重玩</button><button class="btn gh sm" data-act="newRoom">換下一班</button></div></div></div>';
+   '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn gh sm" data-act="replay">同一班重玩</button><button class="btn gh sm" data-act="newRoom">清空紀錄・換新班級</button></div></div></div>';
    if(H.ph==='lobby'){h+='<div class="card"><h2>已經進場：'+n+' 人</h2><div class="crowd">'+(Object.keys(H.seats).map(Number).sort(function(a,b){return a-b}).map(function(s){return R.avatar(s,'#94A3B8','','release')}).join('')||'<p class="lead">還沒有人進場。</p>')+
     '</div><p class="net">選錯座號的同學：點他的小人，就能把座號空出來。</p></div>'+(cfg.rules?'<div class="card">'+cfg.rules+'</div>':'')+
     '<button class="btn te" '+(n>=(cfg.minPlayers||1)?'':'disabled')+' data-act="startGame">'+(cfg.startLabel||'大家都進場了，開始')+'</button>'}

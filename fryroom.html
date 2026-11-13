@@ -131,7 +131,7 @@ if(location.hash.indexOf('host')>=0){
  window.setAll=function(){Object.keys(H.seats).forEach(function(x){if(H.stops[x]==null)H.stops[x]=100});render();broadcast()};
  window.release=function(s){if(H.ph!=='lobby')return;if(confirm('要把 '+s+' 號空出來，讓別台平板重新選嗎？')){delete H.seats[s];render();broadcast()}};
  window.replay=function(){if(confirm('要從第 1 回合重新開始嗎？已經進場的座號會保留。')){H.ph='lobby';H.r=1;H.price=0;H.lead=null;H.bids={};H.stops={};H.over={};H.hist=[];H.log=[];render();broadcast()}};
- window.newRoom=function(){if(confirm(K?'要清空這一班的紀錄，換下一班嗎？學生的平板會自動回到選座號。':'要全部重置、開新房號嗎？（換下一班時用）')){pub(T+'state',{ts:Date.now(),room:H.room,ph:'closed',seats:{},bids:{},stops:{},hist:[]},true);setTimeout(function(){if(K){ls('fryhost-v1',null);location.hash='#host'}else{location.hash='#host-new'}location.reload()},400)}};
+ window.newRoom=function(){if(confirm(K?'清空紀錄、換新班級？\n已經進來的學生都會被退出、回到選座號，之前的紀錄不再計入。':'要全部重置、開新房號嗎？（換下一班時用）')){pub(T+'state',{ts:Date.now(),room:H.room,ph:'closed',seats:{},bids:{},stops:{},hist:[]},true);if(K)pub('hdboard/'+K+'/epoch',{ts:Date.now()},true);setTimeout(function(){if(K){ls('fryhost-v1',null);location.hash='#host'}else{location.hash='#host-new'}location.reload()},400)}};
  function crowd(){var h='';var sec=second();Object.keys(H.seats).map(Number).sort(function(a,b){return a-b}).forEach(function(s){
    if(H.ph==='stop'){var ok=H.stops[s]!=null;h+='<div class="av '+(ok?'second':'lead')+'" onclick="setFor('+s+')" style="cursor:pointer"><span class="tag">'+(ok?'✓ '+H.stops[s]+' 元':'還沒設')+'</span>'+person(ok?'#2A6F68':'#D95D39',s,false)+'</div>';return}
    var cls=s===H.lead?'lead':s===sec?'second':'';var fill=s===H.lead?'#D95D39':s===sec?'#2A6F68':'#94A3B8';
@@ -144,7 +144,7 @@ if(location.hash.indexOf('host')>=0){
   h+='<div class="wrap host"><div class="top"><div><p class="kick">第 3 課・活動二　全班版</p><h1>瘋狂魚苗拍賣會</h1>'+
    (K?'<p class="lead">學生用簡報上的「全班版」連結進來，按自己的座號就能進場。</p></div>':'<p class="lead">學生網址：games.twranger.com/fryroom.html　輸入房號 →</p></div>')+
    '<div style="text-align:right">'+(K?'<p class="lead">免房號</p>':'<p class="lead">房號</p><p class="roomcode">'+H.room+'</p>')+'<p id="net" class="net"></p>'+
-   '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn gh" style="font-size:16px;padding:6px 12px" onclick="replay()">同一班重玩</button><button class="btn gh" style="font-size:16px;padding:6px 12px" onclick="newRoom()">換下一班（全部重置）</button></div></div></div>';
+   '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn gh" style="font-size:16px;padding:6px 12px" onclick="replay()">同一班重玩</button><button class="btn gh" style="font-size:16px;padding:6px 12px" onclick="newRoom()">清空紀錄・換新班級</button></div></div></div>';
   if(H.ph==='lobby'){
    h+='<div class="card"><h2>已經進場：'+n+' 人</h2><div class="crowd">'+crowd()+'</div><p class="net">選錯座號的同學：點他的小人，就能把座號空出來。</p></div>'+
    '<div class="card"><p>規則：魚苗值 <b>100 元</b>。每次舉牌多喊 <b>5 元</b>。'+QUIET+' 秒內沒有人再喊，就成交。<br>喊最高的人，付錢買走魚苗；喊<b>第二高</b>的人，也要照付自己喊的錢，卻什麼也拿不到。</p></div>'+
@@ -174,7 +174,7 @@ if(location.hash.indexOf('host')>=0){
   } else {
    h+='<div class="card"><h2>兩回合比一比</h2>'+sumTable()+'</div>'+
     '<div class="card"><p style="font-size:24px">第 2 回合有先設停損點，價錢有沒有比較低？喊超過停損點的人有幾個？</p></div>'+
-    '<button class="btn gh" onclick="newRoom()">換下一班：開新房間</button>';
+    '<button class="btn gh" onclick="newRoom()">清空紀錄・換新班級</button>';
   }
   h+='</div>';app.innerHTML=h;netShow();tick();
   if(H.lead!==lastLead&&H.lead!=null){var a=document.getElementById('av'+H.lead);if(a){a.classList.add('hop')}}lastLead=H.lead;}

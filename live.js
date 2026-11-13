@@ -37,7 +37,7 @@ L.box=function(game,payload){
  if(L.key){/* 從簡報的連結進來：自動送出，不用房號 */
   var a=document.createElement('p');a.className='hdbox s';a.style.cssText='font-size:17px;color:#475569;margin:0';a.textContent='（正在把結果送到老師的大螢幕……）';
   var cid0=L.cid(),done=false,cn=L.connect(['hdboard/'+L.key+'/ack'],function(t,m){if(m.cid===cid0&&m.game===game&&!done){done=true;a.style.color='#2A6F68';a.style.fontWeight='900';a.textContent='✓ 結果已經送到老師的大螢幕'}},
-   function(ok){if(ok&&!done)cn.pub('hdboard/'+L.key+'/in',{t:'res',game:game,cid:cid0,g:payload.g||null,rows:payload.rows||[],v:payload.v==null?null:payload.v})});
+   function(ok){if(ok&&!done)cn.pub('hdboard/'+L.key+'/in',{t:'res',ep:+(ls('hd-epoch')||0),game:game,cid:cid0,g:payload.g||null,rows:payload.rows||[],v:payload.v==null?null:payload.v})});
   setTimeout(function(){if(!done)a.textContent='（老師這次沒有開統計大螢幕也沒關係，等一下照老師說的舉手。）'},9000);
   return a}
  var d=document.createElement('div');d.className='hdbox';
