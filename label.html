@@ -105,6 +105,6 @@ function done(){
   app.append(h,c,t,el('p','lead','先不要給別的同學看。'));
   if(window.LIVE)app.append(LIVE.box('label',{g:st.g==='甲'?'a':'b',rows:[st.s>=7,st.p==='會得獎'],v:st.s}));
 }
-if(st.s!=null&&st.p)done();else intro();
+if(st.s!=null&&st.p)done();else if(st.s!=null)predict();else intro();
 })();
 </script>

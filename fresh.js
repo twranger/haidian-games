@@ -13,6 +13,27 @@ var touch=+LS.getItem('hd-touch')||0;
 if(touch&&Date.now()-touch>IDLE){wipe();touch=0}
 var orig=Storage.prototype.setItem;
 Storage.prototype.setItem=function(k,v){orig.call(this,k,v);if(this===LS&&!KEEP.test(k))orig.call(this,'hd-touch',String(Date.now()))};
+var setW=Storage.prototype.setItem;
+/* 按錯了可以回上一步：只用在「點選答案」的題目型遊戲，按下去 10 秒內可以回上一步改；超過就確定。 */
+var UNDO=/^(glasses|cookiejar|label|rewrite|coinstall|forkraft|souvenir|pondwall|pursepig|robotlens|tidefield|notice|passball|mathbreak)\.html$/,SEC=10;
+var page=(location.pathname.split('/').pop()||'');
+if(UNDO.test(page)&&location.hash.indexOf('host')<0&&location.hash.indexOf('teacher')<0){
+ var lastTap=0,snap=null,snapTap=-1,ub=null,uT=null,uEnd=0;
+ document.addEventListener('pointerdown',function(){lastTap=Date.now()},true);
+ document.addEventListener('click',function(){lastTap=Date.now()},true);
+ function all(){var o={};keys().forEach(function(k){o[k]=LS.getItem(k)});return o}
+ function hideU(){if(ub){ub.remove();ub=null}clearInterval(uT)}
+ function showU(s){hideU();uEnd=Date.now()+SEC*1000;ub=document.createElement('button');ub.type='button';
+  ub.style.cssText='position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99998;font:900 20px/1.3 "Noto Sans TC",sans-serif;border:3px solid #D95D39;background:#FFF5F2;color:#D95D39;border-radius:999px;padding:10px 22px;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:pointer';
+  function lab(){var n=Math.ceil((uEnd-Date.now())/1000);if(n<=0){hideU();return}ub.textContent='↩ 按錯了？回上一步（'+n+' 秒）'}
+  ub.onclick=function(e){e.stopPropagation();hideU();keys().forEach(function(k){if(!(k in s))LS.removeItem(k)});Object.keys(s).forEach(function(k){orig.call(LS,k,s[k])});location.reload()};
+  lab();uT=setInterval(lab,250);(document.body||document.documentElement).appendChild(ub)}
+ var before=orig;
+ Storage.prototype.setItem=function(k,v){
+  if(this===LS&&!KEEP.test(k)){var now=Date.now();
+   if(now-lastTap<1500&&lastTap!==snapTap&&!(window.HDundoOK&&!window.HDundoOK())){snapTap=lastTap;snap=all();var s0=snap;setTimeout(function(){showU(s0)},0)}}
+  return setW.call(this,k,v)};
+}
 var K=null;try{K=new URLSearchParams(location.search).get('k')}catch(e){}
 if(!K||!/^[a-z0-9]{3,16}$/.test(K))return;
 var H=location.hash,isHost=H.indexOf('host')>=0,isTeacher=H.indexOf('teacher')>=0,T='hdboard/'+K+'/epoch';

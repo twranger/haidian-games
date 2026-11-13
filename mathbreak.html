@@ -25,6 +25,7 @@
 </head>
 <body>
 <script>
+window.HDundoOK=function(){return !document.querySelector('.pop')&&!document.querySelector('.step')};
 // 每一步 3.5 秒；第 4 步之前停 6 秒（被打斷的組會跳出訊息）
 var STEPS=['12','＋ 7','－ 5','＋ 9','－ 6','＋ 8'],ANS=25,SEC=3.5,GAP=6,BREAK=4;
 function tl(){var t=[],x=1.5;for(var i=0;i<STEPS.length;i++){if(i===BREAK)x+=GAP;t.push(x);x+=SEC}return {at:t,end:x}}
