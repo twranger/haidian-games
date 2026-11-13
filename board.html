@@ -74,8 +74,10 @@ var conn=LIVE.connect(['hdboard/'+B.room+'/in'],function(t,d){
  conn.pub('hdboard/'+B.room+'/ack',{cid:d.cid,game:d.game});
  if(d.game!==B.cur){B.cur=d.game}render()},function(){render()});
 function pick(k){B.cur=k;LIVE.ls('hdboard-v1',B);render()}
-function clearGame(){if(confirm('要清空「'+G[B.cur].name+'」這一班的結果嗎？')){B.res[B.cur]={};LIVE.ls('hdboard-v1',B);render()}}
-function newRoom(){if(K){if(confirm('換下一班：要把每個遊戲的結果全部清空嗎？')){B.res={};LIVE.ls('hdboard-v1',B);render()}return}if(confirm('要全部重置、開新房號嗎？（換下一班時用）')){location.hash='#host-new';location.reload()}}
+/* 送出換班訊號：學生平板上 3 分鐘以上沒動過的遊戲進度會自動清掉（fresh.js） */
+function epoch(){try{conn.pub('hdboard/'+B.room+'/epoch',{ts:Date.now()},true)}catch(e){}}
+function clearGame(){if(confirm('要清空「'+G[B.cur].name+'」這一班的結果嗎？')){B.res[B.cur]={};epoch();LIVE.ls('hdboard-v1',B);render()}}
+function newRoom(){if(K){if(confirm('換下一班：要把每個遊戲的結果全部清空嗎？')){B.res={};epoch();LIVE.ls('hdboard-v1',B);render()}return}if(confirm('要全部重置、開新房號嗎？（換下一班時用）')){location.hash='#host-new';location.reload()}}
 window.pick=pick;window.clearGame=clearGame;window.newRoom=newRoom;
 function render(){var g=G[B.cur],R=B.res[B.cur]||{},list=Object.keys(R).map(function(k){return R[k]});
  var h='<div class="top"><div><p class="kick">全班統計看板</p><h1>'+g.name+'</h1>'+

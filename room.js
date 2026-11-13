@@ -64,7 +64,7 @@ R.start=function(cfg){
    release:function(s){if(H.ph==='lobby'&&confirm('要把 '+s+' 號空出來，讓別台平板重新選嗎？')){delete H.seats[s];save()}},
    replay:function(){if(confirm('同一班重玩：從頭開始，已經進場的座號會保留。')){var s=H.seats;H.g={};H.ph='lobby';cfg.init(H);H.seats=s;save()}},
    newRoom:function(){if(confirm(K?'換下一班：要清空這一班的紀錄嗎？學生的平板會自動回到選座號。':'要全部重置、開新房號嗎？（換下一班時用）')){
-    conn.pub(T+'state',{ph:'closed',seats:{},ts:Date.now()},true);setTimeout(function(){if(K){ls(hkey,null);location.hash='#host'}else location.hash='#host-new';location.reload()},400)}}
+    conn.pub(T+'state',{ph:'closed',seats:{},ts:Date.now()},true);if(K)conn.pub('hdboard/'+K+'/epoch',{ts:Date.now()},true);setTimeout(function(){if(K){ls(hkey,null);location.hash='#host'}else location.hash='#host-new';location.reload()},400)}}
   };
   function onAct(e){var el=e.target.closest('[data-act]');if(!el||el.disabled)return;e.preventDefault();var a=el.getAttribute('data-act'),arg=el.getAttribute('data-arg');
    if(ACT[a])ACT[a](arg);else if(cfg.act&&cfg.act[a]){if(cfg.act[a](H,arg)!==false)save()}}
