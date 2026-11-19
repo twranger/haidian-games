@@ -14,24 +14,29 @@ if(touch&&Date.now()-touch>IDLE){wipe();touch=0}
 var orig=Storage.prototype.setItem;
 Storage.prototype.setItem=function(k,v){orig.call(this,k,v);if(this===LS&&!KEEP.test(k))orig.call(this,'hd-touch',String(Date.now()))};
 var setW=Storage.prototype.setItem;
-/* 按錯了可以回上一步：只用在「點選答案」的題目型遊戲，按下去 10 秒內可以回上一步改；超過就確定。 */
-var UNDO=/^(glasses|cookiejar|label|rewrite|coinstall|forkraft|souvenir|pondwall|pursepig|robotlens|tidefield|notice|passball|mathbreak)\.html$/,SEC=10;
+/* 按錯了可以改：只用在「點選答案」的題目型遊戲。
+   只有在「有好幾個選項的題目頁」點了答案、畫面換到下一頁時，右上角才出現一個小小的「↩ 改上一題」，
+   底下一條細線慢慢縮短，8 秒後自動消失，答案就確定。「開始」「下一步」這類只有一顆按鈕的頁面不會出現。 */
+var UNDO=/^(glasses|cookiejar|label|rewrite|coinstall|forkraft|souvenir|pondwall|pursepig|robotlens|tidefield|notice|passball|mathbreak)\.html$/,SEC=8;
 var page=(location.pathname.split('/').pop()||'');
 if(UNDO.test(page)&&location.hash.indexOf('host')<0&&location.hash.indexOf('teacher')<0){
- var lastTap=0,snap=null,snapTap=-1,ub=null,uT=null,uEnd=0;
- document.addEventListener('pointerdown',function(){lastTap=Date.now()},true);
- document.addEventListener('click',function(){lastTap=Date.now()},true);
+ var lastTap=0,tapQ=false,snapTap=-1,ub=null,uT=null;
+ function optCount(){var n=0;document.querySelectorAll('button,[role=button]').forEach(function(b){if(b.id==='hdUndo'||b.disabled)return;var r=b.getBoundingClientRect();if(r.width>0&&r.height>0)n++});return n}
+ function sig(){var h=[].map.call(document.querySelectorAll('h1,h2,h3'),function(x){return x.textContent.trim()}).join('|');return h||(document.body?document.body.innerText.slice(0,160):'')}
+ var preSig='';
+ function onTap(e){if(e.target&&e.target.closest&&e.target.closest('#hdUndo'))return;lastTap=Date.now();tapQ=optCount()>=2;preSig=sig()}
+ document.addEventListener('pointerdown',onTap,true);
  function all(){var o={};keys().forEach(function(k){o[k]=LS.getItem(k)});return o}
- function hideU(){if(ub){ub.remove();ub=null}clearInterval(uT)}
- function showU(s){hideU();uEnd=Date.now()+SEC*1000;ub=document.createElement('button');ub.type='button';
-  ub.style.cssText='position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99998;font:900 20px/1.3 "Noto Sans TC",sans-serif;border:3px solid #D95D39;background:#FFF5F2;color:#D95D39;border-radius:999px;padding:10px 22px;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:pointer';
-  function lab(){var n=Math.ceil((uEnd-Date.now())/1000);if(n<=0){hideU();return}ub.textContent='↩ 按錯了？回上一步（'+n+' 秒）'}
-  ub.onclick=function(e){e.stopPropagation();hideU();keys().forEach(function(k){if(!(k in s))LS.removeItem(k)});Object.keys(s).forEach(function(k){orig.call(LS,k,s[k])});location.reload()};
-  lab();uT=setInterval(lab,250);(document.body||document.documentElement).appendChild(ub)}
- var before=orig;
+ function hideU(){clearTimeout(uT);if(ub){var x=ub;ub=null;x.style.opacity='0';setTimeout(function(){x.remove()},250)}}
+ if(!document.getElementById('hdUndoCss')){var cs=document.createElement('style');cs.id='hdUndoCss';cs.textContent='#hdUndo{position:fixed;top:10px;right:10px;z-index:99998;font:700 17px/1.2 "Noto Sans TC",sans-serif;border:1.5px solid #CBD5E1;background:rgba(255,255,255,.96);color:#475569;border-radius:999px;padding:8px 16px 10px;cursor:pointer;overflow:hidden;transition:opacity .25s;box-shadow:0 2px 8px rgba(0,0,0,.08)}#hdUndo i{position:absolute;left:0;bottom:0;height:3px;width:100%;background:#94A3B8;transform-origin:left;animation:hdU linear forwards}@keyframes hdU{to{transform:scaleX(0)}}';(document.head||document.documentElement).appendChild(cs)}
+ function showU(s){hideU();var b=document.createElement('button');b.type='button';b.id='hdUndo';b.setAttribute('aria-label','剛剛那一題按錯了，回去改');
+  b.innerHTML='↩ 改上一題<i style="animation-duration:'+SEC+'s"></i>';
+  b.onclick=function(e){e.stopPropagation();e.preventDefault();clearTimeout(uT);keys().forEach(function(k){if(!(k in s))LS.removeItem(k)});Object.keys(s).forEach(function(k){orig.call(LS,k,s[k])});location.reload()};
+  ub=b;(document.body||document.documentElement).appendChild(b);uT=setTimeout(hideU,SEC*1000)}
  Storage.prototype.setItem=function(k,v){
   if(this===LS&&!KEEP.test(k)){var now=Date.now();
-   if(now-lastTap<1500&&lastTap!==snapTap&&!(window.HDundoOK&&!window.HDundoOK())){snapTap=lastTap;snap=all();var s0=snap;setTimeout(function(){showU(s0)},0)}}
+   if(now-lastTap<1500&&lastTap!==snapTap){snapTap=lastTap;
+    if(tapQ&&!(window.HDundoOK&&!window.HDundoOK())){var s0=all(),p0=preSig;setTimeout(function(){if(sig()!==p0)showU(s0)},200)}else hideU()}}
   return setW.call(this,k,v)};
 }
 var K=null;try{K=new URLSearchParams(location.search).get('k')}catch(e){}
