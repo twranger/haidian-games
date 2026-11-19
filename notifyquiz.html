@@ -12,7 +12,7 @@
 <style>
 .q{font-size:clamp(60px,16vw,110px);font-weight:900;text-align:center;line-height:1.2}
 .ans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.ans .btn{font-size:clamp(34px,8vw,52px);padding:22px 0}
+.ans .btn{font-size:clamp(44px,11vw,72px);padding:14px 0;font-family:'Noto Sans TC',sans-serif;font-weight:700}
 .hud{background:#1E242B;color:#FAF7F2;border-radius:16px;padding:10px 16px;display:flex;justify-content:space-between;font-weight:900;font-size:22px}
 .hud b{color:#F2A65A}
 .note{position:fixed;left:10px;right:10px;top:10px;z-index:30;font:inherit;text-align:left;border:0;border-radius:18px;background:#fff;box-shadow:0 12px 36px rgba(0,0,0,.35);padding:14px 16px;display:flex;gap:12px;align-items:center;animation:drop .35s ease-out,shake .5s .5s 3;touch-action:manipulation}
@@ -54,10 +54,11 @@ function art(k,spin){var c={orb:'#F2A65A',chat:'#06C755',cal:'#205E86',heart:'#E
   box:'<rect x="16" y="52" width="88" height="52" rx="8" fill="'+c+'"/><path d="M12 52 q48 -44 96 0 z" fill="#E0B84A"/><rect x="52" y="44" width="16" height="30" rx="4" fill="#1E242B"/>',
   like:'<circle cx="60" cy="60" r="48" fill="'+c+'"/><path d="M40 86 v-32 h10 l12 -26 q10 0 8 12 l-2 12 h16 q8 0 6 8 l-6 22 q-2 4 -8 4 z" fill="#fff"/>'}[k];
  return '<svg class="'+(spin?'orb2':'')+'" width="150" height="150" viewBox="0 0 120 120" aria-hidden="true">'+p+'</svg>'}
-// 所有人題目一樣（固定的亂數）
+// 找不同字：9 個字裡有 1 個不一樣。所有人題目一樣（固定的亂數）
+var PAIRS=[['己','已'],['未','末'],['人','入'],['土','士'],['天','夭'],['王','玉'],['千','干'],['大','太'],['木','本'],['田','由'],['鳥','烏'],['免','兔'],['侯','候'],['折','拆'],['白','自'],['日','目'],['戊','戌'],['刀','力']];
 var QS=(function(){var s=20261,r=function(){s=(s*1103515245+12345)%2147483648;return s/2147483648},o=[];
- for(var i=0;i<80;i++){var a=2+Math.floor(r()*8),b=2+Math.floor(r()*8),plus=r()<0.6,x=plus?a+b:Math.max(a,b)-Math.min(a,b),t=plus?a+' ＋ '+b:Math.max(a,b)+' － '+Math.min(a,b);
-  var w1=x+1+Math.floor(r()*2),w2=Math.max(0,x-1-Math.floor(r()*2));if(w2===x)w2=x+3;var op=[x,w1,w2].sort(function(){return r()-0.5});o.push({t:t,a:x,o:op})}return o})();
+ for(var i=0;i<80;i++){var p=PAIRS[Math.floor(r()*PAIRS.length)],sw=r()<0.5,base=sw?p[1]:p[0],odd=sw?p[0]:p[1],pos=Math.floor(r()*9),g=[];
+  for(var j=0;j<9;j++)g.push(j===pos?odd:base);o.push({g:g,a:pos})}return o})();
 function players(H){return Object.keys(H.seats).length}
 function lt(g){var m=window._lt||(window._lt={});if(!m[g.t0])m[g.t0]=Date.now();return m[g.t0]}
 function rankList(g){var S=g.sc||{};return Object.keys(S).map(function(k){return {s:+k,v:S[k].s,n:S[k].n,l:S[k].l||0}}).sort(function(a,b){return b.v-a.v||a.s-b.s})}
@@ -65,7 +66,7 @@ function rankHTML(list){var max=Math.max(50,list.length?list[0].v:50);return '<d
 function grp(list,f){var a=list.filter(f);var s=0;a.forEach(function(x){s+=x.v});return {n:a.length,avg:a.length?Math.round(s/a.length):null}}
 ROOM.start({
  key:'notifyquiz',title:'通知轟炸搶答賽',kick:'第 1 節・注意力　全班連線',studentUrl:'notifyquiz.html',
- rules:'<p><b>60 秒搶答賽！</b>平板上會一直出現簡單的加減法，答對一題得 <b>10 分</b>，答錯不扣分。全班比誰的分數高。</p><p>比賽途中，畫面上方可能會跳出通知。要不要點，你自己決定。</p>',
+ rules:'<p><b>60 秒找不同字搶答賽！</b>平板上每次出現 9 個字，其中 <b>1 個不一樣</b>（例如 8 個「己」裡藏 1 個「已」），找到就點它。答對一題得 <b>10 分</b>，答錯不扣分。全班比誰的分數高。</p><p>比賽途中，畫面上方可能會跳出通知。要不要點，你自己決定。</p>',
  init:function(H){H.g={}},
  onStart:function(H){H.g={sc:{}};H.ph='ready'},
  pub:function(H){var g=H.g;return {g:{t0:g.t0,top:H.ph==='reveal'?rankList(g).slice(0,3):null}}},
@@ -86,11 +87,11 @@ ROOM.start({
     '<div class="card"><p class="stat">點過通知的人，平均有 <span style="color:#D95D39">'+avl+' 秒</span>花在通知上（比賽一共只有 60 秒）。</p></div><div class="card warm"><p style="font-size:24px">每點一次通知，要等畫面跑完、再按一個鈕，至少花 3～4 秒，最多只拿到 5 分，有的什麼都沒有；同樣的時間，本來可以答對兩三題，拿 20～30 分。通知用<b>紅點、倒數、「再不領就消失」</b>來搶你的注意力，這些都是設計好的。寫功課時手機放在旁邊，也是一樣的事。</p></div>'}
   return h},
  studentView:function(ST,me,api){var g=ST.g||{},k='n'+g.t0,L=api.local[k]||{s:0,n:0,q:0,i:0,seen:{}},h='';window._nq={ph:ST.ph,t0:g.t0,api:api,k:k};
-  if(ST.ph==='ready')h+='<h1>準備搶答！</h1><p class="lead">等老師按開始。答對一題 10 分。</p>';
+  if(ST.ph==='ready')h+='<h1>準備搶答！</h1><p class="lead">等老師按開始。9 個字裡找出不一樣的那 1 個，答對一題 10 分。</p>';
   else if(ST.ph==='play'){var e=(Date.now()-lt(g))/1000;
    if(e>=DUR)h+='<h1>時間到！</h1><div class="card"><p class="stat">我的分數：'+L.s+' 分</p></div>';
    else{var Q=QS[L.i%QS.length];
-    h+='<div class="hud"><span>分數 <b>'+L.s+'</b></span><span>剩 <b id="nqleft">'+Math.max(0,Math.ceil(DUR-e))+'</b> 秒</span></div><div class="q">'+Q.t+' ＝ ？</div><div class="ans">'+Q.o.map(function(v){return '<button class="btn gh" data-act="ans" data-arg="'+v+'">'+v+'</button>'}).join('')+'</div>'+(L.fb?'<p class="lead" style="text-align:center;font-weight:900;color:'+(L.fb==='o'?'#2A6F68':'#D95D39')+'">'+(L.fb==='o'?'答對！+10':L.fb==='x'?'答錯了':L.fb)+'</p>':'');
+    h+='<div class="hud"><span>分數 <b>'+L.s+'</b></span><span>剩 <b id="nqleft">'+Math.max(0,Math.ceil(DUR-e))+'</b> 秒</span></div><p class="lead" style="text-align:center;font-weight:900;margin:6px 0">哪一個字不一樣？</p><div class="ans">'+Q.g.map(function(c,j){return '<button class="btn gh" data-act="ans" data-arg="'+j+'">'+c+'</button>'}).join('')+'</div>'+(L.fb?'<p class="lead" style="text-align:center;font-weight:900;color:'+(L.fb==='o'?'#2A6F68':'#D95D39')+'">'+(L.fb==='o'?'答對！+10':L.fb==='x'?'答錯了':L.fb)+'</p>':'');
     if(L.sc){var X=SC[L.sc.i],wait=(Date.now()-L.sc.t)/1000<LOAD;h+='<div class="gacha">'+art(X.k,wait)+(wait?'<p style="font-size:34px">'+X.load+'</p><p style="font-size:20px;color:#94A3B8">請稍候</p>':'<p style="font-size:30px;line-height:1.6">'+X.res+'</p><p style="font-size:24px;color:#F2A65A">'+(X.pt?'+'+X.pt+' 分':'沒有加分')+'</p><button class="btn" data-act="closeN">'+X.btn+'</button>')+'<p style="font-size:18px;color:#94A3B8">搶答還在倒數中……</p></div>'}
     else{var ni=-1;for(var i=0;i<NOTE.length;i++)if(e>=NOTE[i]&&e<NOTE[i]+SHOW&&!L.seen[i])ni=i;
      if(ni>=0)h+='<button class="note" data-act="note" data-arg="'+ni+'"><span class="ic" style="position:relative"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M3 13h18M12 9c-2-4-7-3-5 0M12 9c2-4 7-3 5 0"/></svg><span class="dot">1</span></span><span style="display:flex;flex-direction:column"><b>'+MSG[ni][0]+'</b><span>'+MSG[ni][1]+'</span></span></button>'}}}
