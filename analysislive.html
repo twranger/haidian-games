@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>神準性格分析・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.pick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pick.m{grid-template-columns:repeat(4,1fr)}
+.pick .btn{font-size:clamp(19px,3.6vw,24px);padding:12px 4px}
+.sc{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.sc .btn{font-size:clamp(26px,6vw,40px);padding:14px 0}
+.ana{background:linear-gradient(160deg,#2B2140,#1E242B);color:#FAF7F2;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(30,36,43,.25)}
+.ana .hd{font-size:16px;color:#C4B5FD;font-weight:700;letter-spacing:1px}
+.ana .nm{font-size:clamp(24px,4.4vw,32px);font-weight:900;color:#F2A65A}
+.ana p.s{font-size:clamp(21px,3.4vw,27px);font-weight:700;line-height:1.6}
+.spin{width:96px;height:96px;border-radius:50%;border:10px solid #E3DED7;border-top-color:#7C5CC4;animation:sp 1s linear infinite;margin:20px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.bars{display:flex;align-items:flex-end;gap:14px;height:230px}
+.bars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-weight:900;font-size:24px}
+.bars .c span.b{display:block;width:100%;border-radius:10px 10px 0 0;background:#7C5CC4}
+.huge{font-size:clamp(56px,8vw,110px);font-weight:900;line-height:1.1}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.same{font-size:22px;font-weight:900;color:#fff;background:#D95D39;border-radius:999px;padding:4px 16px;align-self:flex-start}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+</head>
+<body>
+<script>
+/* 每個人看到的三句話一字不差（課本教師自編分析卡），只有最上面的「依據」會顯示自己選的東西 */
+var CARD=['你希望自己的努力被看見，也希望受到理解。','有時你很有信心，有時又擔心自己做得不夠好。','你享受與人相處，也偶爾想有自己的空間。'];
+var COL=['紅色','藍色','綠色','黃色','紫色','黑色'],ANI=['貓','狗','兔子','鯨魚','老鷹','黑面琵鷺'];
+var GUESS=[['c','我選的顏色'],['a','我選的動物'],['m','我的生日'],['all','三個都有用到']];
+var WAIT=3200;
+function players(H){return Object.keys(H.seats).length}
+function cardHTML(L,tag){return '<div class="ana">'+(tag?'<span class="same">'+tag+'</span>':'')+'<p class="hd">AI 神準性格分析・依據：'+(L.all?'每個人選的顏色、動物、生日（每個人都不一樣）':L.c+'・'+L.a+'・'+L.m+' 月生')+'</p><p class="nm">'+(tag?'這是全班每個人拿到的分析':'這是專屬於你的分析')+'</p>'+CARD.map(function(s){return '<p class="s">'+s+'</p>'}).join('')+'</div>'}
+function hist(R){var b=[0,0,0,0,0,0],n=0,s=0;Object.keys(R).forEach(function(k){var v=R[k].v;if(v==null)return;b[v]++;n++;s+=v});return {b:b,n:n,avg:n?Math.round(s/n*100)/100:null}}
+function barsHTML(b){var mx=Math.max(1,Math.max.apply(null,b));return '<div class="bars">'+b.map(function(v,i){return '<div class="c"><span>'+(v||'')+'</span><span class="b" style="height:'+(v/mx*170)+'px"></span><small>'+i+' 分</small></div>'}).join('')+'</div>'}
+ROOM.start({
+ key:'analysislive',title:'神準性格分析',kick:'第 3 節・全班連線',studentUrl:'analysislive.html',
+ rules:'<p>平板會用你選的<b>顏色、動物和生日月份</b>，做一份「AI 神準性格分析」。</p><p>看完以後，替它打分數：0 分＝完全不像我，5 分＝超級像我。</p>',
+ init:function(H){H.g={r:{},t0:Date.now()}},
+ onStart:function(H){H.g={r:{},t0:Date.now()};H.ph='play'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,n:Object.keys(g.r||{}).length,r:H.ph==='reveal'?g.r:null}}},
+ onMsg:function(H,d,seat){if(d.t==='rate'&&H.ph==='play'){var v=Math.max(0,Math.min(5,+d.v|0));H.g.r[seat]={v:v,gs:GUESS.some(function(x){return x[0]===d.gs})?d.gs:''};return true}},
+ act:{reveal:function(H){H.ph='reveal'}},
+ bar:function(H){if(H.ph==='play')return '<button class="btn" data-act="reveal">揭曉！大家拿到的分析……</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),R=g.r||{},h='',x=hist(R);
+  if(H.ph==='play'){h+='<div class="card dark"><p class="huge">AI 正在分析每一個人……</p><p class="stat">選好顏色、動物、生日月份，看完你的專屬分析，再打 0～5 分。</p></div>'+
+   '<div class="card"><p class="stat">已經打分數：'+x.n+' / '+N+' 人</p>'+barsHTML(x.b)+'<p style="font-size:24px;font-weight:900">全班平均：<span style="color:#7C5CC4">'+(x.avg==null?'—':x.avg)+'</span> 分（滿分 5 分）</p></div>'}
+  else{var all=Object.keys(R).filter(function(k){return R[k].gs}).length;
+   h+='<div class="card warm"><p class="huge" style="color:#D95D39;font-size:clamp(40px,5vw,72px)">全班 '+x.n+' 個人的分析，一字不差！</p><p class="stat">顏色、動物、生日都不一樣，拿到的三句話卻完全一樣。</p></div>'+
+    cardHTML({all:1},'全班同一份')+
+    '<div class="cmp"><div class="card"><h2>大家覺得有多像自己？</h2>'+barsHTML(x.b)+'<p style="font-size:24px;font-weight:900">全班平均 <span style="color:#7C5CC4;font-size:40px">'+(x.avg==null?'—':x.avg)+'</span> 分</p></div>'+
+    '<div class="card"><h2>1948 年，美國的大學生</h2><p style="font-size:24px">心理學家福勒也讓全班拿到同一份分析，大家打的平均是</p><p class="huge" style="color:#7C5CC4">4.26 分</p><p style="font-size:20px;color:#475569">（0 分＝很不準，5 分＝非常準）</p></div></div>'+
+    '<div class="card dark"><p class="stat">有 <span style="color:#F2A65A">'+all+'</span> 人覺得 AI 用了自己選的顏色、動物或生日。其實一個都沒用到。</p><p style="font-size:22px">一段話讓人覺得「好準」，不代表它分得出誰是誰。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},h='',L=api.local['a'+g.t0]||{};
+  if(ST.ph==='play'){
+   if(L.sent)h+='<h1>送出了！</h1><p class="lead">你打了 '+L.v+' 分。看大螢幕，等老師揭曉。</p>'+cardHTML(L);
+   else if(!L.c){h+='<h1>第 1 步：選一個顏色</h1><p class="lead">你最喜歡哪一個顏色？</p><div class="pick">'+COL.map(function(c){return '<button class="btn gh" data-act="c" data-arg="'+c+'">'+c+'</button>'}).join('')+'</div>'}
+   else if(!L.a){h+='<h1>第 2 步：選一種動物</h1><p class="lead">你最喜歡哪一種動物？</p><div class="pick">'+ANI.map(function(c){return '<button class="btn gh" data-act="a" data-arg="'+c+'">'+c+'</button>'}).join('')+'</div>'}
+   else if(!L.m){h+='<h1>第 3 步：生日在幾月？</h1><div class="pick m">'+[1,2,3,4,5,6,7,8,9,10,11,12].map(function(c){return '<button class="btn gh" data-act="m" data-arg="'+c+'">'+c+' 月</button>'}).join('')+'</div>'}
+   else if(Date.now()-L.t<WAIT)h+='<h1>AI 分析中……</h1><div class="spin"></div><p class="lead" style="text-align:center">正在比對：'+L.c+'・'+L.a+'・'+L.m+' 月生</p>';
+   else{h+=cardHTML(L)+'<h2>第 4 步：這份分析，有多像你？</h2><p class="lead">0 分＝完全不像我，5 分＝超級像我</p><div class="sc">'+[0,1,2,3,4,5].map(function(v){return '<button class="btn '+(L.v===v?'te on':'gh')+'" data-act="v" data-arg="'+v+'">'+v+'</button>'}).join('')+'</div>'+
+    '<h2>第 5 步：你覺得 AI 是根據什麼，寫出這份分析的？</h2><div class="pick" style="grid-template-columns:1fr 1fr">'+GUESS.map(function(x){return '<button class="btn '+(L.gs===x[0]?'te on':'gh')+'" data-act="gs" data-arg="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>'+
+    '<button class="btn" data-act="send" '+(L.v!=null&&L.gs?'':'disabled')+'>送出</button>'}}
+  else if(ST.ph==='reveal'){h+='<h1>看大螢幕！</h1>'+(L.c?cardHTML(L,'全班同一份')+'<p class="lead">你打了 '+(L.v!=null?L.v:'—')+' 分。全班每個人拿到的三句話，都和你這一份一模一樣。</p>':'<p class="lead">全班拿到的分析，其實一模一樣。</p>')}
+  else h+='<h1>等老師開始</h1><p class="lead">等一下平板會幫你做一份「AI 神準性格分析」。</p>';
+  return h},
+ sact:{
+  c:function(ST,me,api,v){var k='a'+(ST.g||{}).t0,L=api.local[k]||{};L.c=v;var o={};o[k]=L;api.local=o;api.save()},
+  a:function(ST,me,api,v){var k='a'+(ST.g||{}).t0,L=api.local[k]||{};L.a=v;var o={};o[k]=L;api.local=o;api.save()},
+  m:function(ST,me,api,v){var k='a'+(ST.g||{}).t0,L=api.local[k]||{};L.m=v;L.t=Date.now();var o={};o[k]=L;api.local=o;api.save();setTimeout(function(){ROOM.redraw&&ROOM.redraw()},WAIT+100)},
+  v:function(ST,me,api,v){var k='a'+(ST.g||{}).t0,L=api.local[k]||{};L.v=+v;var o={};o[k]=L;api.local=o;api.save()},
+  gs:function(ST,me,api,v){var k='a'+(ST.g||{}).t0,L=api.local[k]||{};L.gs=v;var o={};o[k]=L;api.local=o;api.save()},
+  send:function(ST,me,api){var k='a'+(ST.g||{}).t0,L=api.local[k]||{};if(L.v==null||!L.gs)return;api.send({t:'rate',v:L.v,gs:L.gs});L.sent=1;var o={};o[k]=L;api.local=o;api.save()}}
+});
+</script>
+</body>
+</html>
