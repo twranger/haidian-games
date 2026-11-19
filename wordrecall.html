@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>12 個詞記憶大挑戰・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.word{font-size:clamp(120px,22vw,260px);font-weight:900;text-align:center;line-height:1.2;color:#1E242B;padding:40px 0}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.grid .btn{font-size:clamp(20px,4.4vw,28px);padding:14px 0}
+.curve{display:flex;align-items:flex-end;gap:10px;height:260px}
+.curve .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-weight:900;font-size:22px}
+.curve .c span.b{display:block;width:100%;border-radius:8px 8px 0 0;background:#205E86}
+.curve .c.mid span.b{background:#A8441A}
+.huge{font-size:clamp(50px,7vw,96px);font-weight:900;line-height:1.1}
+.rank{display:flex;flex-direction:column;gap:6px}
+.rk{display:flex;align-items:center;gap:10px;font-weight:900;font-size:24px}
+.rk .no{width:44px;text-align:right;color:#94A3B8}.rk .who{width:90px}
+.rk .barw{flex:1;background:#EEE9E1;border-radius:10px;height:32px;overflow:hidden}.rk .barw i{display:block;height:100%;background:#2A6F68;border-radius:10px}
+.cmp{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+</style>
+</head>
+<body>
+<script>
+var W=['蘋果','雨傘','火車','牙刷','鉛筆','星星','麵包','鑰匙','海豚','時鐘','帽子','背包'];
+var D=['香蕉','雨衣','公車','毛巾','橡皮擦','月亮','饅頭','門鎖','鯨魚','手錶','圍巾','書包'];
+var SEC=1.6,LEAD=2,DUR=LEAD+W.length*SEC+0.6,PICK=60;
+/* 24 個按鈕的順序固定（每個人一樣），真的詞和沒出現的詞混在一起 */
+var ALL=(function(){var a=W.map(function(w,i){return {w:w,i:i}}).concat(D.map(function(w){return {w:w,i:-1}}));var s=7;for(var k=a.length-1;k>0;k--){s=(s*9301+49297)%233280;var j=Math.floor(s/233280*(k+1));var t=a[k];a[k]=a[j];a[j]=t}return a})();
+function players(H){return Object.keys(H.seats).length}
+function score(p){var s=0;(p||[]).forEach(function(w){s+=W.indexOf(w)>=0?1:-1});return Math.max(0,s)}
+function curve(H){var P=H.g.p||{},ks=Object.keys(P),c=W.map(function(){return 0});ks.forEach(function(k){(P[k]||[]).forEach(function(w){var i=W.indexOf(w);if(i>=0)c[i]++})});return {c:c,n:ks.length}}
+function rankHTML(H){var P=H.g.p||{},a=Object.keys(P).map(function(k){return {s:+k,v:score(P[k])}}).sort(function(x,y){return y.v-x.v||x.s-y.s});
+ return '<div class="rank">'+a.slice(0,8).map(function(x,i){return '<div class="rk"><span class="no">'+(i+1)+'</span><span class="who">'+x.s+' 號</span><div class="barw"><i style="width:'+Math.max(2,x.v/12*100)+'%"></i></div><span>'+x.v+'</span></div>'}).join('')+'</div>'}
+ROOM.start({
+ key:'wordrecall',title:'12 個詞記憶大挑戰',kick:'第 4 節・全班連線',studentUrl:'wordrecall.html',
+ rules:'<p>大螢幕會<b>一次出現一個詞</b>，一共 12 個，一個詞只出現一下下。</p><p>不能抄、不能說出來。全部播完以後，在平板上點出你記得<b>出現過</b>的詞。點對 1 個加 1 分，點到沒出現的詞扣 1 分。</p>',
+ init:function(H){H.g={p:{}}},
+ onStart:function(H){H.g={p:{}};H.ph='ready'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,t1:g.t1,n:Object.keys(g.p||{}).length,sc:H.ph==='reveal'?(function(){var o={};Object.keys(g.p).forEach(function(k){o[k]=score(g.p[k])});return o})():null}}},
+ onMsg:function(H,d,seat){if(d.t==='pick'&&H.ph==='pick'){H.g.p[seat]=(d.w||[]).filter(function(w){return W.indexOf(w)>=0||D.indexOf(w)>=0}).slice(0,24);return true}},
+ tick:function(H){var g=H.g;if(H.ph==='show'){var e=(Date.now()-g.t0)/1000-LEAD,kk=e<0?-1:Math.floor(e/SEC);if(kk!==g.k){g.k=kk;return true}}if(H.ph==='show'&&Date.now()-g.t0>=DUR*1000){H.ph='pick';g.t1=Date.now();return true}if(H.ph==='pick'&&Date.now()-g.t1>=PICK*1000){H.ph='wait';return true}},
+ tickText:function(H){if(H.ph==='pick')return '還剩 '+Math.max(0,Math.ceil(PICK-(Date.now()-H.g.t1)/1000))+' 秒';return ''},
+ act:{go:function(H){H.g.t0=Date.now();H.g.k=-2;H.ph='show'},stop:function(H){H.ph='wait'},reveal:function(H){H.ph='reveal'}},
+ bar:function(H){if(H.ph==='ready')return '<button class="btn" data-act="go">開始播放 12 個詞</button>';if(H.ph==='pick')return '<button class="btn" data-act="stop">時間到，不再點了</button>';if(H.ph==='wait')return '<button class="btn" data-act="reveal">公布結果</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='';
+  if(H.ph==='ready')h+='<div class="card dark"><p class="huge">看大螢幕，記住每一個詞</p><p class="stat">一次只出現一個，一共 12 個。不能抄、不能說出來。</p></div>';
+  else if(H.ph==='show'){var e=(Date.now()-g.t0)/1000-LEAD,k=Math.floor(e/SEC);h+=e<0?'<div class="card"><p class="word" style="color:#94A3B8">準備……</p></div>':k<W.length?'<div class="card"><p class="word" id="wr">'+W[k]+'</p></div>':'<div class="card"><p class="word" style="color:#94A3B8">結束</p></div>'}
+  else if(H.ph==='pick'||H.ph==='wait')h+='<div class="card dark"><p class="huge">在平板上點出你記得的詞</p><p class="stat" id="hdtick" style="color:#F2A65A"></p></div><div class="card"><p class="stat">已經送出：'+Object.keys(g.p).length+' / '+N+' 人</p></div>';
+  else{var C=curve(H),mx=Math.max(1,Math.max.apply(null,C.c));
+   h+='<div class="cmp"><div class="card"><h2>每一個位置的詞，全班有幾個人記得？</h2><div class="curve">'+W.map(function(w,i){return '<div class="c'+(i>=4&&i<=7?' mid':'')+'"><span>'+C.c[i]+'</span><span class="b" style="height:'+(C.c[i]/mx*190)+'px"></span><small>'+(i+1)+'<br>'+w+'</small></div>'}).join('')+'</div><p style="font-size:22px">藍色＝開頭和結尾的詞，橘色＝中間的詞。全班 '+C.n+' 人。</p></div>'+
+    '<div class="card"><h2>記憶王排行榜</h2>'+rankHTML(H)+'</div></div>'+
+    '<div class="card warm"><p style="font-size:26px;font-weight:900">開頭的詞和最後的詞，常常比中間的詞容易想起來。</p><p style="font-size:22px">這是我們班一次的結果，不一定每一班都一樣；下一頁看科學家用很多人做的研究。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='w'+g.t0,L=api.local[k]||{p:[]},h='';
+  if(ST.ph==='ready'||ST.ph==='show')h+='<h1>看大螢幕！</h1><p class="lead">記住出現的每一個詞。不能抄、不能說出來。平板先放著。</p>';
+  else if(ST.ph==='pick'){if(L.sent)h+='<h1>送出了！</h1><p class="lead">你點了 '+L.p.length+' 個詞。看大螢幕。</p>';
+   else{h+='<h1>點出你記得「出現過」的詞</h1><p class="lead">不用照順序。沒把握就不要點：點到沒出現的詞會扣分。</p><div class="grid">'+ALL.map(function(x){var on=L.p.indexOf(x.w)>=0;return '<button class="btn '+(on?'te on':'gh')+'" data-act="t" data-arg="'+x.w+'">'+x.w+'</button>'}).join('')+'</div><button class="btn" data-act="send">送出（已選 '+L.p.length+' 個）</button>'}}
+  else if(ST.ph==='wait')h+='<h1>時間到！</h1><p class="lead">看大螢幕，等老師公布。</p>';
+  else{var mine=(g.sc||{})[me];h+='<h1>看大螢幕！</h1><div class="card"><p class="stat">我的分數：'+(mine!=null?mine:'—')+' 分</p><p class="lead">出現過的 12 個詞：'+W.join('、')+'</p></div>'}
+  return h},
+ sact:{
+  t:function(ST,me,api,w){if(ST.ph!=='pick')return;var g=ST.g,k='w'+g.t0,L=api.local[k]||{p:[]};var i=L.p.indexOf(w);if(i>=0)L.p.splice(i,1);else L.p.push(w);var o={};o[k]=L;api.local=o;api.save()},
+  send:function(ST,me,api){if(ST.ph!=='pick')return;var g=ST.g,k='w'+g.t0,L=api.local[k]||{p:[]};api.send({t:'pick',w:L.p});L.sent=1;var o={};o[k]=L;api.local=o;api.save()}}
+});
+</script>
+</body>
+</html>

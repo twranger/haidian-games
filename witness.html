@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>神目擊者・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.scene{display:block;width:100%;height:auto;border-radius:20px;background:#BFE3F2}
+@keyframes cl{0%{transform:translateX(0)}70%{transform:translateX(330px)}100%{transform:translateX(330px)}}
+@keyframes cr{0%{transform:translateX(0)}70%{transform:translateX(-330px)}100%{transform:translateX(-330px)}}
+@keyframes bump{0%,68%{opacity:0}72%{opacity:1}100%{opacity:0}}
+.run .carL{animation:cl 6s ease-in forwards}.run .carR{animation:cr 6s ease-in forwards}.run .pop{animation:bump 6s forwards}
+.pop{opacity:0}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.opts .btn{font-size:clamp(20px,4.4vw,28px);padding:14px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.two .btn{font-size:clamp(22px,4.6vw,30px);padding:16px 0}
+.huge{font-size:clamp(48px,6.5vw,92px);font-weight:900;line-height:1.1}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.q{font-size:clamp(22px,4vw,28px);font-weight:900;line-height:1.5}
+.rank{display:flex;flex-direction:column;gap:6px}
+.rk{display:flex;align-items:center;gap:10px;font-weight:900;font-size:24px}
+.rk .no{width:44px;text-align:right;color:#94A3B8}.rk .who{width:90px}
+</style>
+</head>
+<body>
+<script>
+var SPD=[10,20,30,40,50,60,70,80],VERB={A:'輕輕碰到',B:'猛烈撞爛'};
+function players(H){return Object.keys(H.seats).length}
+function groupOf(g,seat){var i=(g.order||[]).indexOf(+seat);return i<0?'A':(i%2===0?'A':'B')}
+function tree(x){return '<g><rect x="'+(x-8)+'" y="200" width="16" height="60" fill="#6B4E2E"/><circle cx="'+x+'" cy="185" r="38" fill="#3E7D4F"/></g>'}
+function car(cls,x,col){return '<g class="'+cls+'"><rect x="'+x+'" y="300" width="170" height="56" rx="16" fill="'+col+'"/><rect x="'+(x+30)+'" y="272" width="100" height="40" rx="12" fill="'+col+'"/><rect x="'+(x+42)+'" y="280" width="34" height="24" rx="5" fill="#E6F4FA"/><rect x="'+(x+84)+'" y="280" width="34" height="24" rx="5" fill="#E6F4FA"/><circle cx="'+(x+38)+'" cy="358" r="18" fill="#1E242B"/><circle cx="'+(x+132)+'" cy="358" r="18" fill="#1E242B"/></g>'}
+function scene(run){return '<svg class="scene'+(run?' run':'')+'" viewBox="0 0 1000 420" role="img" aria-label="一條路，紅色的車從左邊、藍色的車從右邊開過來，在中間輕輕碰了一下，地上沒有碎玻璃"><rect width="1000" height="260" fill="#BFE3F2"/><circle cx="880" cy="70" r="40" fill="#F2C14E"/>'+tree(120)+tree(470)+tree(820)+'<rect y="260" width="1000" height="160" fill="#8C9A9B"/><path d="M0 340 h1000" stroke="#FAF7F2" stroke-width="6" stroke-dasharray="40 30"/>'+car('carL',20,'#C0392B')+car('carR',810,'#205E86')+'<g class="pop"><path d="M500 262 v-26 M482 268 l-14 -18 M518 268 l14 -18" stroke="#FAF7F2" stroke-width="7" stroke-linecap="round"/></g></svg>'}
+function stats(H){var A=H.g.ans||{},o={A:{s:0,n:0,y:0},B:{s:0,n:0,y:0}};Object.keys(A).forEach(function(k){var a=A[k],G=o[groupOf(H.g,k)];if(a.sp!=null){G.s+=a.sp;G.n++}if(a.gl)G.y++});['A','B'].forEach(function(x){o[x].avg=o[x].n?Math.round(o[x].s/o[x].n):null;o[x].p=o[x].n?Math.round(o[x].y/o[x].n*100):null});return o}
+function sc(a){return (a.side==='L'?1:0)+(a.tr===3?1:0)+(a.gl===0?1:0)}
+ROOM.start({
+ key:'witness',title:'神目擊者',kick:'第 4 節・全班連線',studentUrl:'witness.html',
+ rules:'<p>大螢幕會播一段<b>大約 6 秒</b>的路口影片，只播一次。</p><p>看完以後，平板會問你幾個問題。答對越多題，你就是越可靠的「神目擊者」！</p>',
+ init:function(H){H.g={ans:{}}},
+ onStart:function(H){H.g={ans:{},order:Object.keys(H.seats).map(Number).sort(function(a,b){return a-b})};H.ph='ready'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,order:g.order,n:Object.keys(g.ans||{}).length,rp:g.rp}}},
+ onMsg:function(H,d,seat){if(d.t==='ans'&&H.ph==='ask'){H.g.ans[seat]={sp:SPD.indexOf(+d.sp)>=0?+d.sp:null,side:d.side==='L'?'L':'R',tr:+d.tr,gl:d.gl?1:0};return true}},
+ tick:function(H){if(H.ph==='show'&&Date.now()-H.g.t0>=7500){H.ph='ask';return true}},
+ act:{go:function(H){H.g.t0=Date.now();H.ph='show'},reveal:function(H){H.ph='reveal'},replay:function(H){H.g.rp=Date.now()}},
+ bar:function(H){if(H.ph==='ready')return '<button class="btn" data-act="go">播放影片（只播一次）</button>';if(H.ph==='ask')return '<button class="btn" data-act="reveal">公布結果</button>';if(H.ph==='reveal')return '<button class="btn te" data-act="replay">再看一次影片</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='';
+  if(H.ph==='ready')h+='<div class="card dark"><p class="huge">準備當目擊者</p><p class="stat">影片只播一次，大約 6 秒。看仔細！</p></div>'+scene(false);
+  else if(H.ph==='show')h+=scene(true);
+  else if(H.ph==='ask')h+='<div class="card dark"><p class="huge">在平板上回答問題</p></div><div class="card"><p class="stat">已經送出：'+Object.keys(g.ans).length+' / '+N+' 人</p></div>';
+  else{var S=stats(H),A=g.ans,list=Object.keys(A).map(function(k){return {s:+k,v:sc(A[k])}}).sort(function(x,y){return y.v-x.v||x.s-y.s}),top=list.filter(function(x){return x.v===3}).length;
+   h+='<div class="card warm"><p class="stat">其實全班分成兩組，速度那一題的問法只差兩個字：</p><p style="font-size:26px"><b>甲組：</b>兩台車「<b style="color:#2A6F68">輕輕碰到</b>」的時候，車速大約多少？　<b>乙組：</b>兩台車「<b style="color:#D95D39">猛烈撞爛</b>」的時候，車速大約多少？</p></div>'+
+    '<div class="cmp"><div class="card cool"><h2>甲組「輕輕碰到」</h2><p class="stat">平均猜 <span style="font-size:56px;color:#2A6F68">'+(S.A.avg==null?'—':S.A.avg)+'</span> 公里</p><p class="stat">說「有看到碎玻璃」：'+(S.A.p==null?'—':S.A.p+'%')+'</p></div><div class="card warm"><h2>乙組「猛烈撞爛」</h2><p class="stat">平均猜 <span style="font-size:56px;color:#D95D39">'+(S.B.avg==null?'—':S.B.avg)+'</span> 公里</p><p class="stat">說「有看到碎玻璃」：'+(S.B.p==null?'—':S.B.p+'%')+'</p></div></div>'+
+    '<div class="cmp"><div>'+scene(!!g.rp).replace('<svg ','<svg data-k="'+(g.rp||0)+'" ')+'<p style="font-size:22px;margin-top:6px">兩組看的是同一段影片：紅車從左邊來、路邊 3 棵樹、<b>地上沒有碎玻璃</b>。</p></div><div class="card"><h2>神目擊者（3 題全對）：'+top+' 人</h2><div class="rank">'+list.slice(0,6).map(function(x,i){return '<div class="rk"><span class="no">'+(i+1)+'</span><span class="who">'+x.s+' 號</span><span>答對 '+x.v+' 題</span></div>'}).join('')+'</div></div></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='e'+g.t0,L=api.local[k]||{},grp=groupOf(g,me),h='';
+  if(ST.ph==='ready'||ST.ph==='show')h+='<h1>看大螢幕！</h1><p class="lead">影片只播一次。平板先放著。</p>';
+  else if(ST.ph==='ask'){if(L.sent)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師公布。</p>';
+   else{h+='<h1>目擊者問答</h1><p class="q">① 兩台車「'+VERB[grp]+'」的時候，車速大約每小時多少公里？</p><div class="opts">'+SPD.map(function(v){return '<button class="btn '+(L.sp===v?'te on':'gh')+'" data-act="sp" data-arg="'+v+'">'+v+'</button>'}).join('')+'</div>'+
+    '<p class="q">② 紅色的車，從哪一邊開過來？</p><div class="two"><button class="btn '+(L.side==='L'?'te on':'gh')+'" data-act="side" data-arg="L">左邊</button><button class="btn '+(L.side==='R'?'te on':'gh')+'" data-act="side" data-arg="R">右邊</button></div>'+
+    '<p class="q">③ 路邊有幾棵樹？</p><div class="opts">'+[2,3,4,5].map(function(v){return '<button class="btn '+(L.tr===v?'te on':'gh')+'" data-act="tr" data-arg="'+v+'">'+v+' 棵</button>'}).join('')+'</div>'+
+    '<p class="q">④ 你有看到地上的碎玻璃嗎？</p><div class="two"><button class="btn '+(L.gl===1?'te on':'gh')+'" data-act="gl" data-arg="1">有</button><button class="btn '+(L.gl===0?'te on':'gh')+'" data-act="gl" data-arg="0">沒有</button></div>'+
+    '<button class="btn" data-act="send" '+(L.sp&&L.side&&L.tr&&L.gl!=null?'':'disabled')+'>送出</button>'}}
+  else h+='<h1>看大螢幕！</h1><div class="card"><p class="lead">你是'+(grp==='A'?'甲組（輕輕碰到）':'乙組（猛烈撞爛）')+'。你猜 '+(L.sp||'—')+' 公里，'+(L.gl===1?'說有看到碎玻璃':'說沒看到碎玻璃')+'。</p><p class="stat">你答對 '+((L.side==='L'?1:0)+(L.tr===3?1:0)+(L.gl===0?1:0))+' / 3 題</p></div>';
+  return h},
+ sact:(function(){function set(f){return function(ST,me,api,v){var k='e'+ST.g.t0,L=api.local[k]||{};L[f]=f==='side'?v:+v;var o={};o[k]=L;api.local=o;api.save()}}
+  return {sp:set('sp'),side:set('side'),tr:set('tr'),gl:set('gl'),send:function(ST,me,api){var k='e'+ST.g.t0,L=api.local[k]||{};if(!(L.sp&&L.side&&L.tr&&L.gl!=null))return;api.send({t:'ans',sp:L.sp,side:L.side,tr:L.tr,gl:L.gl});L.sent=1;var o={};o[k]=L;api.local=o;api.save()}}})()
+});
+</script>
+</body>
+</html>
