@@ -61,7 +61,7 @@ G.label={name:'小小評審團',lesson:'第 2 節',groups:[['a','甲組','#205E8
 G.labelquest={name:'標籤闖關',lesson:'第 2 節',groups:[['a','潛力高手','#205E86'],['b','需要加強','#A8441A']],avg:'答對的題數（平均，一共 10 題）',
   rows:['答對 7 題以上','答對 4 題以下']};
 G.rewrite={name:'標籤改寫工坊',lesson:'第 2 節',groups:[['all','全班','#205E86']],
-  rows:['三張卡片都只說「這一次」：0～1 題','2 題','3 題','4 題全部','選過罵「整個人」的卡片']};
+  rows:['4 題裡，三張卡片都選「具體」的：0～1 題','2 題','3 題','4 題全部','曾經選過「罵整個人」的卡片']};
 var ORDER=['label','labelquest','rewrite','coinstall','souvenir','forkraft','glasses','pondwall','cookiejar','hoopshot'];
 var K=LIVE.key,B=LIVE.ls('hdboard-v1'),GM=location.hash.match(/game=([a-z]+)/);
 if(!B||location.hash.indexOf('new')>=0||(K&&B.room!==K)){B={room:K||String(1000+Math.floor(Math.random()*9000)),cur:null,res:{}};LIVE.ls('hdboard-v1',B);try{history.replaceState(null,'','#host')}catch(e){}}
