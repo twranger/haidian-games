@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>五星好評送鑽石・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.pegs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:#C8A26B;border-radius:20px;padding:14px}
+.peg{aspect-ratio:1;border:0;border-radius:14px;background:#8B5E34;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
+.peg svg{width:78%;height:78%;transition:transform .15s}
+.huge{font-size:clamp(46px,6.4vw,90px);font-weight:900;line-height:1.15}
+.offer{background:linear-gradient(160deg,#2B2140,#1E242B);color:#FAF7F2;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.offer .gem{font-size:clamp(30px,6vw,44px);font-weight:900;color:#7DD3FC}
+.revs{display:flex;flex-direction:column;gap:8px}
+.revs .btn{font-size:clamp(20px,4.2vw,26px);padding:14px 10px}
+.sc{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.sc .btn{font-size:clamp(20px,4.6vw,30px);padding:12px 0}
+.wall{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rv{background:#fff;border:2px solid #E3DED7;border-radius:14px;padding:10px 14px;font-size:22px;font-weight:700}
+.rv .st{color:#F2A65A;font-size:20px;letter-spacing:2px}
+.dv{display:flex;flex-direction:column;gap:14px}
+.dr{display:grid;grid-template-columns:200px 1fr 1fr 110px;align-items:center;gap:0;font-weight:900;font-size:24px}
+.dr .neg{display:flex;justify-content:flex-end;border-right:4px solid #1E242B;height:52px;align-items:center}
+.dr .pos{display:flex;justify-content:flex-start;height:52px;align-items:center}
+.dr i{display:block;height:44px;border-radius:8px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+</style>
+</head>
+<body>
+<script>
+/* 依座號順序輪流分三組：1 顆鑽石、20 顆鑽石、不用寫好評（對照組）。學生不知道別組條件 */
+var GR=['one','twenty','ctrl'],GN={one:'1 顆鑽石組',twenty:'20 顆鑽石組',ctrl:'不用寫組'},GEM={one:1,twenty:20};
+var REV=['超好玩！停不下來！','轉木釘好療癒，大推！','比手遊還好玩！'],SEC=40;
+var STUDY={ctrl:-0.45,one:1.35,twenty:-0.05};
+function players(H){return Object.keys(H.seats).length}
+function grpOf(g,seat){var i=(g.order||[]).indexOf(+seat);return GR[(i<0?0:i)%3]}
+function pegSVG(r){return '<svg viewBox="0 0 100 100" style="transform:rotate('+(r*90)+'deg)"><rect x="8" y="8" width="84" height="84" rx="12" fill="#D9B27C" stroke="#6B4423" stroke-width="5"/><rect x="44" y="14" width="12" height="72" rx="4" fill="#6B4423"/><circle cx="50" cy="22" r="7" fill="#C0392B"/></svg>'}
+function stats(g){var o={};GR.forEach(function(x){o[x]={s:0,n:0,w:0,no:0}});Object.keys(g.rate||{}).forEach(function(k){var G=o[grpOf(g,k)];G.s+=g.rate[k];G.n++});Object.keys(g.rev||{}).forEach(function(k){var G=o[grpOf(g,k)];if(g.rev[k]>=0)G.w++;else G.no++});GR.forEach(function(x){o[x].avg=o[x].n?Math.round(o[x].s/o[x].n*100)/100:null});return o}
+function dbar(lab,v,col){var w=v==null?0:Math.abs(v)/5*100;return '<div class="dr"><span>'+lab+'</span><div class="neg">'+(v!=null&&v<0?'<i style="width:'+w+'%;background:'+col+'"></i>':'')+'</div><div class="pos">'+(v!=null&&v>0?'<i style="width:'+w+'%;background:'+col+'"></i>':'')+'</div><span style="text-align:right;color:'+col+'">'+(v==null?'—':(v>0?'+':v<0?'−':'')+Math.abs(v))+'</span></div>'}
+function axis(){return '<div class="dr" style="font-size:18px;color:#64748B"><span></span><div style="display:flex;justify-content:space-between"><span>−5 很無聊</span><span></span></div><div style="display:flex;justify-content:space-between"><span>0</span><span>+5 很好玩</span></div><span></span></div>'}
+ROOM.start({
+ key:'fivestar',title:'五星好評送鑽石',kick:'第 5 節・全班連線',studentUrl:'fivestar.html',
+ rules:'<p>先玩一個 <b>40 秒</b>的小任務：把木釘一個一個轉四分之一圈。</p><p>玩完以後，平板會問你幾個問題。每個人拿到的問題<b>可能不一樣</b>，照自己平板上的做就好。</p>',
+ init:function(H){H.g={rev:{},rate:{}}},
+ onStart:function(H){H.g={rev:{},rate:{},order:Object.keys(H.seats).map(Number).sort(function(a,b){return a-b})};H.ph='ready'},
+ pub:function(H){var g=H.g;return {g:{t1:g.t1,order:g.order,rate:H.ph==='reveal'?g.rate:null}}},
+ onMsg:function(H,d,seat){if(H.ph!=='ask')return;var gr=grpOf(H.g,seat);
+  if(d.t==='rev'&&gr!=='ctrl'&&H.g.rev[seat]==null){var v=+d.v;H.g.rev[seat]=v>=0&&v<REV.length?v:-1;return true}
+  if(d.t==='rate'){H.g.rate[seat]=Math.max(-5,Math.min(5,Math.round(+d.v)||0));return true}},
+ tick:function(H){if(H.ph==='task'&&Date.now()-H.g.t1>=SEC*1000){H.ph='ask';return true}},
+ tickText:function(H){if(H.ph==='task')return '還剩 '+Math.max(0,Math.ceil(SEC-(Date.now()-H.g.t1)/1000))+' 秒';return ''},
+ act:{go:function(H){H.g.t1=Date.now();H.ph='task'},stop:function(H){H.ph='ask'},reveal:function(H){H.ph='reveal'}},
+ bar:function(H){if(H.ph==='ready')return '<button class="btn" data-act="go">開始轉木釘（40 秒）</button>';if(H.ph==='task')return '<button class="btn gh" data-act="stop">提早結束</button>';if(H.ph==='ask')return '<button class="btn" data-act="reveal">公布結果</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='';
+  if(H.ph==='ready')h+='<div class="card dark"><p class="huge">轉木釘任務</p><p class="stat">把每一個木釘轉四分之一圈，轉完再從頭轉。一直轉，轉到時間到。</p></div>';
+  else if(H.ph==='task')h+='<div class="card dark"><p class="huge">轉、轉、轉……</p><p class="stat" id="hdtick" style="color:#F2A65A;font-size:48px"></p></div>';
+  else if(H.ph==='ask'){var ks=Object.keys(g.rev).filter(function(k){return g.rev[k]>=0});
+   h+='<div class="card dark"><p class="huge">在平板上回答</p><p class="stat">已經送出：'+Object.keys(g.rate).length+' / '+N+' 人</p></div><div class="card"><h2>好評留言板（'+ks.length+' 則）</h2><div class="wall">'+ks.slice(-12).map(function(k){return '<div class="rv"><div class="st">★★★★★</div>'+REV[g.rev[k]]+'</div>'}).join('')+'</div></div>'}
+  else{var S=stats(g),C={ctrl:'#64748B',one:'#D95D39',twenty:'#2A6F68'};
+   h+='<div class="card warm"><p class="stat">其實全班分成三組，玩的是同一個任務：</p><p style="font-size:24px;line-height:1.6"><b>不用寫組</b>：直接打分數。　<b style="color:#D95D39">1 顆鑽石組</b>：寫五星好評，送 1 顆。　<b style="color:#2A6F68">20 顆鑽石組</b>：寫五星好評，送 20 顆。</p></div>'+
+    '<div class="cmp"><div class="card"><h2>我們班：真心覺得多好玩？（平均）</h2><div class="dv">'+axis()+GR.slice(2).concat(GR.slice(0,2)).map(function(x){return dbar(GN[x]+'<br><small style="font-size:16px;color:#64748B">'+S[x].n+' 人'+(x!=='ctrl'?'・寫好評 '+S[x].w+'・不寫 '+S[x].no:'')+'</small>',S[x].avg,C[x])}).join('')+'</div></div>'+
+    '<div class="card"><h2>1959 年的研究（平均）</h2><div class="dv">'+axis()+dbar('控制組',STUDY.ctrl,C.ctrl)+dbar('1 美元組',STUDY.one,C.one)+dbar('20 美元組',STUDY.twenty,C.twenty)+'</div><p style="font-size:20px">研究的分數也是 −5 到 +5。</p></div></div>'+
+    '<div class="card dark"><p class="stat">說了「好玩」，可是拿到的獎勵很少……心裡會不會不太舒服？</p><p style="font-size:22px">這是我們班一次的結果，不一定和研究一樣；下一頁看研究怎麼做。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='f'+g.t1,L=api.local[k]||{rot:[0,0,0,0,0,0,0,0,0,0,0,0],n:0},gr=grpOf(g,me),h='';
+  if(ST.ph==='ready')h+='<h1>等老師開始</h1><p class="lead">等一下要玩一個 40 秒的小任務。</p>';
+  else if(ST.ph==='task')h+='<h1>轉木釘任務</h1><p class="lead">點一下，木釘轉四分之一圈。一個一個轉，轉完再從頭轉，轉到老師說停。</p><div class="pegs">'+L.rot.map(function(r,i){return '<button class="peg" data-act="peg" data-arg="'+i+'" aria-label="木釘 '+(i+1)+'">'+pegSVG(r)+'</button>'}).join('')+'</div><p class="stat">你已經轉了 '+L.n+' 下</p>';
+  else if(ST.ph==='ask'){
+   if(L.done)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師公布。</p>';
+   else if(gr!=='ctrl'&&L.rv==null)h+='<div class="offer"><p style="font-size:20px;color:#C4B5FD;font-weight:700">遊戲公司的拜託</p><p style="font-size:clamp(22px,4.2vw,28px);font-weight:900;line-height:1.5">請你替「轉木釘」寫一句五星好評，貼到留言板，給下一班的同學看。</p><p class="gem">寫了就送你 💎 '+GEM[gr]+' 顆鑽石</p></div><h2>選一句好評貼上去：</h2><div class="revs">'+REV.map(function(r,i){return '<button class="btn gh" data-act="rv" data-arg="'+i+'">★★★★★ '+r+'</button>'}).join('')+'<button class="btn gh" data-act="rv" data-arg="-1" style="color:#64748B">我不想寫（沒有鑽石）</button></div>';
+   else{h+=(gr!=='ctrl'?(L.rv>=0?'<div class="card"><p class="stat">已貼上留言板：★★★★★ '+REV[L.rv]+'</p><p class="stat" style="color:#0369A1">你得到 💎 '+GEM[gr]+' 顆鑽石</p></div>':'<div class="card"><p class="stat">你沒有寫好評，也沒有拿鑽石。</p></div>'):'')+
+    '<h2>說真心話：剛剛轉木釘，你覺得有多好玩？</h2><p class="lead">−5＝超級無聊，0＝普通，+5＝超級好玩。只會公布全班平均。</p><div class="sc">'+[-5,-4,-3,-2,-1,0,1,2,3,4,5].map(function(v){return '<button class="btn '+(L.v===v?'te on':'gh')+'" data-act="v" data-arg="'+v+'">'+(v>0?'+'+v:v)+'</button>'}).join('')+'</div><button class="btn" data-act="send" '+(L.v!=null?'':'disabled')+'>送出</button>'}}
+  else h+='<h1>看大螢幕！</h1><div class="card"><p class="stat">你在「'+GN[gr]+'」，你打了 '+(L.v!=null?(L.v>0?'+':'')+L.v:'—')+' 分。</p></div>';
+  return h},
+ sact:(function(){function upd(ST,api,f){var k='f'+(ST.g||{}).t1,L=api.local[k]||{rot:[0,0,0,0,0,0,0,0,0,0,0,0],n:0};f(L);var o={};o[k]=L;api.local=o;api.save()}
+  return {
+  peg:function(ST,me,api,i){if(ST.ph!=='task')return;upd(ST,api,function(L){L.rot[+i]=(L.rot[+i]+1)%4;L.n++})},
+  rv:function(ST,me,api,v){if(ST.ph!=='ask')return;var L=api.local['f'+ST.g.t1]||{};if(L.rv!=null)return;api.send({t:'rev',v:+v});upd(ST,api,function(L){L.rv=+v})},
+  v:function(ST,me,api,v){if(ST.ph!=='ask')return;upd(ST,api,function(L){L.v=+v})},
+  send:function(ST,me,api){var L=api.local['f'+ST.g.t1]||{};if(L.v==null)return;api.send({t:'rate',v:L.v});upd(ST,api,function(L){L.done=1})}}})()
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>我早就知道了・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.q{font-size:clamp(21px,3.8vw,27px);font-weight:900;line-height:1.5}
+.ev{display:flex;flex-direction:column;gap:8px;background:#fff;border:2px solid #E3DED7;border-radius:18px;padding:14px}
+.five{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.five .btn{font-size:clamp(19px,4vw,26px);padding:12px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.two .btn{font-size:clamp(20px,4.2vw,26px);padding:12px 0}
+.huge{font-size:clamp(46px,6.4vw,90px);font-weight:900;line-height:1.15}
+.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;perspective:900px}
+.gc{aspect-ratio:3/4;position:relative;transform-style:preserve-3d;animation:flip .6s ease-out both}
+.gc>div{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(20px,2.6vw,34px)}
+.gc .bk{background:repeating-linear-gradient(45deg,#2B2140 0 12px,#3A2E57 12px 24px);border:4px solid #7C5CC4}
+.gc .fr{transform:rotateY(180deg);background:#CBD5E1;color:#475569;border:4px solid #94A3B8}
+.gc.gold .fr{background:linear-gradient(160deg,#FCE38A,#F2A65A);color:#7A3E00;border-color:#D97706;box-shadow:0 0 30px #F2C14E}
+@keyframes flip{0%{transform:rotateY(0)}100%{transform:rotateY(180deg)}}
+.pb{display:flex;height:56px;border-radius:14px;overflow:hidden;font-weight:900;font-size:26px;color:#fff}
+.pb span{display:flex;align-items:center;justify-content:center}
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.res .card h2{font-size:24px;line-height:1.4}
+.big{font-size:44px;font-weight:900}
+.rank{display:flex;flex-direction:column;gap:6px}
+.rk{display:flex;align-items:center;gap:10px;font-weight:900;font-size:24px}
+.rk .no{width:40px;text-align:right;color:#94A3B8}.rk .who{width:90px}
+.mine{width:100%;border-collapse:collapse;font-size:20px}.mine td,.mine th{border-bottom:1px solid #E3DED7;padding:8px 4px;text-align:left}
+</style>
+</head>
+<body>
+<script>
+/* 三件「還不知道結果」的事：老師現場 10 連抽（每張 4% 金卡），兩題用全班自己的回答當結果 */
+var EV=[
+ {q:'老師等一下現場 10 連抽，會抽到至少 1 張金卡嗎？',s:'10 連抽有金卡',poll:null},
+ {q:'全班超過一半的人，昨天有滑短影音嗎？',s:'超過一半昨天滑短影音',poll:'你自己：昨天有沒有滑短影音？'},
+ {q:'全班超過一半的人，現在有遊戲連續登入 7 天以上嗎？',s:'超過一半連續登入 7 天',poll:'你自己：現在有沒有哪個遊戲，連續登入 7 天以上？'}];
+var PS=[10,30,50,70,90],RATE=0.04;
+function players(H){return Object.keys(H.seats).length}
+function pollRes(g,i){var y=0,n=0;Object.keys(g.pre||{}).forEach(function(k){var o=g.pre[k].o[i];if(o===1)y++;else if(o===0)n++});return {y:y,n:n,hit:y>(y+n)/2}}
+function outcome(g,i){return i===0?(g.cards||[]).some(function(c){return c}):pollRes(g,i).hit}
+function cardsHTML(g){var el=(Date.now()-(g.ts||0))/1000;return '<div class="cards">'+(g.cards||[]).map(function(c,i){return '<div class="gc'+(c?' gold':'')+'" style="animation-delay:'+(i*0.45-el).toFixed(2)+'s"><div class="bk"></div><div class="fr">'+(c?'★ 金卡':'普通')+'</div></div>'}).join('')+'</div>'}
+function pollHTML(g,i){var r=pollRes(g,i),t=Math.max(1,r.y+r.n);return '<div class="pb"><span style="width:'+(r.y/t*100)+'%;background:#D95D39">'+(r.y?'有 '+r.y:'')+'</span><span style="width:'+(r.n/t*100)+'%;background:#64748B">'+(r.n?'沒有 '+r.n:'')+'</span></div><p class="stat">說「有」'+r.y+' 人，說「沒有」'+r.n+' 人 → '+(r.hit?'<b style="color:#D95D39">超過一半，發生了</b>':'<b>沒有超過一半，沒發生</b>')+'</p>'}
+function avg(a){return a.length?Math.round(a.reduce(function(s,x){return s+x},0)/a.length):null}
+function cmp(g){return EV.map(function(e,i){var hit=outcome(g,i),o=[],r=[],tw=0,same=0,aw=0;Object.keys(g.rec||{}).forEach(function(k){var P=g.pre[k];if(!P)return;var a=P.p[i],b=g.rec[k][i];o.push(a);r.push(b);var d=b-a;if(d===0)same++;else if((d>0)===hit)tw++;else aw++});return {hit:hit,o:avg(o),r:avg(r),tw:tw,same:same,aw:aw}})}
+function pts(g,k){var P=g.pre[k];return P?EV.reduce(function(s,e,i){return s+(outcome(g,i)?P.p[i]:100-P.p[i])/10},0):0}
+ROOM.start({
+ key:'knewit',title:'我早就知道了？',kick:'第 5 節・全班連線',studentUrl:'knewit.html',
+ rules:'<p>有 3 件事，<b>結果還沒出來</b>。先猜每一件事發生的機會有多大：10%、30%、50%、70% 或 90%。</p><p>猜得越準，分數越高。結果出來以後，還有一個<b>記憶考驗</b>。</p>',
+ init:function(H){H.g={pre:{},rec:{},step:0}},
+ onStart:function(H){H.g={pre:{},rec:{},step:0,t0:Date.now()};H.ph='predict'},
+ pub:function(H){var g=H.g,o={t0:g.t0,step:g.step,cards:g.cards,ts:g.ts,np:Object.keys(g.pre).length,nr:Object.keys(g.rec).length};if(H.ph==='reveal'){o.hit=EV.map(function(e,i){return outcome(g,i)})}return {g:o}},
+ onMsg:function(H,d,seat){var ok=function(v){return PS.indexOf(+v)>=0};
+  if(d.t==='pre'&&H.ph==='predict'&&d.p&&d.p.length===3&&d.p.every(ok)){H.g.pre[seat]={p:d.p.map(Number),o:[null,d.o[1]?1:0,d.o[2]?1:0]};return true}
+  if(d.t==='rec'&&H.ph==='recall'&&d.r&&d.r.length===3&&d.r.every(ok)){H.g.rec[seat]=d.r.map(Number);return true}},
+ act:{close:function(H){H.ph='out';H.g.step=0},
+  next:function(H){var g=H.g;g.step++;if(g.step===1){g.cards=[];for(var i=0;i<10;i++)g.cards.push(Math.random()<RATE);g.ts=Date.now()}},
+  recall:function(H){H.ph='recall'},reveal:function(H){H.ph='reveal'}},
+ bar:function(H){var s=H.g.step;if(H.ph==='predict')return '<button class="btn" data-act="close">停止作答，開始揭曉</button>';
+  if(H.ph==='out')return s<3?'<button class="btn" data-act="next">揭曉第 '+(s+1)+' 件事</button>':'<button class="btn" data-act="recall">記憶考驗</button>';
+  if(H.ph==='recall')return '<button class="btn" data-act="reveal">對照當時寫的</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='';
+  if(H.ph==='predict'){h+='<div class="card dark"><p class="huge">結果還沒出來，先猜！</p><p class="stat">每一件事，猜它發生的機會：10%、30%、50%、70%、90%</p></div><div class="card">'+EV.map(function(e,i){return '<p class="q">'+(i+1)+'. '+e.q+'</p>'}).join('')+'<p class="stat">已經送出：'+Object.keys(g.pre).length+' / '+N+' 人</p></div>'}
+  else if(H.ph==='out'){var s=g.step;
+   if(s===0)h+='<div class="card dark"><p class="huge">答案鎖住了</p><p class="stat">現在一件一件揭曉。</p></div>';
+   if(s>=1)h+='<div class="card"><h2>1. 老師現場 10 連抽</h2>'+(s===1?cardsHTML(g):'')+'<p class="stat">'+(s===1?'':'結果：')+'金卡 <b>'+(g.cards||[]).filter(function(c){return c}).length+'</b> 張 → '+(outcome(g,0)?'<b style="color:#D95D39">抽到了，發生了</b>':'<b>沒抽到，沒發生</b>')+'</p></div>';
+   if(s>=2)h+='<div class="card"><h2>2. '+EV[1].q+'</h2>'+pollHTML(g,1)+'</div>';
+   if(s>=3)h+='<div class="card"><h2>3. '+EV[2].q+'</h2>'+pollHTML(g,2)+'</div>'}
+  else if(H.ph==='recall')h+='<div class="card dark"><p class="huge">記憶考驗</p><p class="stat">不能偷看、不能問別人：你剛剛每一題選了幾 %？</p></div><div class="card"><p class="stat">已經送出：'+Object.keys(g.rec).length+' / '+Object.keys(g.pre).length+' 人</p></div>';
+  else{var C=cmp(g),lb=Object.keys(g.pre).map(function(k){return {s:+k,v:pts(g,k)}}).sort(function(a,b){return b.v-a.v||a.s-b.s}),keep=Object.keys(g.rec).filter(function(k){return g.pre[k]&&g.rec[k].every(function(v,i){return v===g.pre[k].p[i]})}).length;
+   h+='<div class="res">'+C.map(function(c,i){return '<div class="card'+(c.hit?' warm':' cool')+'"><h2>'+(i+1)+'. '+EV[i].s+'：'+(c.hit?'發生了':'沒發生')+'</h2><p class="stat">當時平均 <span class="big">'+(c.o==null?'—':c.o+'%')+'</span></p><p class="stat">現在記得 <span class="big" style="color:#D95D39">'+(c.r==null?'—':c.r+'%')+'</span></p><p style="font-size:20px">往結果那邊記：<b>'+c.tw+'</b> 人　一樣：<b>'+c.same+'</b> 人　反方向：<b>'+c.aw+'</b> 人</p></div>'}).join('')+'</div>'+
+    '<div class="cmp" style="display:grid;grid-template-columns:3fr 2fr;gap:16px"><div class="card dark"><p class="stat">「往結果那邊記」：事情發生了，記得的數字<b>變大</b>；沒發生，記得的數字<b>變小</b>。</p><p class="stat" style="color:#F2A65A">三題都記得一模一樣的「紙條守護者」：'+keep+' 人</p><p style="font-size:20px">這是我們班一次的結果，不一定每個人、每一班都一樣。</p></div><div class="card"><h2>神預言家排行榜</h2><div class="rank">'+lb.slice(0,5).map(function(x,i){return '<div class="rk"><span class="no">'+(i+1)+'</span><span class="who">'+x.s+' 號</span><span>'+x.v+' 分</span></div>'}).join('')+'</div></div></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='k'+g.t0,L=api.local[k]||{p:[],o:[],r:[]},h='';
+  if(ST.ph==='predict'){if(L.sent)h+='<h1>答案鎖住了！</h1><p class="lead">看大螢幕，等老師揭曉。</p>';
+   else{h+='<h1>結果還沒出來，先猜！</h1><p class="lead">每一題選一個：這件事發生的機會有多大？</p>'+EV.map(function(e,i){return '<div class="ev"><p class="q">'+(i+1)+'. '+e.q+'</p>'+(e.poll?'<p style="font-size:19px;font-weight:700;color:#475569">'+e.poll+'</p><div class="two"><button class="btn '+(L.o[i]===1?'te on':'gh')+'" data-act="o" data-arg="'+i+'_1">有</button><button class="btn '+(L.o[i]===0?'te on':'gh')+'" data-act="o" data-arg="'+i+'_0">沒有</button></div><p style="font-size:19px;font-weight:700;color:#475569">你猜「全班超過一半」的機會：</p>':'')+'<div class="five">'+PS.map(function(v){return '<button class="btn '+(L.p[i]===v?'te on':'gh')+'" data-act="p" data-arg="'+i+'_'+v+'">'+v+'%</button>'}).join('')+'</div></div>'}).join('')+
+    '<button class="btn" data-act="send" '+(L.p[0]&&L.p[1]&&L.p[2]&&L.o[1]!=null&&L.o[2]!=null?'':'disabled')+'>鎖住答案，送出</button>'}}
+  else if(ST.ph==='out')h+='<h1>看大螢幕！</h1><p class="lead">一件一件揭曉中。</p>';
+  else if(ST.ph==='recall'){if(!L.sent)h+='<h1>你剛剛沒有送出</h1><p class="lead">這一輪看大螢幕就好。</p>';
+   else if(L.rs)h+='<h1>送出了！</h1><p class="lead">等老師對照「當時寫的」。</p>';
+   else{h+='<h1>記憶考驗</h1><p class="lead">結果都揭曉了。不能偷看、不能問別人：<b>你剛剛</b>每一題選了幾 %？</p>'+EV.map(function(e,i){return '<div class="ev"><p class="q">'+(i+1)+'. '+e.q+'</p><div class="five">'+PS.map(function(v){return '<button class="btn '+(L.r[i]===v?'te on':'gh')+'" data-act="r" data-arg="'+i+'_'+v+'">'+v+'%</button>'}).join('')+'</div></div>'}).join('')+
+    '<button class="btn" data-act="rsend" '+(L.r[0]&&L.r[1]&&L.r[2]?'':'disabled')+'>送出</button>'}}
+  else if(ST.ph==='reveal'){h+='<h1>看大螢幕！</h1>'+(L.sent?'<div class="card"><table class="mine"><tr><th>題目</th><th>結果</th><th>當時寫</th><th>你記得</th></tr>'+EV.map(function(e,i){return '<tr><td>'+(i+1)+'. '+e.s+'</td><td>'+(g.hit&&g.hit[i]?'發生':'沒發生')+'</td><td><b>'+L.p[i]+'%</b></td><td><b style="color:#D95D39">'+(L.r[i]?L.r[i]+'%':'—')+'</b></td></tr>'}).join('')+'</table></div>':'')}
+  else h+='<h1>等老師開始</h1><p class="lead">等一下要猜 3 件還沒發生的事。</p>';
+  return h},
+ sact:(function(){function upd(api,k,f){var L=api.local[k]||{p:[],o:[],r:[]};f(L);var o={};o[k]=L;api.local=o;api.save()}
+  function kk(ST){return 'k'+(ST.g||{}).t0}
+  return {
+  p:function(ST,me,api,a){if(ST.ph!=='predict')return;var s=a.split('_');upd(api,kk(ST),function(L){if(!L.sent)L.p[+s[0]]=+s[1]})},
+  o:function(ST,me,api,a){if(ST.ph!=='predict')return;var s=a.split('_');upd(api,kk(ST),function(L){if(!L.sent)L.o[+s[0]]=+s[1]})},
+  r:function(ST,me,api,a){if(ST.ph!=='recall')return;var s=a.split('_');upd(api,kk(ST),function(L){if(!L.rs)L.r[+s[0]]=+s[1]})},
+  send:function(ST,me,api){var L=api.local[kk(ST)]||{};if(!(L.p&&L.p[0]&&L.p[1]&&L.p[2]&&L.o[1]!=null&&L.o[2]!=null))return;api.send({t:'pre',p:L.p,o:L.o});upd(api,kk(ST),function(L){L.sent=1})},
+  rsend:function(ST,me,api){var L=api.local[kk(ST)]||{};if(!(L.r&&L.r[0]&&L.r[1]&&L.r[2]))return;api.send({t:'rec',r:L.r});upd(api,kk(ST),function(L){L.rs=1})}}})()
+});
+</script>
+</body>
+</html>
