@@ -28,18 +28,28 @@
 .huge{font-size:clamp(46px,6vw,84px);font-weight:900;line-height:1.1}
 .rule{font-size:22px;font-weight:900;color:#205E86}
 table td,table th{font-size:22px}
-.water{position:relative;height:340px;border-radius:22px;background:linear-gradient(#9FD3E6,#5FA8C4);overflow:hidden;touch-action:manipulation}
+.water{position:relative;height:340px;border-radius:22px;background:linear-gradient(180deg,#A9DCEB 0%,#6CB3CC 55%,#3F86A3 100%);overflow:hidden;touch-action:manipulation;box-shadow:inset 0 -18px 30px rgba(20,60,80,.25)}
 .water.big{height:220px}
-.sw{position:absolute;left:0;border:0;background:none;padding:6px;cursor:pointer;animation:swim linear infinite alternate;touch-action:manipulation}
-.sw svg{display:block;width:78px;height:48px}
-.water.big .sw svg{width:54px;height:34px}
-@keyframes swim{from{transform:translateX(0)}to{transform:translateX(var(--d))}}
-.sw.flip svg{transform:scaleX(-1)}
-.sw[disabled]{opacity:.55;cursor:default}
+.water .ray{position:absolute;top:-40px;width:60px;height:420px;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0));transform:rotate(18deg);pointer-events:none}
+.water .weed{position:absolute;bottom:0;left:0;width:100%;height:70px;pointer-events:none}
+.water .bub{position:absolute;bottom:-12px;width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.75);animation:bub linear infinite;pointer-events:none}
+@keyframes bub{to{transform:translateY(-380px);opacity:0}}
+.sw{position:absolute;left:0;border:0;background:none;padding:8px;cursor:pointer;animation:swim linear infinite;touch-action:manipulation;will-change:transform}
+.sw svg{display:block;width:92px;height:52px;overflow:visible}
+.water.big .sw svg{width:60px;height:34px}
+.sw .tail{transform-box:fill-box;transform-origin:100% 50%;animation:wag .45s ease-in-out infinite alternate}
+@keyframes wag{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+@keyframes swim{0%{transform:translate(0,0) scaleX(1)}24%{transform:translate(calc(var(--d) * .5),-10px) scaleX(1)}47%{transform:translate(var(--d),0) scaleX(1)}50%{transform:translate(var(--d),0) scaleX(-1)}74%{transform:translate(calc(var(--d) * .5),10px) scaleX(-1)}97%{transform:translate(0,0) scaleX(-1)}100%{transform:translate(0,0) scaleX(1)}}
+.sw[disabled]{cursor:default;filter:saturate(.6)}
+.splash{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:4px solid #fff;pointer-events:none;z-index:50;animation:spl .5s ease-out forwards}
+@keyframes spl{to{transform:scale(5);opacity:0}}
+.plus{position:fixed;font:900 28px "Noto Sans TC",sans-serif;color:#D95D39;pointer-events:none;z-index:51;animation:plus .8s ease-out forwards;text-shadow:0 2px 0 #fff}
+@keyframes plus{to{transform:translateY(-60px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sw,.sw .tail,.water .bub{animation-duration:0s!important}}
 .bucket{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:70px;background:#FFF5F2;border:3px dashed #D95D39;border-radius:18px;padding:8px 14px}
 .bucket b{font-size:24px;color:#D95D39}
 .bucket button{border:0;background:none;padding:0;cursor:pointer}
-.bucket svg{width:60px;height:38px}
+.bucket svg{width:66px;height:36px}
 .live{display:flex;flex-wrap:wrap;gap:8px}
 .live span{font-weight:900;font-size:20px;border-radius:999px;padding:4px 14px;background:#fff;border:2px solid #E3DED7}
 </style>
@@ -61,11 +71,17 @@ function gOf(g,seat){for(var i=0;i<(g.groups||[]).length;i++)if(g.groups[i].inde
 function cap(g,i){return g.groups[i].length*PER}
 function fishHTML(n,c){var o='<div class="fish">';for(var i=0;i<c;i++)o+='<i class="'+(i<n?'':'gone')+'"></i>';return o+'</div>'}
 
-var FISH='<svg viewBox="0 0 80 50" aria-hidden="true"><path d="M8 25 Q30 2 58 18 L76 6 L72 25 L76 44 L58 32 Q30 48 8 25 Z" fill="#F2A65A" stroke="#C26A2E" stroke-width="3"/><circle cx="22" cy="21" r="4" fill="#1E242B"/></svg>';
-function swimHTML(n,act,disabled,big){var o='<div class="water'+(big?' big':'')+'">',now=Date.now()/1000;
- for(var i=0;i<n;i++){var rows=big?4:5,top=6+((i*37)%rows)*(big?48:62)+((i*13)%9),dur=7+(i*29%5),dl=-((now+i*1.7)%(dur*2)),dist=(big?220:560)+((i*41)%120);
-  o+='<button class="sw'+(i%2?' flip':'')+'" '+(act?'data-act="catch"':'tabindex="-1"')+(disabled?' disabled':'')+' style="top:'+top+'px;left:'+((i*53)%40)+'px;--d:'+dist+'px;animation-duration:'+dur+'s;animation-delay:'+dl.toFixed(2)+'s" aria-label="一條魚">'+FISH+'</button>'}
+var FISH='<svg viewBox="0 0 96 52" aria-hidden="true"><defs><linearGradient id="mf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5E7F93"/><stop offset=".45" stop-color="#C9D8E2"/><stop offset="1" stop-color="#F4F8FA"/></linearGradient></defs><path class="tail" d="M24 26 L4 10 Q10 26 4 42 Z" fill="#7F9BAD" stroke="#3E5566" stroke-width="2" stroke-linejoin="round"/><path d="M22 26 Q40 6 70 12 Q90 18 92 26 Q90 34 70 40 Q40 46 22 26 Z" fill="url(#mf)" stroke="#3E5566" stroke-width="2.4"/><path d="M48 12 L58 3 L62 13" fill="#7F9BAD" stroke="#3E5566" stroke-width="2" stroke-linejoin="round"/><path d="M52 29 L58 39 L64 30 Z" fill="#8FA6B5" stroke="#3E5566" stroke-width="1.6" stroke-linejoin="round"/><path d="M74 16 Q70 26 74 36" fill="none" stroke="#5E7F93" stroke-width="2"/><circle cx="81" cy="22" r="4.2" fill="#fff"/><circle cx="82" cy="22" r="2.3" fill="#1E242B"/></svg>';
+var WEED='<svg class="weed" viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 Q10 30 4 0 Q22 34 16 70 Z M60 70 Q74 36 66 8 Q86 40 76 70 Z M180 70 Q192 30 186 4 Q206 40 196 70 Z M300 70 Q312 40 306 12 Q324 42 316 70 Z M370 70 Q384 32 376 2 Q396 40 388 70 Z" fill="#2F6E5A" opacity=".55"/><path d="M0 70 Q200 52 400 70 Z" fill="#C9B88E" opacity=".7"/></svg>';
+function swimHTML(n,act,disabled,big){var o='<div class="water'+(big?' big':'')+'"><div class="ray" style="left:12%"></div><div class="ray" style="left:52%;width:40px"></div>',now=Date.now()/1000;
+ for(var j=0;j<5;j++)o+='<span class="bub" style="left:'+(8+j*19)+'%;animation-duration:'+(5+j%3)+'s;animation-delay:-'+((now+j*1.3)%(5+j%3)).toFixed(2)+'s"></span>';
+ o+=WEED;
+ for(var i=0;i<n;i++){var rows=big?4:5,top=4+((i*37)%rows)*(big?44:56)+((i*13)%9),dur=(9+(i*29%5))*2,dl=-((now+i*2.3)%dur),dist=(big?200:520)+((i*41)%120);
+  o+='<button class="sw" '+(act?'data-act="catch"':'tabindex="-1"')+(disabled?' disabled':'')+' style="top:'+top+'px;left:'+((i*53)%40)+'px;--d:'+dist+'px;animation-duration:'+dur+'s;animation-delay:'+dl.toFixed(2)+'s" aria-label="一條虱目魚">'+FISH+'</button>'}
  return o+'</div>'}
+document.addEventListener('pointerdown',function(e){var f=e.target.closest&&e.target.closest('.sw[data-act]');if(!f||f.disabled)return;var x=e.clientX,y=e.clientY;
+ var sp=document.createElement('div');sp.className='splash';sp.style.left=x+'px';sp.style.top=y+'px';document.body.appendChild(sp);setTimeout(function(){sp.remove()},600);
+ var pl=document.createElement('div');pl.className='plus';pl.textContent='+1';pl.style.left=(x+10)+'px';pl.style.top=(y-30)+'px';document.body.appendChild(pl);setTimeout(function(){pl.remove()},900)},true);
 function liveSum(g,i,except){var t=0;(g.groups[i]||[]).forEach(function(s){if(s!=except)t+=(g.picks||{})[s]||0});return t}
 function startStage(g,st){g.stage=st;g.round=1;g.pond=g.groups.map(function(m,i){return cap(g,i)});g.picks={};g.last=null;g.deadline=Date.now()+SEC*1000}
 function settle(H){var g=H.g;g.last={round:g.round,stage:g.stage,gs:[]};
