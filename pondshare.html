@@ -28,6 +28,20 @@
 .huge{font-size:clamp(46px,6vw,84px);font-weight:900;line-height:1.1}
 .rule{font-size:22px;font-weight:900;color:#205E86}
 table td,table th{font-size:22px}
+.water{position:relative;height:340px;border-radius:22px;background:linear-gradient(#9FD3E6,#5FA8C4);overflow:hidden;touch-action:manipulation}
+.water.big{height:220px}
+.sw{position:absolute;left:0;border:0;background:none;padding:6px;cursor:pointer;animation:swim linear infinite alternate;touch-action:manipulation}
+.sw svg{display:block;width:78px;height:48px}
+.water.big .sw svg{width:54px;height:34px}
+@keyframes swim{from{transform:translateX(0)}to{transform:translateX(var(--d))}}
+.sw.flip svg{transform:scaleX(-1)}
+.sw[disabled]{opacity:.55;cursor:default}
+.bucket{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:70px;background:#FFF5F2;border:3px dashed #D95D39;border-radius:18px;padding:8px 14px}
+.bucket b{font-size:24px;color:#D95D39}
+.bucket button{border:0;background:none;padding:0;cursor:pointer}
+.bucket svg{width:60px;height:38px}
+.live{display:flex;flex-wrap:wrap;gap:8px}
+.live span{font-weight:900;font-size:20px;border-radius:999px;padding:4px 14px;background:#fff;border:2px solid #E3DED7}
 </style>
 </head>
 <body>
@@ -46,6 +60,13 @@ function makeGroups(list){var n=list.length,k=Math.max(1,Math.round(n/GS)),G=[];
 function gOf(g,seat){for(var i=0;i<(g.groups||[]).length;i++)if(g.groups[i].indexOf(+seat)>=0)return i;return -1}
 function cap(g,i){return g.groups[i].length*PER}
 function fishHTML(n,c){var o='<div class="fish">';for(var i=0;i<c;i++)o+='<i class="'+(i<n?'':'gone')+'"></i>';return o+'</div>'}
+
+var FISH='<svg viewBox="0 0 80 50" aria-hidden="true"><path d="M8 25 Q30 2 58 18 L76 6 L72 25 L76 44 L58 32 Q30 48 8 25 Z" fill="#F2A65A" stroke="#C26A2E" stroke-width="3"/><circle cx="22" cy="21" r="4" fill="#1E242B"/></svg>';
+function swimHTML(n,act,disabled,big){var o='<div class="water'+(big?' big':'')+'">',now=Date.now()/1000;
+ for(var i=0;i<n;i++){var rows=big?4:5,top=6+((i*37)%rows)*(big?48:62)+((i*13)%9),dur=7+(i*29%5),dl=-((now+i*1.7)%(dur*2)),dist=(big?220:560)+((i*41)%120);
+  o+='<button class="sw'+(i%2?' flip':'')+'" '+(act?'data-act="catch"':'tabindex="-1"')+(disabled?' disabled':'')+' style="top:'+top+'px;left:'+((i*53)%40)+'px;--d:'+dist+'px;animation-duration:'+dur+'s;animation-delay:'+dl.toFixed(2)+'s" aria-label="一條魚">'+FISH+'</button>'}
+ return o+'</div>'}
+function liveSum(g,i,except){var t=0;(g.groups[i]||[]).forEach(function(s){if(s!=except)t+=(g.picks||{})[s]||0});return t}
 function startStage(g,st){g.stage=st;g.round=1;g.pond=g.groups.map(function(m,i){return cap(g,i)});g.picks={};g.last=null;g.deadline=Date.now()+SEC*1000}
 function settle(H){var g=H.g;g.last={round:g.round,stage:g.stage,gs:[]};
  g.groups.forEach(function(mem,i){var want={},tot=0;mem.forEach(function(s){var w=g.picks[s];if(w==null)w=0;if(g.stage===2&&g.rule[i]!=null)w=Math.min(w,g.rule[i]);want[s]=w;tot+=w});
@@ -61,12 +82,12 @@ function settle(H){var g=H.g;g.last={round:g.round,stage:g.stage,gs:[]};
  g.hist.push(JSON.parse(JSON.stringify(g.last)))}
 ROOM.start({
  key:'pond3',title:'小組魚塭大作戰',kick:'第 4 課・制度　全班連線',studentUrl:'pondshare.html',
- rules:'<p>全班分成幾個小組，<b>每一組共用一口魚塭</b>。每一回合，每個人選要撈 <b>0、1、2 或 3 條魚</b>，撈到的就是你的分數。</p><p>大家撈完以後，<b>剩下的魚會生小魚，數量變成 2 倍</b>（但不會超過魚塭的上限）。魚撈光了，就再也生不出來。<b>第 3 回合結束時，還留在魚塭裡的魚，小組每個人平分</b>。</p><p>第一階段：不能說話，各撈各的。第二階段：先和小組訂一條約定，再撈。</p>',
+ rules:'<p>全班分成幾個小組，<b>每一組共用一口魚塭</b>。每一回合，<b>點水裡游的魚就能撈起來</b>，每人最多撈 <b>3 條</b>（可以撈 0～3 條），水桶裡的魚就是你的分數。組員撈走的魚，你的魚塭裡也會馬上少掉。</p><p>大家撈完以後，<b>剩下的魚會生小魚，數量變成 2 倍</b>（但不會超過魚塭的上限）。魚撈光了，就再也生不出來。<b>第 3 回合結束時，還留在魚塭裡的魚，小組每個人平分</b>。</p><p>第一階段：不能說話，各撈各的。第二階段：先和小組訂一條約定，再撈。</p>',
  init:function(H){H.g={}},
  onStart:function(H){var g=H.g={t0:Date.now(),groups:makeGroups(seatsOf(H)),score:{},tot:{},hist:[],rule:{},votes:{}};startStage(g,1);H.ph='choose'},
- pub:function(H){var g=H.g;return {g:{t0:g.t0,groups:g.groups,stage:g.stage,round:g.round,pond:g.pond,deadline:g.deadline,rule:g.rule,votes:g.votes,last:g.last,score:g.score,n:Object.keys(g.picks||{}).length}}},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,groups:g.groups,stage:g.stage,round:g.round,pond:g.pond,deadline:g.deadline,rule:g.rule,votes:g.votes,last:g.last,score:g.score,picks:g.picks,n:Object.keys(g.picks||{}).length}}},
  onMsg:function(H,d,seat){var g=H.g;
-  if(d.t==='take'&&H.ph==='choose'&&[0,1,2,3].indexOf(+d.v)>=0){g.picks[seat]=+d.v;return true}
+  if(d.t==='take'&&H.ph==='choose'){var i=gOf(g,seat);if(i<0)return;var mx=g.stage===2&&g.rule[i]!=null?g.rule[i]:3,v=Math.max(0,Math.min(+d.v|0,mx,g.pond[i]-liveSum(g,i,seat)));g.picks[seat]=v;return true}
   if(d.t==='vote'&&H.ph==='vote'&&[1,2,3].indexOf(+d.v)>=0){g.votes[seat]=+d.v;return true}},
  tick:function(H){if(H.ph==='choose'&&Date.now()>H.g.deadline){settle(H);H.ph='reveal';return true}},
  tickText:function(H){if(H.ph==='choose')return '還剩 '+Math.max(0,Math.ceil((H.g.deadline-Date.now())/1000))+' 秒';return ''},
@@ -83,7 +104,7 @@ ROOM.start({
    return '<div class="pd'+(dead?' dead':'')+'"><h3><span>第 '+(i+1)+' 組</span><span class="n">'+(L?'剩 '+L.rem+' → 變成 '+L.next:n)+' / '+c+' 條</span></h3>'+fishHTML(L?L.rem:n,c)+
     (L?'<p style="font-size:20px">這一回合撈走 <b>'+L.taken+'</b> 條（'+mem.map(function(s){return s+' 號 '+L.got[s]}).join('、')+'）</p>':'<p style="font-size:20px">'+mem.map(function(s){return s+' 號'}).join('、')+(g.stage===2&&g.rule[i]!=null?'　<span class="rule">約定：每人最多 '+g.rule[i]+' 條</span>':'')+'</p>')+
     (dead?'<p style="font-size:22px;font-weight:900;color:#D95D39">魚塭空了，生不出小魚</p>':'')+(L&&L.bonus!=null?'<p style="font-size:22px;font-weight:900;color:#2A6F68">階段結束：留下的魚每人平分 '+L.bonus+' 條</p>':'')+'</div>'}).join('')+'</div>'}
-  if(H.ph==='choose')h+=head+'<div class="card"><p class="stat">已經選好：'+Object.keys(g.picks).length+' / '+N+' 人　<span id="hdtick" style="color:#D95D39"></span></p></div>'+ponds(false);
+  if(H.ph==='choose')h+=head+'<div class="card"><p class="stat">在平板上點水裡的魚，就能撈起來！　<span id="hdtick" style="color:#D95D39"></span></p></div><div class="ponds">'+g.groups.map(function(mem,i){var took=liveSum(g,i,null),left=g.pond[i]-took;return '<div class="pd"><h3><span>第 '+(i+1)+' 組</span><span class="n">水裡還有 '+left+' 條</span></h3>'+swimHTML(left,false,true,true)+'<p style="font-size:20px">已經撈起 <b>'+took+'</b> 條'+(g.stage===2&&g.rule[i]!=null?'　<span class="rule">約定：每人最多 '+g.rule[i]+' 條</span>':'')+'</p></div>'}).join('')+'</div>';
   else if(H.ph==='reveal')h+=head+ponds(true);
   else if(H.ph==='vote')h+='<div class="card dark"><p class="huge">第二階段：小組先訂約定</p><p class="stat">魚塭會重新放滿。小組可以小聲討論，再在平板上投票：每人每回合最多撈幾條？</p></div>'+
    '<div class="ponds">'+g.groups.map(function(mem,i){var c={1:0,2:0,3:0};mem.forEach(function(s){if(g.votes[s])c[g.votes[s]]++});return '<div class="pd"><h3><span>第 '+(i+1)+' 組</span></h3><p style="font-size:22px">最多 1 條：'+c[1]+' 票　最多 2 條：'+c[2]+' 票　最多 3 條：'+c[3]+' 票</p></div>'}).join('')+'</div>';
@@ -96,19 +117,26 @@ ROOM.start({
   if(gi<0)return '<h1>這一輪你還沒分到小組</h1><p class="lead">等老師開下一輪。</p>';
   var mem=g.groups[gi],c=mem.length*PER,n=(g.pond||[])[gi],sc=(g.score||{})[me]||{s1:0,s2:0},rule=g.stage===2?(g.rule||{})[gi]:null;
   var top='<p class="lead" style="font-weight:900">你是第 '+(gi+1)+' 組（'+mem.map(function(s){return s+' 號'}).join('、')+'）　我的魚：'+(sc.s1+sc.s2)+' 條</p>';
-  if(ST.ph==='choose'){h+=top+'<div class="card"><p class="stat">'+(g.stage===1?'第一階段':'第二階段')+'・第 '+g.round+' / '+ROUNDS+' 回合</p><p class="lead">你們的魚塭現在有 <b>'+n+'</b> 條魚（最多 '+c+' 條）</p>'+fishHTML(n,c)+(rule?'<p class="rule">小組約定：每人最多撈 '+rule+' 條</p>':'<p class="lead">不能說話，各撈各的。</p>')+'</div>';
-   if(L.sent)h+='<h2>送出了！你要撈 '+L.v+' 條。</h2><p class="lead">等老師收網。</p>';
-   else h+='<h2>這一回合，你要撈幾條魚？</h2><div class="take">'+[0,1,2,3].map(function(v){var off=rule&&v>rule;return '<button class="btn '+(L.v===v?'te on':'gh')+'" data-act="v" data-arg="'+v+'" '+(off?'disabled':'')+'>'+v+'<small>條</small></button>'}).join('')+'</div><button class="btn" data-act="send" '+(L.v==null?'disabled':'')+'>送出</button>'}
+  window._pdDL=ST.ph==='choose'?g.deadline:0;
+  if(ST.ph==='choose'){var sv=(g.picks||{})[me];if(L.t&&Date.now()-L.t>1500&&sv!=null&&sv!==L.v){L.v=sv}
+   var my=L.v||0,others=liveSum(g,gi,me),left=Math.max(0,n-others-my),mx=rule||3,full=my>=mx;
+   h+=top+'<div class="card"><p class="stat">'+(g.stage===1?'第一階段':'第二階段')+'・第 '+g.round+' / '+ROUNDS+' 回合　<span style="color:#D95D39" id="pdleft"></span></p>'+
+    '<p class="lead">'+(rule?'<span class="rule">小組約定：每人最多撈 '+rule+' 條</span>':'不能說話，各撈各的。每人最多撈 3 條。')+'</p>'+
+    '<p class="lead">水裡還有 <b>'+left+'</b> 條魚（魚塭最多 '+c+' 條）。<b>點魚就能撈起來。</b></p>'+swimHTML(left,true,full,false)+
+    '<p class="lead" style="font-weight:900">我的水桶（點一下可以放回水裡）</p><div class="bucket">'+(my?Array(my+1).join('<button data-act="release" aria-label="放回一條魚">'+FISH+'</button>'):'<span class="lead">還沒撈到魚</span>')+'<b>'+my+' / '+mx+' 條'+(full?'（滿了）':'')+'</b></div>'+
+    '<div class="live">'+mem.filter(function(x){return x!=me}).map(function(x){return '<span>'+x+' 號撈了 '+(((g.picks||{})[x])||0)+' 條</span>'}).join('')+'</div></div>'+
+    '<p class="lead">時間到或老師收網時，水桶裡的魚就是你這一回合撈到的。</p>'}
   else if(ST.ph==='reveal'&&g.last){var R=g.last.gs[gi];h+=top+'<div class="card"><p class="stat">你們這組一共撈走 '+R.taken+' 條，剩下 '+R.rem+' 條</p><p class="lead">剩下的魚生小魚，變成 2 倍：'+(R.bonus!=null?'魚塭最後有':'下一回合有')+' <b>'+R.next+'</b> 條（最多 '+c+' 條）</p>'+fishHTML(R.next,c)+'<div class="mates">'+mem.map(function(s){return '<span class="'+(R.got[s]>=3?'hi':'')+'">'+s+' 號撈 '+R.got[s]+' 條</span>'}).join('')+'</div>'+(R.next===0?'<p class="stat" style="color:#D95D39">魚塭空了，再也生不出魚。</p>':'')+(R.bonus!=null?'<p class="stat" style="color:#2A6F68">這一階段結束：魚塭還有 '+R.next+' 條，每人平分到 '+R.bonus+' 條</p>':'')+'</div><p class="lead">看大螢幕。</p>'}
   else if(ST.ph==='vote'){var vk='v'+g.t0,V=api.local[vk];h+=top+'<h1>小組約定</h1><p class="lead">第二階段魚塭會重新放滿。先和小組小聲討論，再投票：</p><h2>每人每回合，最多撈幾條？</h2><div class="take" style="grid-template-columns:repeat(3,1fr)">'+[1,2,3].map(function(v){return '<button class="btn '+(V===v?'te on':'gh')+'" data-act="vote" data-arg="'+v+'">'+v+'<small>條</small></button>'}).join('')+'</div>'+(V?'<p class="lead">投好了，可以再改。多數決，平手選比較少的。</p>':'')}
   else if(ST.ph==='end')h+=top+'<h1>結束了！</h1><div class="card"><p class="stat">第一階段撈到 '+sc.s1+' 條，第二階段撈到 '+sc.s2+' 條</p></div><p class="lead">看大螢幕。</p>';
   else h+='<h1>等老師開始</h1>';
   return h},
  sact:{
-  v:function(ST,me,api,v){if(ST.ph!=='choose')return;var g=ST.g,k='p'+g.t0+'_'+g.stage+'_'+g.round,L=api.local[k]||{};L.v=+v;var o={};o[k]=L;api.local=o;api.save()},
-  send:function(ST,me,api){if(ST.ph!=='choose')return;var g=ST.g,k='p'+g.t0+'_'+g.stage+'_'+g.round,L=api.local[k]||{};if(L.v==null)return;api.send({t:'take',v:L.v});L.sent=1;var o={};o[k]=L;api.local=o;api.save()},
+  catch:function(ST,me,api){if(ST.ph!=='choose')return;var g=ST.g,k='p'+g.t0+'_'+g.stage+'_'+g.round,L=api.local[k]||{},gi=gOf(g,me),rule=g.stage===2?(g.rule||{})[gi]:null,my=L.v||0;if(my>=(rule||3))return;if((g.pond||[])[gi]-liveSum(g,gi,me)-my<=0)return;L.v=my+1;L.t=Date.now();api.send({t:'take',v:L.v});var o={};o[k]=L;api.local=o;api.save()},
+  release:function(ST,me,api){if(ST.ph!=='choose')return;var g=ST.g,k='p'+g.t0+'_'+g.stage+'_'+g.round,L=api.local[k]||{};if(!L.v)return;L.v--;L.t=Date.now();api.send({t:'take',v:L.v});var o={};o[k]=L;api.local=o;api.save()},
   vote:function(ST,me,api,v){var g=ST.g,vk='v'+g.t0;api.send({t:'vote',v:+v});var o={};o[vk]=+v;api.local=o;api.save()}}
 });
+setInterval(function(){var e=document.getElementById('pdleft');if(e&&window._pdDL)e.textContent='還剩 '+Math.max(0,Math.ceil((window._pdDL-Date.now())/1000))+' 秒'},250);
 </script>
 </body>
 </html>
