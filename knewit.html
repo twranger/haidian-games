@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>我早就知道了・全班連線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,7 +47,7 @@ var PS=[10,30,50,70,90],RATE=0.04;
 function players(H){return Object.keys(H.seats).length}
 function pollRes(g,i){var y=0,n=0;Object.keys(g.pre||{}).forEach(function(k){var o=g.pre[k].o[i];if(o===1)y++;else if(o===0)n++});return {y:y,n:n,hit:y>(y+n)/2}}
 function outcome(g,i){return i===0?(g.cards||[]).some(function(c){return c}):pollRes(g,i).hit}
-function cardsHTML(g){var el=(Date.now()-(g.ts||0))/1000;return '<div class="cards">'+(g.cards||[]).map(function(c,i){return '<div class="gc'+(c?' gold':'')+'" style="animation-delay:'+(i*0.45-el).toFixed(2)+'s"><div class="bk"></div><div class="fr">'+(c?'★ 金卡':'普通')+'</div></div>'}).join('')+'</div>'}
+function cardsHTML(g){var el=(Date.now()-(g.ts||0))/1000;return '<div class="cards">'+(g.cards||[]).map(function(c,i){return '<div class="gc'+(c?' gold':'')+'" style="animation-delay:'+(i*0.45-el).toFixed(2)+'s"><div class="bk"></div><div class="fr">'+(c?ICON('star')+' 金卡':'普通')+'</div></div>'}).join('')+'</div>'}
 function pollHTML(g,i){var r=pollRes(g,i),t=Math.max(1,r.y+r.n);return '<div class="pb"><span style="width:'+(r.y/t*100)+'%;background:#D95D39">'+(r.y?'有 '+r.y:'')+'</span><span style="width:'+(r.n/t*100)+'%;background:#64748B">'+(r.n?'沒有 '+r.n:'')+'</span></div><p class="stat">說「有」'+r.y+' 人，說「沒有」'+r.n+' 人 → '+(r.hit?'<b style="color:#D95D39">超過一半，發生了</b>':'<b>沒有超過一半，沒發生</b>')+'</p>'}
 function avg(a){return a.length?Math.round(a.reduce(function(s,x){return s+x},0)/a.length):null}
 function cmp(g){return EV.map(function(e,i){var hit=outcome(g,i),o=[],r=[],tw=0,same=0,aw=0;Object.keys(g.rec||{}).forEach(function(k){var P=g.pre[k];if(!P)return;var a=P.p[i],b=g.rec[k][i];o.push(a);r.push(b);var d=b-a;if(d===0)same++;else if((d>0)===hit)tw++;else aw++});return {hit:hit,o:avg(o),r:avg(r),tw:tw,same:same,aw:aw}})}

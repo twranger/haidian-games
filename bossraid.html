@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>全班打王・全班連線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,7 +56,7 @@ ROOM.start({
  hostView:function(H){var g=H.g,N=players(H),h='';
   if(H.ph==='ready')h+='<div class="card dark"><p class="huge">全班一起打大魔王</p><p class="stat">狂點「攻擊！」，把血打到 0！</p></div>'+bossSVG(1,false);
   else if(H.ph==='play'){var e=(Date.now()-g.t0)/1000;
-   h+='<div class="grid2"><div>'+bossSVG(g.hp/g.max,false)+'</div><div class="card"><h2>大魔王的血</h2>'+hpBar(g.hp,g.max,'#7B3F98')+'<p class="stat">'+g.hp+' / '+g.max+'</p><h2>隊伍的心</h2><p class="huge" style="color:#D95D39">'+'♥'.repeat(Math.max(0,g.team))+'<span style="color:#E3DED7">'+'♥'.repeat(3-Math.max(0,g.team))+'</span></p>'+
+   h+='<div class="grid2"><div>'+bossSVG(g.hp/g.max,false)+'</div><div class="card"><h2>大魔王的血</h2>'+hpBar(g.hp,g.max,'#7B3F98')+'<p class="stat">'+g.hp+' / '+g.max+'</p><h2>隊伍的心</h2><p class="huge" style="color:#D95D39">'+ICON('heart').repeat(Math.max(0,g.team))+'<span style="color:#E3DED7">'+ICON('heart').repeat(3-Math.max(0,g.team))+'</span></p>'+
     (g.res.length&&!g.res[g.res.length-1].ok&&e<SIG[g.res.length-1]+WIN+3?'<p class="stat" style="color:#D95D39">有隊友倒下了！隊伍少一顆心！</p>':'')+'<p class="lead">已經打了 '+Math.floor(e)+' 秒</p></div></div>'}
   else if(H.ph==='end'){var w=g.end==='win';
    h+='<div class="card '+(w?'cool':'warm')+'"><p class="huge" style="color:'+(w?'#2A6F68':'#D95D39')+'">'+(w?'打贏了！':g.end==='wipe'?'全隊倒下了……':'時間到，沒打完')+'</p><p class="stat">魔王還剩 '+g.hp+' / '+g.max+' 滴血。</p></div>'+
@@ -68,7 +69,7 @@ ROOM.start({
   if(ST.ph==='ready')h+='<h1>準備打王！</h1><p class="lead">等老師說開打，就狂點「攻擊！」</p>';
   else if(ST.ph==='play'){var done=(window._sosDone||{})[g.t0+'_'+g.sig];
    h+=(g.sig>=0&&!done?'<button class="sos" data-sos="'+g.sig+'">隊友求救：按這裡</button>':'')+
-    '<p class="lead">大魔王的血</p>'+hpBar(g.hp,g.max,'#7B3F98')+'<p class="lead">隊伍的心：<b style="color:#D95D39;font-size:30px">'+'♥'.repeat(Math.max(0,g.team))+'</b></p><button class="atk" data-hit="1">攻擊！</button><p class="lead" style="text-align:center">我打了 <b id="myhits">'+(window._hits||0)+'</b> 下</p>'}
+    '<p class="lead">大魔王的血</p>'+hpBar(g.hp,g.max,'#7B3F98')+'<p class="lead">隊伍的心：<b style="color:#D95D39;font-size:30px">'+ICON('heart').repeat(Math.max(0,g.team))+'</b></p><button class="atk" data-hit="1">攻擊！</button><p class="lead" style="text-align:center">我打了 <b id="myhits">'+(window._hits||0)+'</b> 下</p>'}
   else if(ST.ph==='end')h+='<h1>'+(g.end==='win'?'打贏了！':g.end==='wipe'?'全隊倒下了……':'時間到')+'</h1><div class="card"><p class="stat">我打了 '+(window._hits||0)+' 下</p><p>你有看到右上角的「隊友求救」嗎？</p></div><p class="lead">看大螢幕。</p>';
   else h+='<h1>看大螢幕！</h1>';
   return h},

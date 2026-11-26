@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>數傳球・全班連線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,7 +93,7 @@ ROOM.start({
  studentView:function(ST,me,api){var g=ST.g||{},h='',L=api.local['a'+g.t0]||{};
   if(ST.ph==='ready'||ST.ph==='play'||ST.ph==='replay')h+='<h1>看大螢幕！</h1><div class="card dark"><p class="stat">只數「黑衣隊」傳了幾次球。</p><p>在心裡數，不要說出來。平板先放著，播完再回答。</p></div>';
   else if(ST.ph==='answer'){if(L.done)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師公布。</p>';
-   else{h+='<h2>1. 黑衣隊傳了幾次球？</h2><div class="nums">';for(var i=10;i<=19;i++)h+='<button class="btn '+(L.n==i?'te on':'gh')+'" data-act="num" data-arg="'+i+'">'+(i===10?'10↓':i===19?'19↑':i)+'</button>';
+   else{h+='<h2>1. 黑衣隊傳了幾次球？</h2><div class="nums">';for(var i=10;i<=19;i++)h+='<button class="btn '+(L.n==i?'te on':'gh')+'" data-act="num" data-arg="'+i+'">'+(i===10?'10'+ICON('down'):i===19?'19'+ICON('up'):i)+'</button>';
     h+='</div><h2>2. 剛剛的畫面裡，你有看到什麼奇怪的東西嗎？</h2><div class="opts">'+SEEN.map(function(s){return '<button class="btn '+(L.what===s[0]?'te on':'gh')+'" data-act="saw" data-arg="'+s[0]+'">'+s[1]+'</button>'}).join('')+
      '<button class="btn '+(L.what==='none'?'te on':'gh')+'" data-act="saw" data-arg="none" style="grid-column:1/3">什麼都沒看到</button></div>'+
      '<button class="btn" data-act="send" '+(L.n&&L.what?'':'disabled')+'>送出</button>'}}

@@ -1,3 +1,4 @@
+var HD_CK='<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-.14em"><path d="M20 6.5 9.5 17 4 11.5"/></svg>';/* 打勾圖示（不用符號字元） */
 /* 海佃課堂小遊戲・全班即時連線共用程式
    同時連兩個公開服務（EMQX、HiveMQ），訊息用 id 去重複；學生和老師都不用登入。 */
 (function(){
@@ -36,7 +37,7 @@ L.box=function(game,payload){
  if(!document.getElementById('hdboxcss')){var st=document.createElement('style');st.id='hdboxcss';st.textContent=CSS;document.head.appendChild(st)}
  if(L.key){/* 從簡報的連結進來：自動送出，不用房號 */
   var a=document.createElement('p');a.className='hdbox s';a.style.cssText='font-size:17px;color:#475569;margin:0';a.textContent='（正在把結果送到老師的大螢幕……）';
-  var cid0=L.cid(),done=false,cn=L.connect(['hdboard/'+L.key+'/ack'],function(t,m){if(m.cid===cid0&&m.game===game&&!done){done=true;a.style.color='#2A6F68';a.style.fontWeight='900';a.textContent='✓ 結果已經送到老師的大螢幕'}},
+  var cid0=L.cid(),done=false,cn=L.connect(['hdboard/'+L.key+'/ack'],function(t,m){if(m.cid===cid0&&m.game===game&&!done){done=true;a.style.color='#2A6F68';a.style.fontWeight='900';a.innerHTML=HD_CK+' 結果已經送到老師的大螢幕'}},
    function(ok){if(ok&&!done)cn.pub('hdboard/'+L.key+'/in',{t:'res',ep:+(ls('hd-epoch')||0),game:game,cid:cid0,g:payload.g||null,rows:payload.rows||[],v:payload.v==null?null:payload.v})});
   setTimeout(function(){if(!done)a.textContent='（老師這次沒有開統計大螢幕也沒關係，等一下照老師說的舉手。）'},9000);
   return a}
@@ -45,11 +46,11 @@ L.box=function(game,payload){
  d.innerHTML='<b class="t">把結果送到老師的大螢幕</b><p class="s">老師有開「全班統計」的話，輸入大螢幕上的 4 位數房號，再按送出。沒有的話，這一格不用管。</p>'+
   '<div class="r"><input inputmode="numeric" maxlength="4" placeholder="房號" value="'+L.esc(room)+'"><button type="button">送出結果</button></div><p class="s" aria-live="polite"></p>';
  var inp=d.querySelector('input'),btn=d.querySelector('button'),msg=d.querySelectorAll('p.s')[1],conn=null,cur=null,cid=L.cid(),timer=null;
- function say(t,c){msg.textContent=t;msg.className='s'+(c?' '+c:'')}
+ function say(t,c){msg.innerHTML=t;msg.className='s'+(c?' '+c:'')}
  btn.onclick=function(){var v=(inp.value||'').replace(/\D/g,'');if(v.length!==4){say('房號是 4 個數字','bad');return}
   ls('hd-room',v);say('送出中……');
   var send=function(){conn.pub('hdboard/'+v+'/in',{t:'res',game:game,cid:cid,g:payload.g||null,rows:payload.rows||[],v:payload.v==null?null:payload.v})};
-  if(conn&&cur===v){send()}else{cur=v;conn=L.connect(['hdboard/'+v+'/ack'],function(t,m){if(m.cid===cid&&m.game===game){clearTimeout(timer);say('✓ 大螢幕收到了！','ok')}},function(ok){if(ok)send()})}
+  if(conn&&cur===v){send()}else{cur=v;conn=L.connect(['hdboard/'+v+'/ack'],function(t,m){if(m.cid===cid&&m.game===game){clearTimeout(timer);say(HD_CK+' 大螢幕收到了！','ok')}},function(ok){if(ok)send()})}
   clearTimeout(timer);timer=setTimeout(function(){say('大螢幕還沒有回應。請確認房號，或請老師看看大螢幕有沒有打開。','bad')},9000)};
  return d};
 })();

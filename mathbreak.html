@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>被打斷的心算・全班連線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,7 +73,7 @@ ROOM.start({
   key:function(ST,me,api,v){var g=ST.g,k='m'+g.t0,L=api.local[k]||{};var s=L.typed||'';if(v==='del')s=s.slice(0,-1);else if(s.length<3)s+=v;L.typed=s;api.local={};api.local[k]=L;api.save()},
   send:function(ST,me,api){var g=ST.g,k='m'+g.t0,L=api.local[k]||{};if(!L.typed)return;L.v=+L.typed;L.sent=1;api.send({t:'ans',v:L.v});api.save()}}
 });
-function pad(L){var h='<h1>算完了！答案是多少？</h1><div class="show">'+(L.typed||'')+'</div><div class="pad">';['1','2','3','4','5','6','7','8','9','del','0','ok'].forEach(function(x){h+=x==='del'?'<button class="btn gh" data-act="key" data-arg="del">⌫</button>':x==='ok'?'<button class="btn te" data-act="send" '+(L.typed?'':'disabled')+'>送出</button>':'<button class="btn gh" data-act="key" data-arg="'+x+'">'+x+'</button>'});return h+'</div>'}
+function pad(L){var h='<h1>算完了！答案是多少？</h1><div class="show">'+(L.typed||'')+'</div><div class="pad">';['1','2','3','4','5','6','7','8','9','del','0','ok'].forEach(function(x){h+=x==='del'?'<button class="btn gh" data-act="key" data-arg="del" aria-label="刪除一個數字">'+ICON('backspace')+'</button>':x==='ok'?'<button class="btn te" data-act="send" '+(L.typed?'':'disabled')+'>送出</button>':'<button class="btn gh" data-act="key" data-arg="'+x+'">'+x+'</button>'});return h+'</div>'}
 var _k='';setInterval(function(){if(location.hash.indexOf('host')>=0||!window.ROOM||!ROOM.redraw||!window._lt)return;var t0=Object.keys(window._lt).pop();if(!t0)return;var e=(Date.now()-window._lt[t0])/1000,k=String(stepAt(e))+(e>=TL.end?'end':'');if(k!==_k){_k=k;ROOM.redraw()}},200);
 </script>
 </body>

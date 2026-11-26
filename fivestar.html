@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>五星好評送鑽石・全班連線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,7 +61,7 @@ ROOM.start({
   if(H.ph==='ready')h+='<div class="card dark"><p class="huge">轉木釘任務</p><p class="stat">把每一個木釘轉四分之一圈，轉完再從頭轉。一直轉，轉到時間到。</p></div>';
   else if(H.ph==='task')h+='<div class="card dark"><p class="huge">轉、轉、轉……</p><p class="stat" id="hdtick" style="color:#F2A65A;font-size:48px"></p></div>';
   else if(H.ph==='ask'){var ks=Object.keys(g.rev).filter(function(k){return g.rev[k]>=0});
-   h+='<div class="card dark"><p class="huge">在平板上回答</p><p class="stat">已經送出：'+Object.keys(g.rate).length+' / '+N+' 人</p></div><div class="card"><h2>好評留言板（'+ks.length+' 則）</h2><div class="wall">'+ks.slice(-12).map(function(k){return '<div class="rv"><div class="st">★★★★★</div>'+REV[g.rev[k]]+'</div>'}).join('')+'</div></div>'}
+   h+='<div class="card dark"><p class="huge">在平板上回答</p><p class="stat">已經送出：'+Object.keys(g.rate).length+' / '+N+' 人</p></div><div class="card"><h2>好評留言板（'+ks.length+' 則）</h2><div class="wall">'+ks.slice(-12).map(function(k){return '<div class="rv"><div class="st">'+STARS(5,{color:'#E0A21B'})+'</div>'+REV[g.rev[k]]+'</div>'}).join('')+'</div></div>'}
   else{var S=stats(g),C={ctrl:'#64748B',one:'#D95D39',twenty:'#2A6F68'};
    h+='<div class="card warm"><p class="stat">其實全班分成三組，玩的是同一個任務：</p><p style="font-size:24px;line-height:1.6"><b>不用寫組</b>：直接打分數。　<b style="color:#D95D39">1 顆鑽石組</b>：寫五星好評，送 1 顆。　<b style="color:#2A6F68">20 顆鑽石組</b>：寫五星好評，送 20 顆。</p></div>'+
     '<div class="cmp"><div class="card"><h2>我們班：真心覺得多好玩？（平均）</h2><div class="dv">'+axis()+GR.slice(2).concat(GR.slice(0,2)).map(function(x){return dbar(GN[x]+'<br><small style="font-size:16px;color:#64748B">'+S[x].n+' 人'+(x!=='ctrl'?'・寫好評 '+S[x].w+'・不寫 '+S[x].no:'')+'</small>',S[x].avg,C[x])}).join('')+'</div></div>'+
@@ -72,8 +73,8 @@ ROOM.start({
   else if(ST.ph==='task')h+='<h1>轉木釘任務</h1><p class="lead">點一下，木釘轉四分之一圈。一個一個轉，轉完再從頭轉，轉到老師說停。</p><div class="pegs">'+L.rot.map(function(r,i){return '<button class="peg" data-act="peg" data-arg="'+i+'" aria-label="木釘 '+(i+1)+'">'+pegSVG(r)+'</button>'}).join('')+'</div><p class="stat">你已經轉了 '+L.n+' 下</p>';
   else if(ST.ph==='ask'){
    if(L.done)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師公布。</p>';
-   else if(gr!=='ctrl'&&L.rv==null)h+='<div class="offer"><p style="font-size:20px;color:#C4B5FD;font-weight:700">遊戲公司的拜託</p><p style="font-size:clamp(22px,4.2vw,28px);font-weight:900;line-height:1.5">請你替「轉木釘」寫一句五星好評，貼到留言板，給下一班的同學看。</p><p class="gem">寫了就送你 💎 '+GEM[gr]+' 顆鑽石</p></div><h2>選一句好評貼上去：</h2><div class="revs">'+REV.map(function(r,i){return '<button class="btn gh" data-act="rv" data-arg="'+i+'">★★★★★ '+r+'</button>'}).join('')+'<button class="btn gh" data-act="rv" data-arg="-1" style="color:#64748B">我不想寫（沒有鑽石）</button></div>';
-   else{h+=(gr!=='ctrl'?(L.rv>=0?'<div class="card"><p class="stat">已貼上留言板：★★★★★ '+REV[L.rv]+'</p><p class="stat" style="color:#0369A1">你得到 💎 '+GEM[gr]+' 顆鑽石</p></div>':'<div class="card"><p class="stat">你沒有寫好評，也沒有拿鑽石。</p></div>'):'')+
+   else if(gr!=='ctrl'&&L.rv==null)h+='<div class="offer"><p style="font-size:20px;color:#C4B5FD;font-weight:700">遊戲公司的拜託</p><p style="font-size:clamp(22px,4.2vw,28px);font-weight:900;line-height:1.5">請你替「轉木釘」寫一句五星好評，貼到留言板，給下一班的同學看。</p><p class="gem">寫了就送你 '+ICON('gem')+' '+GEM[gr]+' 顆鑽石</p></div><h2>選一句好評貼上去：</h2><div class="revs">'+REV.map(function(r,i){return '<button class="btn gh" data-act="rv" data-arg="'+i+'">'+STARS(5,{color:'#E0A21B'})+' '+r+'</button>'}).join('')+'<button class="btn gh" data-act="rv" data-arg="-1" style="color:#64748B">我不想寫（沒有鑽石）</button></div>';
+   else{h+=(gr!=='ctrl'?(L.rv>=0?'<div class="card"><p class="stat">已貼上留言板：'+STARS(5,{color:'#E0A21B'})+' '+REV[L.rv]+'</p><p class="stat" style="color:#0369A1">你得到 '+ICON('gem')+' '+GEM[gr]+' 顆鑽石</p></div>':'<div class="card"><p class="stat">你沒有寫好評，也沒有拿鑽石。</p></div>'):'')+
     '<h2>說真心話：剛剛轉木釘，你覺得有多好玩？</h2><p class="lead">−5＝超級無聊，0＝普通，+5＝超級好玩。只會公布全班平均。</p><div class="sc">'+[-5,-4,-3,-2,-1,0,1,2,3,4,5].map(function(v){return '<button class="btn '+(L.v===v?'te on':'gh')+'" data-act="v" data-arg="'+v+'">'+(v>0?'+'+v:v)+'</button>'}).join('')+'</div><button class="btn" data-act="send" '+(L.v!=null?'':'disabled')+'>送出</button>'}}
   else h+='<h1>看大螢幕！</h1><div class="card"><p class="stat">你在「'+GN[gr]+'」，你打了 '+(L.v!=null?(L.v>0?'+':'')+L.v:'—')+' 分。</p></div>';
   return h},

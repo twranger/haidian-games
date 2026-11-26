@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <title>這個能收嗎？</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
@@ -176,11 +177,11 @@ function customer(){
 function decide(id,it){
   var stall=el('div','stall');
   var cu=el('div','cust');cu.innerHTML=face(it.s);cu.appendChild(el('p','bubble',it.t));
-  var up=el('p','hintup','↑ 推回去給客人（不收）');
+  var up=el('p','hintup',ICON('up')+' 推回去給客人（不收）');
   var counter=el('div','counter');
   var g=el('div','goods',art(id));g.tabIndex=0;g.setAttribute('aria-label',it.n+'。按 Enter 收下，按 Esc 推回去。');
   counter.appendChild(g);
-  var dn=el('p','hintdn','↓ 拖進抽屜（收下）');
+  var dn=el('p','hintdn',ICON('down')+' 拖進抽屜（收下）');
   var dr=drawerEl();
   stall.append(cu,up,counter,dn,dr);
   var ctrl=el('div','ctrl');

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>瘋狂魚苗拍賣會・全班版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -133,7 +134,7 @@ if(location.hash.indexOf('host')>=0){
  window.replay=function(){if(confirm('要從第 1 回合重新開始嗎？已經進場的座號會保留。')){H.ph='lobby';H.r=1;H.price=0;H.lead=null;H.bids={};H.stops={};H.over={};H.hist=[];H.log=[];render();broadcast()}};
  window.newRoom=function(){if(confirm(K?'清空紀錄、換新班級？\n已經進來的學生都會被退出、回到選座號，之前的紀錄不再計入。':'要全部重置、開新房號嗎？（換下一班時用）')){pub(T+'state',{ts:Date.now(),room:H.room,ph:'closed',seats:{},bids:{},stops:{},hist:[]},true);if(K)pub('hdboard/'+K+'/epoch',{ts:Date.now()},true);setTimeout(function(){if(K){ls('fryhost-v1',null);location.hash='#host'}else{location.hash='#host-new'}location.reload()},400)}};
  function crowd(){var h='';var sec=second();Object.keys(H.seats).map(Number).sort(function(a,b){return a-b}).forEach(function(s){
-   if(H.ph==='stop'){var ok=H.stops[s]!=null;h+='<div class="av '+(ok?'second':'lead')+'" onclick="setFor('+s+')" style="cursor:pointer"><span class="tag">'+(ok?'✓ '+H.stops[s]+' 元':'還沒設')+'</span>'+person(ok?'#2A6F68':'#D95D39',s,false)+'</div>';return}
+   if(H.ph==='stop'){var ok=H.stops[s]!=null;h+='<div class="av '+(ok?'second':'lead')+'" onclick="setFor('+s+')" style="cursor:pointer"><span class="tag">'+(ok?ICON('check')+' '+H.stops[s]+' 元':'還沒設')+'</span>'+person(ok?'#2A6F68':'#D95D39',s,false)+'</div>';return}
    var cls=s===H.lead?'lead':s===sec?'second':'';var fill=s===H.lead?'#D95D39':s===sec?'#2A6F68':'#94A3B8';
    h+='<div class="av '+cls+'" id="av'+s+'" onclick="release('+s+')"><span class="tag">'+(H.bids[s]?H.bids[s]+' 元':'－')+'</span>'+person(fill,s,s===H.lead)+'</div>'});
   return h||'<p class="lead">還沒有人進場。</p>'}

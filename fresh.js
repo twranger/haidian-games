@@ -30,7 +30,7 @@ if(UNDO.test(page)&&location.hash.indexOf('host')<0&&location.hash.indexOf('teac
  function hideU(){clearTimeout(uT);if(ub){var x=ub;ub=null;x.style.opacity='0';setTimeout(function(){x.remove()},250)}}
  if(!document.getElementById('hdUndoCss')){var cs=document.createElement('style');cs.id='hdUndoCss';cs.textContent='#hdUndo{position:fixed;top:10px;right:10px;z-index:99998;font:700 17px/1.2 "Noto Sans TC",sans-serif;border:1.5px solid #CBD5E1;background:rgba(255,255,255,.96);color:#475569;border-radius:999px;padding:8px 16px 10px;cursor:pointer;overflow:hidden;transition:opacity .25s;box-shadow:0 2px 8px rgba(0,0,0,.08)}#hdUndo i{position:absolute;left:0;bottom:0;height:3px;width:100%;background:#94A3B8;transform-origin:left;animation:hdU linear forwards}@keyframes hdU{to{transform:scaleX(0)}}';(document.head||document.documentElement).appendChild(cs)}
  function showU(s){hideU();var b=document.createElement('button');b.type='button';b.id='hdUndo';b.setAttribute('aria-label','剛剛那一題按錯了，回去改');
-  b.innerHTML='↩ 改上一題<i style="animation-duration:'+SEC+'s"></i>';
+  b.innerHTML='<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-.14em"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg> 改上一題<i style="animation-duration:'+SEC+'s"></i>';
   b.onclick=function(e){e.stopPropagation();e.preventDefault();clearTimeout(uT);keys().forEach(function(k){if(!(k in s))LS.removeItem(k)});Object.keys(s).forEach(function(k){orig.call(LS,k,s[k])});location.reload()};
   ub=b;(document.body||document.documentElement).appendChild(b);uT=setTimeout(hideU,SEC*1000)}
  Storage.prototype.setItem=function(k,v){
@@ -50,7 +50,7 @@ var HDc=null;
 function teacherUI(){need(function(){HDc=LIVE.connect([],function(){});
  var b=document.createElement('div');b.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99999;display:flex;flex-direction:column;gap:6px;align-items:flex-end;font-family:"Noto Sans TC",sans-serif';
  b.innerHTML='<button type="button" style="font:inherit;font-size:22px;font-weight:900;border:0;border-radius:14px;padding:14px 22px;background:#D95D39;color:#fff;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.25)">老師：清空紀錄・換新班級</button><span style="font-size:15px;color:#475569;background:#fff;border-radius:8px;padding:2px 8px"></span>';
- var s=b.querySelector('span');b.querySelector('button').onclick=function(){if(!confirm('清空紀錄、換新班級？\n所有學生平板（包括已經進來的）都會被退出、回到開頭，之前的紀錄不再計入。'))return;HDnewClass();s.textContent='✓ 已送出：學生平板會自動回到開頭'};
+ var s=b.querySelector('span');b.querySelector('button').onclick=function(){if(!confirm('清空紀錄、換新班級？\n所有學生平板（包括已經進來的）都會被退出、回到開頭，之前的紀錄不再計入。'))return;HDnewClass();s.innerHTML='<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-.14em"><path d="M20 6.5 9.5 17 4 11.5"/></svg> 已送出：學生平板會自動回到開頭'};
  document.body.appendChild(b)})}
 /* 學生：收到換班訊號，就退出、清掉進度、回到開頭 */
 function listen(){need(function(){LIVE.connect([T],function(t,d){var ts=+d.ts||0,seen=+LS.getItem('hd-epoch')||0;if(!ts||ts<=seen)return;

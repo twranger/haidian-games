@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>紀念品交換日・全班市場</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,7 +88,7 @@ if(location.hash.indexOf('host')>=0){
  window.release=function(s){if(H.ph==='lobby'&&confirm('要把 '+s+' 號空出來嗎？')){delete H.seats[s];save()}};
  function crowd(showRole){var h='';Object.keys(H.seats).map(Number).sort(function(a,b){return a-b}).forEach(function(s){
    var r=H.role[s],fill=showRole?(r==='y'?'#C99A2E':'#2A6F68'):'#94A3B8',done=H.price[s]!=null;
-   h+='<div class="av" onclick="release('+s+')">'+person(fill,s)+'<span class="tag">'+(H.ph==='price'?(done?'✓':''):'')+'</span></div>'});return h||'<p class="lead">還沒有人進場。</p>'}
+   h+='<div class="av" onclick="release('+s+')">'+person(fill,s)+'<span class="tag">'+(H.ph==='price'?(done?ICON('check'):''):'')+'</span></div>'});return h||'<p class="lead">還沒有人進場。</p>'}
  function bars(list,max,color,dealSet){return list.map(function(x){return '<div class="br'+(dealSet[x.s]?' deal':'')+'"><span class="s">'+x.s+' 號</span><span class="t"><span class="f" style="width:'+(max?x.p/max*100:0)+'%;background:'+color+'"></span></span><span class="v">'+x.p+' 點</span></div>'}).join('')}
  function render(){var n=Object.keys(H.seats).length,h='<div class="wrap host"><div class="top"><div><p class="kick">第 2 課・活動二　全班市場</p><h1>紀念品交換日</h1>'+
   (K?'<p class="lead">學生用簡報上的「全班版」連結進來，按自己的座號就能進場。</p></div>':'<p class="lead">學生網址：games.twranger.com/souvenirlive.html　輸入房號 →</p></div>')+'<div style="text-align:right">'+(K?'<p class="lead">免房號</p>':'<p class="lead">房號</p><p class="roomcode">'+H.room+'</p>')+''+netHTML(conn.ok())+
@@ -98,7 +99,7 @@ if(location.hash.indexOf('host')>=0){
     '<button class="btn te" '+(n>1?'':'disabled')+' onclick="startPrice()">大家都進場了，開始</button>';
   } else if(H.ph==='price'){
    var k=Object.keys(H.price).length;
-   h+='<div class="card"><h2>請在平板上寫下你的點數</h2><p class="lead">兩組看到的問題不一樣，請不要告訴旁邊的同學。寫好的人，小人下面會出現 ✓。</p><p class="stat">已經寫好：'+k+' / '+n+' 人</p><div class="crowd">'+crowd(false)+'</div></div>'+
+   h+='<div class="card"><h2>請在平板上寫下你的點數</h2><p class="lead">兩組看到的問題不一樣，請不要告訴旁邊的同學。寫好的人，小人下面會出現 '+ICON('check')+'。</p><p class="stat">已經寫好：'+k+' / '+n+' 人</p><div class="crowd">'+crowd(false)+'</div></div>'+
     '<button class="btn te" '+(k>1?'':'disabled')+' onclick="openMarket()">開市！看看誰和誰能成交</button>';
   } else {
    var ys=[],cs=[],ds={};H.deals.forEach(function(d){ds[d.y]=1;ds[d.c]=1});

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>掉了票，還是掉了錢？・全班連線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,7 +89,7 @@ ROOM.start({
    function col(G){var o=S.o[G],p=o.n?Math.round(o.y/o.n*100):null,z=[[],[]];g.order.forEach(function(s){if(grp(g,s)===G&&g.a[s])z[g.a[s].v1].push(s)});
     return '<div class="card mini" style="border-color:'+CC[G]+';border-width:4px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><span class="tg" style="background:'+CC[G]+';font-size:24px">'+SC[G].t+'的人</span><p class="stat" style="font-size:24px;margin-top:6px">'+(o.n?o.y+' / '+o.n+' 人說「會買」':'這次沒有人拿到這一題')+'</p></div><p class="pct" style="color:'+CC[G]+'">'+(p==null?'—':p+'%')+'</p></div>'+
      '<div class="zone"><div><h3>會買</h3><div class="crowd">'+z[1].map(function(s){return ROOM.avatar(s,CC[G],'')}).join('')+'</div></div><div><h3>不買</h3><div class="crowd">'+z[0].map(function(s){return ROOM.avatar(s,'#94A3B8','')}).join('')+'</div></div></div></div>'}
-   var pairs='';for(var i=0;i<g.order.length;i+=2){var a=g.order[i],b=g.order[i+1],A=g.a[a],B=b!=null?g.a[b]:null;if(b==null||!A||!B)continue;pairs+='<span class="'+(A.v1!==B.v1?'df':'')+'">'+a+' 號 '+YS[A.v1]+' ↔ '+b+' 號 '+YS[B.v1]+'</span>'}
+   var pairs='';for(var i=0;i<g.order.length;i+=2){var a=g.order[i],b=g.order[i+1],A=g.a[a],B=b!=null?g.a[b]:null;if(b==null||!A||!B)continue;pairs+='<span class="'+(A.v1!==B.v1?'df':'')+'">'+a+' 號 '+YS[A.v1]+' '+ICON('leftright')+' '+b+' 號 '+YS[B.v1]+'</span>'}
    h+='<div class="card warm" style="gap:4px"><p class="huge" style="font-size:clamp(30px,3.4vw,48px)">其實全班拿到的情境不一樣！</p><p class="stat" style="font-size:26px">一半的人<b style="color:#2A6F68">掉了 300 元現金</b>，一半的人<b style="color:#D95D39">掉了 300 元的電影票</b>。兩種都是少了 300 元。</p></div>'+
     '<div class="cmp">'+col('cash')+col('ticket')+'</div>'+
     (pairs?'<div class="card"><h2>配對同學（左邊掉了錢，右邊掉了票；黃色是兩個人選得不一樣）</h2><div class="pp">'+pairs+'</div><p class="lead">看平板：找到你的配對同學，各用一句話說理由，再回答對方的情境。</p></div>':'<div class="card"><p class="lead">看平板：另一種情境長什麼樣子？換成是你，會怎麼選？</p></div>')}

@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
+<script src="icons.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>連線測試</title>
@@ -41,10 +42,10 @@ var B=[
 ];
 var st={},cl={},t0=Date.now(),seen={};
 function show(){var h='',n=0;B.forEach(function(b){var s=st[b.id]||'wait';if(s==='ok')n++;
- h+='<div class="row"><span>'+b.name+'</span><span class="'+(s==='ok'?'ok':s==='bad'?'bad':'wait')+'">'+(s==='ok'?'✓ 連線成功'+(b.ms?'（'+b.ms+' 毫秒）':''):s==='bad'?'✗ 連不上':'測試中…')+'</span></div>'});
+ h+='<div class="row"><span>'+b.name+'</span><span class="'+(s==='ok'?'ok':s==='bad'?'bad':'wait')+'">'+(s==='ok'?ICON('check')+' 連線成功'+(b.ms?'（'+b.ms+' 毫秒）':''):s==='bad'?ICON('x')+' 連不上':'測試中…')+'</span></div>'});
  document.getElementById('list').innerHTML=h;
  var done=B.every(function(b){return st[b.id]==='ok'||st[b.id]==='bad'});
- document.getElementById('sum').innerHTML=n>0?'<span class="ok">✓ 有 '+n+' 個服務可以用</span>':done?'<span class="bad">✗ 全部連不上，學校網路可能擋住了</span>':'測試中……';}
+ document.getElementById('sum').innerHTML=n>0?'<span class="ok">'+ICON('check')+' 有 '+n+' 個服務可以用</span>':done?'<span class="bad">'+ICON('x')+' 全部連不上，學校網路可能擋住了</span>':'測試中……';}
 function got(src,txt){if(seen[txt])return;seen[txt]=1;var l=document.getElementById('log');if(l.querySelector('.wait'))l.innerHTML='';
  l.insertAdjacentHTML('afterbegin','<p>'+txt.replace(/[<>&]/g,'')+' <span class="wait">（經由 '+src+'）</span></p>')}
 B.forEach(function(b){

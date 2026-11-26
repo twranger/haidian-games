@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <title>加薪拔河</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
@@ -153,7 +154,7 @@ function question(){
   var hint=el('p','small','用手指拖動紅布條，或按下面的箭頭。');
   var go=btn('決定',null,function(){if(!touched)return;st.ans[qi]=pos;st.stage++;save(st);render()});go.disabled=true;
   var ctrl=el('div','ctrl');
-  ctrl.append(btn('← 往阿明拉','alt',function(){setPos(Math.max(0,pos-1),true)}),btn('往阿華拉 →','alt',function(){setPos(Math.min(2,pos+1),true)}));
+  ctrl.append(btn(ICON('left')+' 往阿明拉','alt',function(){setPos(Math.max(0,pos-1),true)}),btn('往阿華拉 '+ICON('right'),'alt',function(){setPos(Math.min(2,pos+1),true)}));
   app.append(tug,ctrl,hint,go,el('p','small','這一題選好就好，不會告訴你對不對。等一下全班一起聊。'));
 
   function W(){return tr.clientWidth||1}

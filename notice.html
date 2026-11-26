@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <title>兩支螢光筆</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
@@ -243,7 +244,7 @@ function mathAsk(){
 }
 function mathFb(){
   var M=st.math,cur=M.start,lines=[];
-  M.ops.forEach(function(v,i){var n=cur+v;lines.push(cur+' '+opTxt(v)+' ＝ '+n+(i===1||i===2?'　<span style="color:var(--rust);font-weight:700">← 這裡跳出訊息</span>':''));cur=n});
+  M.ops.forEach(function(v,i){var n=cur+v;lines.push(cur+' '+opTxt(v)+' ＝ '+n+(i===1||i===2?'　<span style="color:var(--rust);font-weight:700">'+ICON('left')+' 這裡跳出訊息</span>':''));cur=n});
   var right=st.mAns!=='?'&&Number(st.mAns)===M.ans;
   var c=el('div','card');
   c.append(el('p','note',(st.mAns==='?'?'你選了「我不知道」。':'你寫的是 '+st.mAns+'，'+mark(right)+'。')+'正確答案是 <b>'+M.ans+'</b>。'),

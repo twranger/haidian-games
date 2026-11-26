@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>手遊商城大搶購・全班連線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +55,7 @@ function real(c){var p=0,fee=0;(c||[]).forEach(function(i){p+=BY[i].real;fee+=BY
 function traps(c){return (c||[]).filter(function(i){return BY[i].why}).length}
 function ranks(g,fn){var C=g.cart||{};return Object.keys(C).map(function(s){return {s:+s,v:fn(C[s])}}).sort(function(a,b){return b.v-a.v||a.s-b.s})}
 function rankHTML(list,max,prev){var pos={};(prev||[]).forEach(function(x,i){pos[x.s]=i});
- return '<div class="rank">'+list.slice(0,10).map(function(x,i){var mv='';if(prev){var d=pos[x.s]-i;mv=d>0?'<span style="color:#2A6F68">↑ 升 '+d+' 名</span>':d<0?'<span style="color:#D95D39">↓ 掉 '+(-d)+' 名</span>':'<span style="color:#94A3B8">不變</span>'}
+ return '<div class="rank">'+list.slice(0,10).map(function(x,i){var mv='';if(prev){var d=pos[x.s]-i;mv=d>0?'<span style="color:#2A6F68">'+ICON('up')+' 升 '+d+' 名</span>':d<0?'<span style="color:#D95D39">'+ICON('down')+' 掉 '+(-d)+' 名</span>':'<span style="color:#94A3B8">不變</span>'}
   return '<div class="rk'+(prev&&pos[x.s]<i?' fall':'')+'"><span class="no">'+(i+1)+'</span><span class="who">'+x.s+' 號</span><div class="barw"><i style="width:'+Math.max(2,x.v/max*100)+'%"></i></div><span style="width:70px">'+x.v+'</span>'+(prev?'<span class="mv">'+mv+'</span>':'')+'</div>'}).join('')+'</div>'}
 ROOM.start({
  key:'shopgrab',title:'手遊商城大搶購',kick:'第 1 節・注意力　全班連線',studentUrl:'shopgrab.html',

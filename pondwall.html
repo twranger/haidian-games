@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="fresh.js"></script>
+<script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>颱風季，守住魚塭</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -162,7 +163,7 @@ function render(){var h='';var s=st.step;
   '<div class="split"><div class="side wall"><span class="nm">加高塭岸</span><span class="n" id="nw">'+w+' 位</span></div><div class="side ditch"><span class="nm">挖水渠</span><span class="n" id="nd">'+d+' 位</span></div></div>'+
   '<div class="crew" id="crew" aria-hidden="true">'+crew(w,d)+'</div>'+
   '<input type="range" min="0" max="10" step="1" value="'+d+'" oninput="slide(this.value)" aria-label="挖水渠的工人數，其餘加高塭岸">'+
-  '<div class="ends"><span>← 全部加高塭岸</span><span>全部挖水渠 →</span></div></div>'+
+  '<div class="ends"><span>'+ICON('left')+' 全部加高塭岸</span><span>全部挖水渠 '+ICON('right')+'</span></div></div>'+
   '<button class="btn te" onclick="storm()">派工完成，等'+STORM[st.r].t.split('：')[1]+'來</button>';
  } else if(s===1 && st.ph==='storm'){
   h='<p class="kick">'+STORM[st.r].t+' '+tag()+'</p>'+rounds()+scene(true)+'<h2 style="text-align:center">風雨好大……</h2>';
