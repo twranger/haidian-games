@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>園遊會金幣王・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.huge{font-size:clamp(40px,5.4vw,80px);font-weight:900;line-height:1.15}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:18px;align-items:start}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* 轉盤 */
+.wh{--R:190px;position:relative;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:26px auto 6px;flex:none}
+.wh.sm{--R:104px;margin-top:20px}
+.wh .disc{position:absolute;inset:0;border-radius:50%;border:8px solid #1E242B;box-shadow:0 10px 30px rgba(30,36,43,.25)}
+.wh .disc span{position:absolute;left:50%;top:50%;width:0;height:0}
+.wh .disc b{position:absolute;left:-70px;width:140px;text-align:center;top:calc(var(--R)*-.74);font-size:calc(var(--R)*.2);font-weight:900;color:#1E242B;line-height:1}
+.wh .ptr{position:absolute;left:50%;top:-24px;margin-left:-20px;border-left:20px solid transparent;border-right:20px solid transparent;border-top:38px solid #D95D39;z-index:3;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+.wh .hub{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#1E242B;border:6px solid #FAF7F2;z-index:2}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(var(--to))}}
+/* 錢包 */
+.wl{border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;border:4px solid;background:#fff}
+.wl.red{border-color:#C8372D;background:#FFF4F1}.wl.work{border-color:#205E86;background:#F1F7FB}
+.wl .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.wl .nm{font-size:clamp(22px,4.6vw,28px);font-weight:900}.wl.red .nm{color:#C8372D}.wl.work .nm{color:#205E86}
+.wl .from{font-size:17px;font-weight:700;color:#475569}
+.wl .bal{font-size:clamp(22px,4.6vw,28px);font-weight:900}
+.coins{display:flex;flex-wrap:wrap;gap:4px;min-height:26px}
+.coins i{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE9A8,#F2B544 60%,#C98A1B);box-shadow:inset 0 0 0 2px #B67A12}
+.coins i.out{background:#fff;box-shadow:inset 0 0 0 2px #CBD5E1;opacity:.9}
+.ctl{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ctl .btn{font-size:clamp(19px,4vw,24px);padding:10px 0}
+.put{font-size:clamp(20px,4.2vw,25px);font-weight:900;text-align:center;background:#1E242B;color:#FAF7F2;border-radius:12px;padding:6px}
+.put b{color:#F2B544;font-size:1.25em}
+/* 顧攤位 */
+.stall{position:relative;background:linear-gradient(180deg,#FDE7C8,#FFF7EA);border:4px solid #E9A23B;border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.awn{height:26px;border-radius:10px;background:repeating-linear-gradient(90deg,#D95D39 0 34px,#FFF5F2 34px 68px)}
+.cust{display:flex;align-items:center;gap:14px;justify-content:center;min-height:150px}
+.cust svg{width:84px;height:106px;flex:none}
+.bub{position:relative;background:#fff;border:3px solid #1E242B;border-radius:18px;padding:10px 18px;font-size:clamp(22px,4.8vw,30px);font-weight:900;line-height:1.35}
+.bub:before{content:'';position:absolute;left:-14px;top:50%;margin-top:-10px;border-right:14px solid #1E242B;border-top:10px solid transparent;border-bottom:10px solid transparent}
+.drs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.drs .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;font-size:clamp(19px,4vw,24px)}
+.drs svg{width:54px;height:66px}
+.miss{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pop{animation:pop .4s}
+@keyframes pop{from{transform:scale(.6);opacity:.3}to{transform:scale(1);opacity:1}}
+/* 紅包 */
+.env{align-self:center;width:210px;height:270px;border-radius:18px;background:linear-gradient(180deg,#D9453A,#B52A22);border:0;cursor:pointer;position:relative;box-shadow:0 12px 30px rgba(181,42,34,.35);animation:bob 1.2s ease-in-out infinite alternate;touch-action:manipulation}
+.env:before{content:'';position:absolute;left:0;right:0;top:0;height:92px;background:#C8372D;border-radius:18px 18px 110px 110px;box-shadow:0 4px 0 rgba(0,0,0,.12)}
+.env:after{content:'開';position:absolute;left:50%;top:60px;margin-left:-36px;width:72px;height:72px;border-radius:50%;background:#F2B544;color:#8A2A1F;font:900 38px/72px "Noto Sans TC",sans-serif;text-align:center;box-shadow:inset 0 0 0 4px #C98A1B}
+@keyframes bob{to{transform:translateY(-10px) rotate(-2deg)}}
+/* 排行榜 */
+.rk{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px}
+.rk div{white-space:nowrap;display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #E3DED7;border-radius:14px;padding:6px 14px;font-size:24px;font-weight:900}
+.rk div.t1{background:#FFF3D6;border-color:#E9A23B}
+.rk i{font-style:normal;color:#64748B;width:64px;flex:none;font-size:20px}.rk span{margin-left:auto;color:#B67A12}
+.hb{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.hb .lb{font-size:28px;font-weight:900;display:flex;justify-content:space-between}
+.hb .bw{background:#EEE9E1;border-radius:12px;height:58px;overflow:hidden}
+.hb .bw i{display:block;height:100%;border-radius:10px}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.tri div{background:#F3EEE7;border-radius:14px;padding:10px 4px;font-size:22px;font-weight:700}
+.mini .crowd{gap:4px}.mini .av{width:60px}.mini .av svg{width:44px;height:56px}.mini .av .tag{font-size:13px;min-height:20px;padding:0 6px}
+.hw{display:grid;grid-template-columns:1fr 1fr;gap:16px}.hw .wl .nm{font-size:34px}.hw .wl .bal{font-size:34px}.hw .wl .from{font-size:22px}.hw .coins i{width:34px;height:34px}.tri b{display:block;font-size:52px;line-height:1.1}
+@media (max-width:900px){.cols,.cmp{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.env,.pop,.miss{animation:none}}
+</style>
+</head>
+<body>
+<script>
+/* 園遊會金幣王（第 7 節・心理帳戶的「來源標籤」）
+   每個人有兩個錢包，各 100 枚金幣：打工錢包（自己顧攤位做 10 杯飲料賺的）、紅包錢包（開幕紅包送的）。
+   兩次轉盤：第 1 轉金色占一半，放上去的金幣變 2 倍；第 2 轉金色占 3 分之 1，變 3 倍；轉到灰色沒收。
+   全班共用同一次轉盤結果。最後排行榜只看兩個錢包的總數；再公布：大家從哪個錢包放得比較多。 */
+var RED='#C8372D',BLU='#205E86',SPIN=5200,NEED=10,PER=10;
+var DR=[['milk','珍珠奶茶','#D9B38C'],['green','綠茶','#8DB86B'],['black','紅茶','#A6502E']];
+var WH={1:{mul:2,n:6,gold:[0,2,4],name:'加倍轉盤',odds:'金色占一半（6 格裡有 3 格）',rule:'轉到<b style="color:#B67A12">金色</b>：放上去的金幣<b>變 2 倍</b>還你。轉到<b style="color:#64748B">灰色</b>：放上去的金幣<b>沒收</b>。'},
+ 2:{mul:3,n:6,gold:[0,3],name:'三倍轉盤',odds:'金色只占 3 分之 1（6 格裡有 2 格）',rule:'轉到<b style="color:#B67A12">金色</b>：放上去的金幣<b>變 3 倍</b>還你。轉到<b style="color:#64748B">灰色</b>：放上去的金幣<b>沒收</b>。'}};
+var WN=['紅包錢包','打工錢包'],WF=['開幕紅包送的','顧攤位賺的'],WC=['red','work'];
+function cup(c){return '<svg viewBox="0 0 54 66" aria-hidden="true"><path d="M30 2 L26 22" stroke="#1E242B" stroke-width="4" stroke-linecap="round"/><path d="M8 18 H46 L41 62 H13 Z" fill="#fff" stroke="#1E242B" stroke-width="3" stroke-linejoin="round"/><path d="M11 30 H43 L40.4 60 H13.6 Z" fill="'+c+'"/><circle cx="20" cy="54" r="3" fill="#3B2A20"/><circle cx="28" cy="56" r="3" fill="#3B2A20"/><circle cx="35" cy="53" r="3" fill="#3B2A20"/></svg>'}
+function wheelHTML(r,rot,spinAt,sm,big){var W=WH[r],seg=360/W.n,stops=[],lab='';
+ for(var i=0;i<W.n;i++){var g=W.gold.indexOf(i)>=0;stops.push((g?'#F2B544':'#CBD5E1')+' '+i*seg+'deg '+(i+1)*seg+'deg');lab+='<span style="transform:rotate('+(i*seg+seg/2)+'deg)"><b>'+(g?'×'+W.mul:'沒收')+'</b></span>'}
+ var st='background:conic-gradient('+stops.join(',')+');';
+ if(spinAt)st+='--to:'+rot+'deg;animation:spin '+SPIN+'ms cubic-bezier(.12,.62,.1,1) forwards;animation-delay:-'+Math.max(0,Math.min(SPIN,Date.now()-spinAt))+'ms';else st+='transform:rotate('+(rot||0)+'deg)';
+ return '<div class="wh'+(sm?' sm':'')+'"'+(big?' style="--R:'+big+'px"':'')+'><div class="ptr"></div><div class="disc" style="'+st+'">'+lab+'</div><div class="hub"></div></div>'}
+function coins(n,out){var h='',a=Math.min(30,Math.round(n/10)),b=Math.min(30-a,Math.round((out||0)/10));for(var i=0;i<a;i++)h+='<i></i>';for(i=0;i<b;i++)h+='<i class="out"></i>';return '<div class="coins">'+h+'</div>'}
+function tot(w){return w[0]+w[1]}
+function ranks(g){return Object.keys(g.w||{}).map(Number).map(function(s){return [s,tot(g.w[s])]}).sort(function(a,b){return b[1]-a[1]||a[0]-b[0]})}
+function boardHTML(g,max){var R=ranks(g),top=R.length?R[0][1]:0,h='',rank=0,prev=null;
+ R.slice(0,max||12).forEach(function(x,i){if(x[1]!==prev){rank=i+1;prev=x[1]}h+='<div class="'+(x[1]===top?'t1':'')+'"><i>第 '+rank+' 名</i>'+x[0]+' 號<span>'+x[1]+' 枚</span></div>'});
+ return '<div class="rk">'+h+'</div>'+(R.length>(max||12)?'<p class="net">還有 '+(R.length-(max||12))+' 位同學，名次在自己的平板上。</p>':'')}
+function hbar(lab,v,mx,col,note){var p=mx?Math.round(v/mx*100):0;return '<div class="hb"><span class="lb"><span>'+lab+'</span><span style="color:'+col+'">'+note+'</span></span><div class="bw"><i style="width:'+p+'%;background:'+col+'"></i></div></div>'}
+function st1(g){var B=(g.b||{})[1]||{},ks=Object.keys(B),n=ks.length,a=0,b=0,more=0,same=0,less=0;
+ ks.forEach(function(k){var v=B[k];a+=v[0];b+=v[1];if(v[0]>v[1])more++;else if(v[0]<v[1])less++;else same++});
+ return {n:n,red:n?Math.round(a/n):0,work:n?Math.round(b/n):0,more:more,same:same,less:less}}
+ROOM.start({
+ key:'coinfair',title:'園遊會金幣王',kick:'第 7 節・全班連線',studentUrl:'coinfair.html',
+ rules:'<p>園遊會開始了！先<b>顧攤位賺金幣</b>，再領<b>開幕紅包</b>；接著有 <b>2 次轉盤挑戰</b>。</p><p>最後金幣最多的人，就是今天的<b>金幣王</b>。</p>',
+ init:function(H){H.g={w:{},b:{1:{},2:{}},rd:{},out:{},rot:{}}},
+ onStart:function(H){var w={};Object.keys(H.seats).forEach(function(s){w[s]=[100,100]});H.g={t0:Date.now(),r:0,w:w,b:{1:{},2:{}},rd:{},out:{},rot:{}};H.ph='earn'},
+ onJoin:function(H,seat){if(H.g&&H.g.w&&!H.g.w[seat])H.g.w[seat]=[100,100]},
+ pub:function(H){var g=H.g,show=H.ph==='res'||H.ph==='final';return {g:{t0:g.t0,r:g.r,w:g.w,out:show?g.out:(g.r===2?{1:g.out[1]}:{}),bl:show&&g.b?g.b[g.r]:null,nb:g.b&&g.b[g.r]?Object.keys(g.b[g.r]).length:0}}},
+ onMsg:function(H,d,seat){var g=H.g;
+  if(d.t==='ready'){if(g.rd&&!g.rd[seat]){g.rd[seat]=1;return true}return}
+  if(d.t==='bet'&&H.ph==='bet'&&+d.r===g.r&&g.w[seat]&&d.v){var w=g.w[seat],a=Math.round(+d.v[0]/10)*10,b=Math.round(+d.v[1]/10)*10;
+   if(!(a>=0&&a<=w[0]&&b>=0&&b<=w[1]))return;g.b[g.r][seat]=[a,b];return true}},
+ act:{
+  bet:function(H){var g=H.g;g.r=(g.r||0)+1;H.ph='bet'},
+  spin:function(H){var g=H.g,W=WH[g.r],seg=360/W.n,win=Math.random()<W.gold.length/W.n,pool=[];
+   for(var i=0;i<W.n;i++)if((W.gold.indexOf(i)>=0)===win)pool.push(i);
+   var sl=pool[Math.floor(Math.random()*pool.length)],th=sl*seg+seg/2+(Math.random()-.5)*seg*.6;
+   g.out[g.r]=win?1:0;g.rot[g.r]=360*7-th;g.spinAt=Date.now();H.ph='spin'},
+  fin:function(H){H.ph='final'}},
+ tick:function(H){var g=H.g;if(H.ph==='spin'&&Date.now()-g.spinAt>SPIN+700){var W=WH[g.r],win=g.out[g.r];
+   Object.keys(g.w).forEach(function(s){var v=g.b[g.r][s]||[0,0],w=g.w[s];for(var i=0;i<2;i++)w[i]+=win?v[i]*(W.mul-1):-v[i]});H.ph='res';return true}},
+ bar:function(H){var g=H.g;
+  if(H.ph==='earn')return '<button class="btn" data-act="bet">大家都有兩個錢包了：第 1 轉開始</button>';
+  if(H.ph==='bet')return '<button class="btn" data-act="spin">大家放好了：轉！</button>';
+  if(H.ph==='res')return g.r===1?'<button class="btn" data-act="bet">第 2 轉：三倍轉盤</button>':'<button class="btn" data-act="fin">公布：兩個錢包的祕密</button>';
+  return ''},
+ hostView:function(H){var g=H.g,N=Object.keys(H.seats).length,h='',r=g.r,W=WH[r];
+  function crowd(map){return '<div class="crowd">'+Object.keys(H.seats).map(Number).sort(function(a,b){return a-b}).map(function(s){return ROOM.avatar(s,map[s]?'#2A6F68':'#CBD5E1',map[s]?'好了':'')}).join('')+'</div>'}
+  if(H.ph==='earn'){h+='<div class="card dark"><p class="huge">園遊會開始了！</p><p class="stat">第 1 步：顧攤位，做好 10 杯飲料，賺 <span style="color:#F2B544">100 枚</span>金幣。<br>第 2 步：打開開幕紅包，裡面有 <span style="color:#F2B544">100 枚</span>金幣。</p></div>'+
+   '<div class="hw"><div class="wl work"><div class="hd"><span class="nm">打工錢包</span><span class="bal">100 枚</span></div><span class="from">顧攤位，自己做 10 杯飲料賺的</span>'+coins(100)+'</div><div class="wl red"><div class="hd"><span class="nm">紅包錢包</span><span class="bal">100 枚</span></div><span class="from">園遊會開幕，紅包送的</span>'+coins(100)+'</div></div>'+
+   '<div class="card mini"><h2>兩個錢包都準備好的人：'+Object.keys(g.rd).length+' / '+N+'</h2>'+crowd(g.rd)+'</div>'}
+  else if(H.ph==='bet'){var nb=Object.keys(g.b[r]).length;
+   h+='<div class="cols"><div class="card" style="align-items:center"><h2>第 '+r+' 轉：'+W.name+'</h2>'+wheelHTML(r,0)+'<p class="stat" style="font-size:24px">'+W.odds+'</p></div>'+
+    '<div style="display:flex;flex-direction:column;gap:14px"><div class="card warm"><p class="stat" style="line-height:1.5">'+W.rule+'</p><p style="font-size:24px;font-weight:700">兩個錢包都可以放，每個錢包放 0 枚到全部都可以。沒放上去的金幣不會變。</p></div>'+
+    '<div class="card mini"><h2>已經放好：'+nb+' / '+N+' 人</h2>'+crowd(g.b[r])+'</div></div></div>'}
+  else if(H.ph==='spin'){h+='<div class="card" style="align-items:center"><h2>第 '+r+' 轉：'+W.name+'</h2>'+wheelHTML(r,g.rot[r],g.spinAt,0,270)+'<p class="stat">會停在金色，還是灰色？</p></div>'}
+  else if(H.ph==='res'){var win=g.out[r],put=Object.keys(g.b[r]).filter(function(k){return g.b[r][k][0]+g.b[r][k][1]>0}).length;
+   h+='<div class="cols"><div class="card" style="align-items:center"><h2>第 '+r+' 轉：'+W.name+'</h2>'+wheelHTML(r,g.rot[r])+'</div>'+
+    '<div style="display:flex;flex-direction:column;gap:14px"><div class="card '+(win?'warm':'dark')+'"><p class="huge" style="color:'+(win?'#B67A12':'#CBD5E1')+'">'+(win?'金色！':'灰色……')+'</p><p class="stat">'+(win?'放上去的金幣，變 '+W.mul+' 倍回到錢包。':'放上去的金幣，沒收了。')+'</p></div>'+
+    '<div class="card"><h2>目前排行榜（兩個錢包加起來）</h2>'+boardHTML(g,10)+'<p class="lead">這一轉有 <b>'+put+'</b> 人放了金幣，<b>'+(Object.keys(g.w).length-put)+'</b> 人一枚都沒放。</p></div></div></div>'}
+  else{var S=st1(g),mx=Math.max(100,S.red,S.work),R=ranks(g),top=R.length?R[0][1]:0,kings=R.filter(function(x){return x[1]===top}).map(function(x){return x[0]+' 號'});
+   h+='<div class="cmp"><div class="card"><h2>第 1 轉，大家從哪個錢包放得多？</h2><p class="lead">那時候每個人兩個錢包都是 100 枚。（'+S.n+' 人放好）</p>'+
+    (S.n?hbar('紅包錢包（紅包送的）',S.red,mx,RED,'平均放 '+S.red+' 枚')+hbar('打工錢包（顧攤位賺的）',S.work,mx,BLU,'平均放 '+S.work+' 枚')+
+     '<div class="tri"><div><b style="color:'+RED+'">'+S.more+'</b>人：紅包放得多</div><div><b>'+S.same+'</b>人：兩邊一樣多</div><div><b style="color:'+BLU+'">'+S.less+'</b>人：打工放得多</div></div>':'<p class="stat">第 1 轉沒有人放金幣。</p>')+'</div>'+
+    '<div class="card"><h2>金幣王：'+(kings.slice(0,6).join('、')||'—')+(kings.length>6?' 等 '+kings.length+' 人':'')+'（'+top+' 枚）</h2>'+boardHTML(g,8)+'</div></div>'+
+    '<div class="card dark"><p class="stat" style="line-height:1.5">排行榜<span style="color:#F2B544">只看總數</span>：紅包錢包的 1 枚，和打工錢包的 1 枚，都是 1 枚。</p><p style="font-size:24px">那為什麼放金幣的時候，兩個錢包的感覺不一樣？（這是我們班一次的結果，不一定每一班都一樣。）</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='c'+g.t0,L=api.local[k]||{},w=(g.w||{})[me]||[100,100],h='',r=g.r,W=WH[r]||WH[1],ord=me%2===0?[1,0]:[0,1];
+  function wallet(i,bal,put,ctl){return '<div class="wl '+WC[i]+'"><div class="hd"><span class="nm">'+WN[i]+'</span><span class="bal">'+(bal-(put||0))+' 枚</span></div><span class="from">'+WF[i]+'</span>'+coins(bal-(put||0),put)+
+   (ctl?'<div class="put">放上轉盤：<b>'+put+'</b> 枚</div><div class="ctl">'+[-50,-10,10,50].map(function(d){var nv=put+d;return '<button class="btn gh" '+(nv<0||nv>bal?'disabled':'')+' data-act="adj" data-arg="'+i+':'+d+'">'+(d>0?'+':'−')+Math.abs(d)+'</button>'}).join('')+'</div>':'')+'</div>'}
+  function two(){return ord.map(function(i){return wallet(i,w[i])}).join('')}
+  if(ST.ph==='earn'){var sv=L.sv||0;
+   if(sv<NEED){var o=DR[L.o==null?0:L.o];
+    h+='<h1>第 1 步：顧攤位賺金幣</h1><div class="stall"><div class="awn"></div><div class="cust'+(L.ms?' miss':' pop')+'">'+ROOM.person(['#7C5CC4','#2A6F68','#D95D39','#205E86'][sv%4],'')+'<div class="bub">'+(L.ms?'不是這個啦！<br>':'')+'我要一杯<br><span style="color:#D95D39">'+o[1]+'</span>！</div></div>'+
+     '<div class="drs">'+DR.map(function(d,i){return '<button class="btn gh" data-act="serve" data-arg="'+i+'">'+cup(d[2])+d[1]+'</button>'}).join('')+'</div></div>'+
+     '<div class="wl work"><div class="hd"><span class="nm">打工錢包</span><span class="bal">'+sv*PER+' / 100 枚</span></div>'+coins(sv*PER,(NEED-sv)*PER)+'</div><p class="lead">客人點什麼，就按什麼。做對 1 杯賺 10 枚，做滿 10 杯。</p>'}
+   else if(!L.red)h+='<h1>第 2 步：開幕紅包</h1><p class="lead">打工錢包存滿 100 枚了！園遊會開幕，主辦人發給每個人一個紅包。點一下打開。</p><button class="env" data-act="open" aria-label="打開紅包"></button>';
+   else h+='<h1>兩個錢包都準備好了</h1>'+two()+'<div class="card"><p class="lead">一共 <b>'+tot(w)+' 枚</b>金幣。看大螢幕，等老師開始轉盤挑戰。</p></div>'}
+  else if(ST.ph==='bet'){var sent=L['s'+r];
+   if(sent)h+='<h1>放好了！</h1><div class="card"><p class="lead">第 '+r+' 轉你放了：紅包錢包 <b>'+sent[0]+'</b> 枚、打工錢包 <b>'+sent[1]+'</b> 枚。<br>看大螢幕，等老師轉轉盤。</p></div>';
+   else{var d=(L.d&&L.d.r===r)?L.d.v:[0,0];
+    h+='<h1>第 '+r+' 轉：'+W.name+'</h1><div class="card warm" style="flex-direction:row;align-items:center;gap:14px">'+wheelHTML(r,0,0,1)+'<div><p style="font-size:clamp(19px,4vw,23px);font-weight:700">'+W.rule+'</p><p class="net" style="font-size:17px">'+W.odds+'</p></div></div>'+
+     '<p class="lead"><b>你要從哪個錢包，放幾枚金幣上轉盤？</b>（不放也可以）</p>'+ord.map(function(i){return wallet(i,w[i],Math.min(d[i],w[i]),1)}).join('')+
+     '<button class="btn" data-act="send">決定了：一共放 '+(d[0]+d[1])+' 枚</button>'}}
+  else if(ST.ph==='spin')h+='<h1>看大螢幕！</h1><div class="card dark" style="align-items:center"><p class="big" style="font-size:clamp(40px,9vw,72px)">轉盤正在轉……</p></div>';
+  else if(ST.ph==='res'){var win=(g.out||{})[r],v=(g.bl||{})[me]||[0,0],R=ranks(g),rk=1,my=tot(w);R.forEach(function(x){if(x[1]>my)rk++});var m=W.mul-1;
+   h+='<h1 style="color:'+(win?'#B67A12':'#475569')+'">'+(win?'金色！':'灰色……')+'</h1><div class="card"><p class="lead">你放了：紅包錢包 <b>'+v[0]+'</b> 枚、打工錢包 <b>'+v[1]+'</b> 枚。<br>'+
+    (v[0]+v[1]===0?'你沒有放金幣，兩個錢包都沒有變。':win?'紅包錢包 <b>+'+v[0]*m+'</b>、打工錢包 <b>+'+v[1]*m+'</b>。':'紅包錢包 <b>−'+v[0]+'</b>、打工錢包 <b>−'+v[1]+'</b>。')+'</p></div>'+two()+
+    '<div class="card dark" style="align-items:center"><p class="stat">一共 <span style="color:#F2B544">'+my+' 枚</span>　目前第 '+rk+' 名（'+R.length+' 人）</p></div>'}
+  else if(ST.ph==='final'){var R2=ranks(g),rk2=1,my2=tot(w),s1=L.s1;R2.forEach(function(x){if(x[1]>my2)rk2++});
+   h+='<h1>看大螢幕！</h1><div class="card dark" style="align-items:center"><p class="stat">你一共 <span style="color:#F2B544">'+my2+' 枚</span>　第 '+rk2+' 名（'+R2.length+' 人）</p></div>'+
+    (s1?'<div class="card"><p class="lead">第 1 轉，兩個錢包都是 100 枚的時候：<br>你從紅包錢包放了 <b style="color:'+RED+'">'+s1[0]+'</b> 枚，從打工錢包放了 <b style="color:'+BLU+'">'+s1[1]+'</b> 枚。<br>為什麼會這樣放？等一下說說看。</p></div>':'')}
+  else h+='<h1>等老師開始</h1>';
+  return h},
+ sact:(function(){function upd(ST,api,f){var k='c'+(ST.g||{}).t0,L=api.local[k]||{};f(L);var o={};o[k]=L;api.local=o;api.save()}
+  return {
+   serve:function(ST,me,api,a){upd(ST,api,function(L){var cur=L.o==null?0:L.o;if(+a===cur){L.sv=(L.sv||0)+1;L.ms=0;var n;do{n=Math.floor(Math.random()*DR.length)}while(n===cur);L.o=n}else L.ms=Date.now()})},
+   open:function(ST,me,api){upd(ST,api,function(L){L.red=1});api.send({t:'ready'})},
+   adj:function(ST,me,api,a){var p=a.split(':'),i=+p[0],dv=+p[1],g=ST.g,w=(g.w||{})[me]||[100,100];upd(ST,api,function(L){var d=(L.d&&L.d.r===g.r)?L.d.v:[0,0];d[i]=Math.max(0,Math.min(w[i],d[i]+dv));L.d={r:g.r,v:d}})},
+   send:function(ST,me,api){var g=ST.g,w=(g.w||{})[me]||[100,100];upd(ST,api,function(L){var d=(L.d&&L.d.r===g.r)?L.d.v:[0,0];d=[Math.min(d[0],w[0]),Math.min(d[1],w[1])];L['s'+g.r]=d;api.send({t:'bet',r:g.r,v:d})})}}})()
+});
+</script>
+</body>
+</html>

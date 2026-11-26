@@ -10,69 +10,113 @@
 <script src="live.js"></script>
 <script src="room.js"></script>
 <style>
-.sc{background:#fff;border:3px solid #E3DED7;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.sc{background:#fff;border:4px solid #E3DED7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
 .sc p{font-size:clamp(20px,4.2vw,26px);font-weight:700;line-height:1.6}
-.sc .tg{align-self:flex-start;font-size:18px;font-weight:900;color:#fff;border-radius:999px;padding:4px 14px}
+.tg{align-self:flex-start;font-size:18px;font-weight:900;color:#fff;border-radius:999px;padding:4px 14px}
+.pic{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tk{position:relative;width:150px;height:72px;border-radius:10px;background:#F2B544;border:3px solid #1E242B;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;line-height:1.2;text-align:center;flex:none}
+.tk:before,.tk:after{content:'';position:absolute;top:50%;margin-top:-10px;width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid #1E242B}
+.tk:before{left:-13px}.tk:after{right:-13px}
+.bl{width:150px;height:72px;border-radius:8px;background:#C0392B;border:5px solid #F6D5CE;outline:3px solid #1E242B;color:#FAF7F2;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;flex:none}
+.lost{opacity:.4;transform:rotate(-8deg);border-style:dashed}
+.sm3 .bl{width:66px;height:36px;font-size:15px;border-width:3px;outline-width:2px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .two .btn{font-size:clamp(22px,4.6vw,30px);padding:16px 4px}
-.rs .btn{font-size:clamp(19px,4vw,24px);padding:14px 10px;text-align:left}
 .rs{display:flex;flex-direction:column;gap:8px}
-.huge{font-size:clamp(46px,6.4vw,90px);font-weight:900;line-height:1.15}
+.rs .btn{font-size:clamp(19px,4vw,24px);padding:14px 12px;text-align:left}
+.huge{font-size:clamp(34px,4.4vw,62px);font-weight:900;line-height:1.2}
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pct{font-size:clamp(48px,6vw,84px);font-weight:900;line-height:1}
+.zone{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.zone>div{border-radius:14px;padding:8px;min-height:96px;background:#F3EEE7}
+.zone h3{margin:0 0 4px;font-size:22px;font-weight:900;text-align:center}
+.mini .crowd{gap:2px}.mini .av{width:58px}.mini .av svg{width:46px;height:58px}.mini .av .tag{display:none}
+.pp{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:6px}
+.pp span{font-size:18px;white-space:nowrap;font-weight:900;border:2px solid #E3DED7;border-radius:12px;padding:5px 6px;background:#fff;text-align:center}
+.pp span.df{border-color:#E9A23B;background:#FFF3D6}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.duo>div{border-radius:16px;padding:12px;border:4px solid;display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;background:#fff}
+.duo .who{font-size:clamp(20px,4.4vw,26px);font-weight:900}.duo .ch{font-size:clamp(24px,5.4vw,34px);font-weight:900}
 .hb{display:flex;flex-direction:column;gap:4px;margin-top:6px}
-.hb .lb{font-size:22px;font-weight:900;display:flex;justify-content:space-between}
-.hb .bw{background:#EEE9E1;border-radius:10px;height:40px;overflow:hidden}
+.hb .lb{font-size:22px;font-weight:900;display:flex;justify-content:space-between;gap:12px}
+.hb .bw{background:#EEE9E1;border-radius:10px;height:38px;overflow:hidden}
 .hb .bw i{display:block;height:100%;border-radius:10px}
+@media (max-width:900px){.cmp{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <script>
-/* 依進場座號輪流：一半拿到「掉了 300 元現金」，一半拿到「掉了 300 元的電影票」。答完自己的，再看另一題 */
-var SC={cash:{t:'掉了錢',c:'#2A6F68',s:'你決定今天去看一部電影，票價 <b>300 元</b>，打算到電影院再買。走到售票口，你發現錢包裡<b>掉了 300 元現金</b>，找不回來了。你身上還有足夠的錢可以買票。'},
- ticket:{t:'掉了票',c:'#D95D39',s:'你已經花 <b>300 元</b>，先買好了一張紙本電影票。走到入口，你發現<b>電影票掉了</b>，找不回來，也不能補印。要看，就得再花 300 元買一張。你身上還有足夠的錢。'}};
+/* 掉了票，還是掉了錢？（第 7 節・心理帳戶的「用途標籤」）
+   依進場座號輪流：一半拿到「掉了 300 元現金」，一半拿到「掉了 300 元的電影票」，相鄰兩人配成一對。
+   第 1 段：選會不會買、選理由。第 2 段（老師公布後）：看到配對同學的情境和選擇，兩人互相說理由，再回答對方的情境。 */
+var CC={cash:'#2A6F68',ticket:'#D95D39'};
+var SC={cash:{t:'掉了錢',s:'你決定今天去看一部電影，票價 <b>300 元</b>，打算到電影院再買。走到售票口，你發現錢包裡<b>掉了 300 元現金</b>，找不回來了。你身上還有足夠的錢可以買票。',
+  pic:'<div class="pic"><div class="tk">電影票<br>300 元</div><span style="font-size:20px;font-weight:900;color:#64748B">還沒買</span><div class="bl lost">掉了 300 元</div></div>'},
+ ticket:{t:'掉了票',s:'你已經花 <b>300 元</b>，先買好了一張紙本電影票。走到入口，你發現<b>電影票掉了</b>，找不回來，也不能補印。要看，就得再花 300 元買一張。你身上還有足夠的錢。',
+  pic:'<div class="pic"><div class="tk lost">電影票<br>掉了</div><span style="font-size:20px;font-weight:900;color:#64748B">已經付了 300 元</span></div>'}};
 var Q='你還會花 300 元買票，進去看這部電影嗎？';
-var WHY=[['a','看電影的錢已經花過了，再買等於看一部電影花 600 元'],['b','掉的錢和看電影是兩回事，想看就買'],['c','反正已經少了 300 元，看不看要另外想'],['d','其他理由']];
-var STUDY={cash:88,ticket:46};
+var YN=['不會，不看了','會，再買票看'],YS=['不買','會買'];
+var WHY=[['a','看電影的錢已經花過了，再買等於看一部電影花 600 元'],['b','掉的東西和看電影是兩回事，想看就買'],['c','少了 300 元心情不好，不想看了'],['d','其他理由']];
 function players(H){return Object.keys(H.seats).length}
-function grp(g,seat){var i=(g.order||[]).indexOf(+seat);return (i<0?0:i)%2===0?'cash':'ticket'}
+function idx(g,seat){return (g.order||[]).indexOf(+seat)}
+function grp(g,seat){var i=idx(g,seat);return (i<0?0:i)%2===0?'cash':'ticket'}
+function mate(g,seat){var i=idx(g,seat);if(i<0)return null;var j=i%2===0?i+1:i-1,o=g.order||[];return o[j]==null?null:o[j]}
 function other(x){return x==='cash'?'ticket':'cash'}
-function scHTML(k,tag){var x=SC[k];return '<div class="sc">'+(tag?'<span class="tg" style="background:'+x.c+'">'+tag+'</span>':'')+'<p>'+x.s+'</p></div>'}
-function hbar(lab,y,n,col,study){var p=n?Math.round(y/n*100):0;return '<div class="hb"><span class="lb"><span>'+lab+'</span><span style="color:'+col+'">'+(n?p+'%':'—')+'</span></span><div class="bw"><i style="width:'+p+'%;background:'+col+'"></i></div><span style="font-size:18px;color:#64748B">'+(study?'1981 年研究':y+' / '+n+' 人說「會買」')+'</span></div>'}
-function stats(g){var o={cash:{y:0,n:0},ticket:{y:0,n:0}},o2={cash:{y:0,n:0},ticket:{y:0,n:0}},why={a:0,b:0,c:0,d:0},chg=0;
- Object.keys(g.a||{}).forEach(function(k){var A=g.a[k],G=grp(g,k);o[G].n++;if(A.v1)o[G].y++;var G2=other(G);o2[G2].n++;if(A.v2)o2[G2].y++;if(why[A.w]!=null)why[A.w]++;if(A.v1!==A.v2)chg++});return {o:o,o2:o2,why:why,chg:chg}}
+function scHTML(k,tag){var x=SC[k];return '<div class="sc" style="border-color:'+CC[k]+'">'+(tag?'<span class="tg" style="background:'+CC[k]+'">'+tag+'</span>':'')+x.pic+'<p>'+x.s+'</p></div>'}
+function hbar(lab,y,n,col){var p=n?Math.round(y/n*100):0;return '<div class="hb"><span class="lb"><span>'+lab+'</span><span style="color:'+col+';white-space:nowrap">'+(n?y+' / '+n+' 人':'—')+'</span></span><div class="bw"><i style="width:'+p+'%;background:'+col+'"></i></div></div>'}
+function stats(g){var o={cash:{y:0,n:0},ticket:{y:0,n:0}},all={cash:{y:0,n:0},ticket:{y:0,n:0}},why={a:0,b:0,c:0,d:0},chg=0,typ=0,n2=0;
+ Object.keys(g.a||{}).forEach(function(k){var A=g.a[k],G=grp(g,k),G2=other(G);o[G].n++;all[G].n++;if(A.v1){o[G].y++;all[G].y++}if(why[A.w]!=null)why[A.w]++;
+  if(A.v2!=null){n2++;all[G2].n++;if(A.v2)all[G2].y++;if(A.v1!==A.v2){chg++;var c=G==='cash'?A.v1:A.v2,t=G==='cash'?A.v2:A.v1;if(c&&!t)typ++}}});
+ return {o:o,all:all,why:why,chg:chg,typ:typ,n2:n2}}
 ROOM.start({
  key:'lostticket',title:'掉了票，還是掉了錢？',kick:'第 7 節・全班連線',studentUrl:'lostticket.html',
- rules:'<p>你要去看一部 <b>300 元</b>的電影，可是出了一點意外。</p><p>平板會給你一個情境，選你<b>真的會怎麼做</b>。沒有對錯。</p>',
+ rules:'<p>你要去看一部 <b>300 元</b>的電影，可是出了一點意外。</p><p>平板會給你一個情境，選你<b>真的會怎麼做</b>。沒有對錯。等一下會和一位同學<b>配成一對</b>，比比看兩個人的選擇。</p>',
  init:function(H){H.g={a:{}}},
  onStart:function(H){H.g={a:{},t0:Date.now(),order:Object.keys(H.seats).map(Number).sort(function(a,b){return a-b})};H.ph='play'},
- pub:function(H){var g=H.g;return {g:{t0:g.t0,order:g.order}}},
- onMsg:function(H,d,seat){if(d.t==='a'&&H.ph==='play'){H.g.a[seat]={v1:d.v1?1:0,v2:d.v2?1:0,w:['a','b','c','d'].indexOf(d.w)>=0?d.w:'d'};return true}},
+ onJoin:function(H,seat){var g=H.g;if(g&&g.order&&g.order.indexOf(+seat)<0)g.order.push(+seat)},
+ pub:function(H){var g=H.g,o={t0:g.t0,order:g.order,n:Object.keys(g.a||{}).length};if(H.ph!=='play'){var a={};Object.keys(g.a).forEach(function(k){a[k]=[g.a[k].v1,g.a[k].w]});o.a=a}return {g:o}},
+ onMsg:function(H,d,seat){var g=H.g;
+  if(d.t==='a1'&&H.ph==='play'){g.a[seat]={v1:d.v?1:0,w:['a','b','c','d'].indexOf(d.w)>=0?d.w:'d',v2:null};return true}
+  if(d.t==='a2'&&(H.ph==='reveal'||H.ph==='both')&&g.a[seat]){g.a[seat].v2=d.v?1:0;return true}},
  act:{reveal:function(H){H.ph='reveal'},both:function(H){H.ph='both'}},
- bar:function(H){if(H.ph==='play')return '<button class="btn" data-act="reveal">公布第一次的選擇</button>';if(H.ph==='reveal')return '<button class="btn" data-act="both">看完兩題以後呢？</button>';return ''},
+ bar:function(H){if(H.ph==='play')return '<button class="btn" data-act="reveal">公布：其實有兩種情境</button>';if(H.ph==='reveal')return '<button class="btn" data-act="both">換成對方的情境，大家怎麼選？</button>';return ''},
  hostView:function(H){var g=H.g,N=players(H),h='',S=stats(g);
-  if(H.ph==='play')h+='<div class="card dark"><p class="huge">要去看 300 元的電影……</p><p class="stat">可是出了一點意外。在平板上選你真的會怎麼做。</p></div><div class="card"><p class="stat">已經送出：'+Object.keys(g.a).length+' / '+N+' 人</p></div>';
-  else if(H.ph==='reveal'){h+='<div class="card warm"><p class="huge" style="font-size:clamp(34px,4.4vw,60px)">其實全班拿到的情境不一樣！</p><p class="stat">一半的人<b style="color:#2A6F68">掉了 300 元現金</b>，一半的人<b style="color:#D95D39">掉了 300 元的電影票</b>。兩種都是少了 300 元。</p></div>'+
-   '<div class="cmp"><div class="card"><h2>我們班：還會買票嗎？</h2>'+hbar('掉了錢的人',S.o.cash.y,S.o.cash.n,'#2A6F68')+hbar('掉了票的人',S.o.ticket.y,S.o.ticket.n,'#D95D39')+'</div>'+
-   '<div class="card"><h2>1981 年研究（電影換成看戲，10 美元）</h2>'+hbar('掉了 10 美元現金（183 人）',88,100,'#2A6F68',1)+hbar('掉了 10 美元的票（200 人）',46,100,'#D95D39',1)+'</div></div>'+
-   '<div class="card dark"><p class="stat">一樣少了 300 元，為什麼「掉了票」的人比較不想再買？</p><p style="font-size:22px">這是我們班一次的結果，不一定每一班都一樣。</p></div>'}
+  if(H.ph==='play')h+='<div class="card dark"><p class="huge">要去看 300 元的電影……</p><p class="stat">可是出了一點意外。在平板上選你真的會怎麼做，再選一個最接近的理由。</p></div><div class="card"><h2>已經選好：'+Object.keys(g.a).length+' / '+N+' 人</h2><div class="crowd">'+
+   g.order.map(function(s){return ROOM.avatar(s,g.a[s]?'#2A6F68':'#CBD5E1',g.a[s]?'好了':'')}).join('')+'</div></div>';
+  else if(H.ph==='reveal'){
+   function col(G){var o=S.o[G],p=o.n?Math.round(o.y/o.n*100):null,z=[[],[]];g.order.forEach(function(s){if(grp(g,s)===G&&g.a[s])z[g.a[s].v1].push(s)});
+    return '<div class="card mini" style="border-color:'+CC[G]+';border-width:4px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><span class="tg" style="background:'+CC[G]+';font-size:24px">'+SC[G].t+'的人</span><p class="stat" style="font-size:24px;margin-top:6px">'+(o.n?o.y+' / '+o.n+' 人說「會買」':'這次沒有人拿到這一題')+'</p></div><p class="pct" style="color:'+CC[G]+'">'+(p==null?'—':p+'%')+'</p></div>'+
+     '<div class="zone"><div><h3>會買</h3><div class="crowd">'+z[1].map(function(s){return ROOM.avatar(s,CC[G],'')}).join('')+'</div></div><div><h3>不買</h3><div class="crowd">'+z[0].map(function(s){return ROOM.avatar(s,'#94A3B8','')}).join('')+'</div></div></div></div>'}
+   var pairs='';for(var i=0;i<g.order.length;i+=2){var a=g.order[i],b=g.order[i+1],A=g.a[a],B=b!=null?g.a[b]:null;if(b==null||!A||!B)continue;pairs+='<span class="'+(A.v1!==B.v1?'df':'')+'">'+a+' 號 '+YS[A.v1]+' ↔ '+b+' 號 '+YS[B.v1]+'</span>'}
+   h+='<div class="card warm" style="gap:4px"><p class="huge" style="font-size:clamp(30px,3.4vw,48px)">其實全班拿到的情境不一樣！</p><p class="stat" style="font-size:26px">一半的人<b style="color:#2A6F68">掉了 300 元現金</b>，一半的人<b style="color:#D95D39">掉了 300 元的電影票</b>。兩種都是少了 300 元。</p></div>'+
+    '<div class="cmp">'+col('cash')+col('ticket')+'</div>'+
+    (pairs?'<div class="card"><h2>配對同學（左邊掉了錢，右邊掉了票；黃色是兩個人選得不一樣）</h2><div class="pp">'+pairs+'</div><p class="lead">看平板：找到你的配對同學，各用一句話說理由，再回答對方的情境。</p></div>':'<div class="card"><p class="lead">看平板：另一種情境長什麼樣子？換成是你，會怎麼選？</p></div>')}
   else{var W=S.why,T=Math.max(1,W.a+W.b+W.c+W.d);
-   h+='<div class="cmp"><div class="card"><h2>看到另一題時，大家怎麼選？</h2>'+hbar('原本掉錢、這次看掉票',S.o2.ticket.y,S.o2.ticket.n,'#D95D39')+hbar('原本掉票、這次看掉錢',S.o2.cash.y,S.o2.cash.n,'#2A6F68')+'<p class="stat">兩題選得不一樣的人：'+S.chg+' 人</p></div>'+
-   '<div class="card"><h2>大家的理由</h2>'+WHY.map(function(x){return hbar(x[1],W[x[0]],T,'#7C5CC4')}).join('')+'</div></div>'+
-   '<div class="card dark"><p class="stat">「看電影的錢已經花過了」：我們心裡好像有一個<b style="color:#F2A65A">「看電影」的抽屜</b>。票掉了，就像這個抽屜已經花掉 300 元。</p></div>'}
+   h+='<div class="cmp"><div class="card"><h2>每個人兩種情境都選過了</h2>'+hbar('掉了 300 元現金：會買',S.all.cash.y,S.all.cash.n,CC.cash)+hbar('掉了 300 元的票：會買',S.all.ticket.y,S.all.ticket.n,CC.ticket)+
+    '<p class="stat" style="margin-top:8px">兩題選得不一樣：<span style="color:#D95D39">'+S.chg+'</span> / '+S.n2+' 人</p><p style="font-size:22px;font-weight:700">其中「掉了錢會買、掉了票不買」：'+S.typ+' 人</p></div>'+
+    '<div class="card"><h2>第一次選的理由</h2>'+WHY.map(function(x){return hbar(x[1],W[x[0]],T,'#7C5CC4')}).join('')+'</div></div>'+
+    '<div class="card dark"><p class="stat" style="line-height:1.5">兩種情境都是少了 <span style="color:#F2A65A">300 元</span>。為什麼有人覺得「掉了票再買，就是花 600 元看電影」？</p><p style="font-size:22px">這是我們班一次的結果，不一定每一班都一樣。</p></div>'}
   return h},
- studentView:function(ST,me,api){var g=ST.g||{},k='l'+g.t0,L=api.local[k]||{},G=grp(g,me),h='';
+ studentView:function(ST,me,api){var g=ST.g||{},k='l'+g.t0,L=api.local[k]||{},G=grp(g,me),O=other(G),h='';
   if(ST.ph==='play'){
-   if(L.sent)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師公布。</p>';
-   else if(L.v1==null)h+='<h1>出了一點意外……</h1>'+scHTML(G)+'<p class="lead"><b>'+Q+'</b></p><div class="two"><button class="btn gh" data-act="v1" data-arg="1">會，再買票看</button><button class="btn gh" data-act="v1" data-arg="0">不會，不看了</button></div>';
-   else if(L.w==null)h+='<h1>你為什麼這樣選？</h1><p class="lead">你選了「'+(L.v1?'會，再買票看':'不會，不看了')+'」。最接近你的想法是：</p><div class="rs">'+WHY.map(function(x){return '<button class="btn gh" data-act="w" data-arg="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>';
-   else if(L.v2==null)h+='<h1>換一個情境</h1><p class="lead">另一半的同學，拿到的是這一題：</p>'+scHTML(other(G))+'<p class="lead"><b>如果是你，'+Q+'</b></p><div class="two"><button class="btn gh" data-act="v2" data-arg="1">會，再買票看</button><button class="btn gh" data-act="v2" data-arg="0">不會，不看了</button></div>';
-   else h+='<h1>都選好了</h1><div class="card"><p class="lead">'+SC[G].t+'：'+(L.v1?'會買':'不買')+'<br>'+SC[other(G)].t+'：'+(L.v2?'會買':'不買')+'</p></div><button class="btn" data-act="send">送出</button>'}
-  else if(ST.ph==='reveal'||ST.ph==='both')h+='<h1>看大螢幕！</h1><div class="card"><p class="lead">你先拿到的是「'+SC[G].t+'」，你選'+(L.v1?'「會買」':'「不買」')+'；另一題你選'+(L.v2?'「會買」':'「不買」')+'。</p></div>';
+   if(L.v1==null)h+='<h1>出了一點意外……</h1>'+scHTML(G)+'<p class="lead"><b>'+Q+'</b></p><div class="two"><button class="btn gh" data-act="v1" data-arg="1">'+YN[1]+'</button><button class="btn gh" data-act="v1" data-arg="0">'+YN[0]+'</button></div>';
+   else if(L.w==null)h+='<h1>你為什麼這樣選？</h1><p class="lead">你選了「'+YN[L.v1]+'」。最接近你的想法是：</p><div class="rs">'+WHY.map(function(x){return '<button class="btn gh" data-act="w" data-arg="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>';
+   else h+='<h1>選好了！</h1><div class="card"><p class="lead">你選了「'+YN[L.v1]+'」。看大螢幕，等老師公布。<br>先不要告訴別人你拿到什麼情境。</p></div>'}
+  else if(ST.ph==='reveal'||ST.ph==='both'){var m=mate(g,me),A=g.a||{},M=m!=null?A[m]:null;
+   function duo(){return '<div class="duo"><div style="border-color:'+CC[G]+'"><span class="tg" style="background:'+CC[G]+';align-self:center">'+SC[G].t+'</span><span class="who">我（'+me+' 號）</span><span class="ch" style="color:'+CC[G]+'">'+(L.v1==null?'沒選到':YS[L.v1])+'</span></div>'+
+    '<div style="border-color:'+CC[O]+'"><span class="tg" style="background:'+CC[O]+';align-self:center">'+SC[O].t+'</span><span class="who">'+m+' 號</span><span class="ch" style="color:'+CC[O]+'">'+(M?YS[M[0]]:'還沒選')+'</span></div></div>'}
+   if(L.v2==null){
+    h+='<h1>原來有兩種情境！</h1>';
+    if(m!=null)h+='<p class="lead">你的配對同學是 <b>'+m+' 號</b>。他拿到的情境和你不一樣：</p>'+duo()+'<div class="card cool"><p style="font-size:clamp(19px,4vw,23px);font-weight:700">找到 '+m+' 號，兩個人各用一句話說：「我選……，因為……」</p></div>';
+    else h+='<p class="lead">這一次你沒有配對同學。另一半的同學拿到的是下面這一題：</p>';
+    h+=scHTML(O,(m!=null?m+' 號':'另一半同學')+'拿到的情境')+'<p class="lead"><b>換成是你，'+Q+'</b></p><div class="two"><button class="btn gh" data-act="v2" data-arg="1">'+YN[1]+'</button><button class="btn gh" data-act="v2" data-arg="0">'+YN[0]+'</button></div>'}
+   else h+='<h1>兩種情境都選好了</h1>'+(m!=null?duo():'')+'<div class="card"><p class="lead">'+SC[G].t+'：你選「'+(L.v1==null?'沒選到':YS[L.v1])+'」<br>'+SC[O].t+'：你選「'+YS[L.v2]+'」</p><p class="lead">'+(L.v1!=null&&L.v1!==L.v2?'你兩題選得<b>不一樣</b>。兩題都是少了 300 元，差別在哪裡？':'你兩題選得<b>一樣</b>。等一下說說你的想法。')+'</p></div><p class="lead">看大螢幕。</p>'}
   else h+='<h1>等老師開始</h1><p class="lead">等一下要去看一部 300 元的電影。</p>';
   return h},
  sact:(function(){function upd(ST,api,f){var k='l'+(ST.g||{}).t0,L=api.local[k]||{};f(L);var o={};o[k]=L;api.local=o;api.save()}
-  return {v1:function(ST,me,api,v){upd(ST,api,function(L){L.v1=+v})},w:function(ST,me,api,v){upd(ST,api,function(L){L.w=v})},v2:function(ST,me,api,v){upd(ST,api,function(L){L.v2=+v})},
-  send:function(ST,me,api){var L=api.local['l'+ST.g.t0]||{};if(L.v1==null||L.v2==null||L.w==null)return;api.send({t:'a',v1:L.v1,v2:L.v2,w:L.w});upd(ST,api,function(L){L.sent=1})}}})()
+  return {v1:function(ST,me,api,v){upd(ST,api,function(L){L.v1=+v})},
+   w:function(ST,me,api,v){upd(ST,api,function(L){L.w=v;api.send({t:'a1',v:L.v1,w:v})})},
+   v2:function(ST,me,api,v){upd(ST,api,function(L){L.v2=+v;api.send({t:'a2',v:+v})})}}})()
 });
 </script>
 </body>
