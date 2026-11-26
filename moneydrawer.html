@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>1,000 元放哪個抽屜？・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.src{background:linear-gradient(160deg,#2B2140,#1E242B);color:#FAF7F2;border-radius:20px;padding:18px;font-size:clamp(20px,4.2vw,26px);font-weight:700;line-height:1.6}
+.left{font-size:clamp(24px,5vw,32px);font-weight:900;text-align:center}
+.drs{display:flex;flex-direction:column;gap:8px}
+.dr{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:#fff;border:3px solid #E3DED7;border-radius:16px;padding:10px 12px}
+.dr .nm{font-size:clamp(19px,4vw,24px);font-weight:900}
+.dr .bills{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;min-height:22px}
+.dr .bills i{width:30px;height:18px;border-radius:3px;background:#C0392B;box-shadow:inset 0 0 0 2px #F6D5CE}
+.dr .ctl{display:flex;gap:6px;align-items:center}
+.dr .ctl .btn{width:58px;font-size:26px;padding:8px 0}
+.dr .amt{font-size:clamp(22px,4.6vw,28px);font-weight:900;width:80px;text-align:right}
+.dr.lock{opacity:.5}
+.huge{font-size:clamp(46px,6.4vw,90px);font-weight:900;line-height:1.15}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.stk{display:flex;height:64px;border-radius:12px;overflow:hidden;font-weight:900;font-size:20px;color:#fff}
+.stk span{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden}
+.lg{display:flex;flex-wrap:wrap;gap:14px;font-size:20px;font-weight:700}.lg i{display:inline-block;width:18px;height:18px;border-radius:4px;margin-right:6px;vertical-align:-3px}
+</style>
+</head>
+<body>
+<script>
+/* 依進場座號輪流：一半的人的 1,000 元是「顧店 20 天賺的」，一半是「抽獎意外中的」。第二關：腳踏車要修 400 元，從哪些抽屜拿 */
+var D=[['save','存起來','#205E86'],['book','買書、文具','#2A6F68'],['fun','吃喝玩樂（零食、扭蛋、遊戲）','#D95D39'],['gift','請朋友、送禮','#7C5CC4']];
+var SRC={earn:{t:'顧店賺的',s:'寒假幫忙家裡顧店 <b>20 天</b>，每天 50 元，一共<b>賺到 1,000 元</b>。'},luck:{t:'抽獎中的',s:'你參加商店街抽獎，<b>意外抽中 1,000 元</b>。'}};
+var FIX=400;
+function players(H){return Object.keys(H.seats).length}
+function grp(g,seat){var i=(g.order||[]).indexOf(+seat);return (i<0?0:i)%2===0?'luck':'earn'}
+function sum(o){return D.reduce(function(s,d){return s+(o[d[0]]||0)},0)}
+function avg(g,G,key){var n=0,o={};D.forEach(function(d){o[d[0]]=0});Object.keys(g[key]||{}).forEach(function(k){if(G&&grp(g,k)!==G)return;n++;D.forEach(function(d){o[d[0]]+=g[key][k][d[0]]||0})});D.forEach(function(d){o[d[0]]=n?Math.round(o[d[0]]/n):0});o.n=n;return o}
+function stk(o,tot){return '<div class="stk">'+D.map(function(d){var v=o[d[0]];return v?'<span style="width:'+(v/tot*100)+'%;background:'+d[2]+'">'+v+'</span>':''}).join('')+'</div>'}
+function legend(){return '<div class="lg">'+D.map(function(d){return '<span><i style="background:'+d[2]+'"></i>'+d[1]+'</span>'}).join('')+'</div>'}
+function drawerUI(L,key,cap,limit){var o=L[key]||{};return '<div class="drs">'+D.map(function(d){var v=o[d[0]]||0,mx=limit?limit[d[0]]||0:cap;return '<div class="dr'+(limit&&!mx?' lock':'')+'"><div><span class="nm" style="color:'+d[2]+'">'+d[1]+'</span>'+(limit?'<span style="font-size:18px;color:#64748B">　（抽屜裡有 '+mx+' 元）</span>':'')+'<div class="bills">'+new Array(v/100+1).join('<i></i>')+'</div></div><div class="ctl"><button class="btn gh" data-act="dn" data-arg="'+key+'_'+d[0]+'" '+(v?'':'disabled')+'>−</button><span class="amt">'+v+'</span><button class="btn gh" data-act="up" data-arg="'+key+'_'+d[0]+'" '+(sum(o)<cap&&(!limit||v<mx)?'':'disabled')+'>+</button></div></div>'}).join('')+'</div>'}
+ROOM.start({
+ key:'moneydrawer',title:'1,000 元放哪個抽屜？',kick:'第 7 節・全班連線',studentUrl:'moneydrawer.html',
+ rules:'<p>你有 <b>1,000 元</b>可以自己安排。把它分到 4 個抽屜：存起來、買書文具、吃喝玩樂、請朋友送禮。</p><p>每按一下「+」放 100 元進去，<b>剛好放完 1,000 元</b>才能送出。</p>',
+ init:function(H){H.g={a:{},f:{}}},
+ onStart:function(H){H.g={a:{},f:{},t0:Date.now(),order:Object.keys(H.seats).map(Number).sort(function(a,b){return a-b})};H.ph='play'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,order:g.order}}},
+ onMsg:function(H,d,seat){var ok=function(o,c){return o&&sum(o)===c&&D.every(function(x){var v=o[x[0]]||0;return v>=0&&v%100===0})};
+  if(d.t==='a'&&H.ph==='play'&&ok(d.o,1000)){var o={};D.forEach(function(x){o[x[0]]=d.o[x[0]]||0});H.g.a[seat]=o;return true}
+  if(d.t==='f'&&H.ph==='fix'&&ok(d.o,FIX)){var A=H.g.a[seat];if(!A)return;var o2={};D.forEach(function(x){o2[x[0]]=Math.min(d.o[x[0]]||0,A[x[0]])});if(sum(o2)!==FIX)return;H.g.f[seat]=o2;return true}},
+ act:{reveal:function(H){H.ph='reveal'},fix:function(H){H.ph='fix'},end:function(H){H.ph='end'}},
+ bar:function(H){if(H.ph==='play')return '<button class="btn" data-act="reveal">公布大家的抽屜</button>';if(H.ph==='reveal')return '<button class="btn" data-act="fix">突發狀況！</button>';if(H.ph==='fix')return '<button class="btn" data-act="end">公布從哪裡拿</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='';
+  if(H.ph==='play')h+='<div class="card dark"><p class="huge">1,000 元放哪個抽屜？</p><p class="stat">在平板上把 1,000 元分到 4 個抽屜。</p></div><div class="card"><p class="stat">已經送出：'+Object.keys(g.a).length+' / '+N+' 人</p></div>';
+  else if(H.ph==='reveal'){var E=avg(g,'earn','a'),W=avg(g,'luck','a');
+   h+='<div class="card warm"><p class="huge" style="font-size:clamp(34px,4.4vw,60px)">其實大家的 1,000 元，來源不一樣！</p><p class="stat">一半的人是<b>顧店 20 天賺的</b>，一半的人是<b>抽獎意外中的</b>。一樣是 1,000 元，能買的東西一模一樣。</p></div>'+
+    '<div class="card"><h2>平均每個抽屜放多少？</h2>'+legend()+'<p class="stat" style="margin-top:10px">顧店賺的（'+E.n+' 人）</p>'+stk(E,1000)+'<p class="stat" style="margin-top:10px">抽獎中的（'+W.n+' 人）</p>'+stk(W,1000)+'</div>'+
+    '<div class="card dark"><p class="stat">「吃喝玩樂」抽屜：顧店賺的平均 <span style="color:#F2A65A">'+E.fun+'</span> 元，抽獎中的平均 <span style="color:#F2A65A">'+W.fun+'</span> 元。</p><p style="font-size:22px">這是我們班一次的結果，不一定每一班都一樣。</p></div>'}
+  else if(H.ph==='fix')h+='<div class="card dark"><p class="huge">突發狀況！</p><p class="stat">你的腳踏車壞了，修理要 <b style="color:#F2A65A">400 元</b>。從你剛剛的抽屜裡拿出 400 元。</p></div><div class="card"><p class="stat">已經送出：'+Object.keys(g.f).length+' / '+Object.keys(g.a).length+' 人</p></div>';
+  else{var F=avg(g,null,'f'),only=0;Object.keys(g.f).forEach(function(k){var f=g.f[k],used=D.filter(function(d){return f[d[0]]>0}).length;if(used===1)only++});
+   h+='<div class="card"><h2>修腳踏車的 400 元，大家平均從哪裡拿？（'+F.n+' 人）</h2>'+legend()+stk(F,FIX)+'</div>'+
+    '<div class="cmp"><div class="card"><p class="stat">只從 1 個抽屜拿的人：'+only+' 人</p><p class="stat">從 2 個以上抽屜湊的人：'+(F.n-only)+' 人</p></div>'+
+    '<div class="card dark"><p class="stat">抽屜是我們自己分的。真的需要時，可以<b style="color:#F2A65A">打開整個錢包</b>一起看：合起來還有多少？哪一格最不影響重要的事？</p></div></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='d'+g.t0,L=api.local[k]||{},G=grp(g,me),h='',a=L.a||{};
+  if(ST.ph==='play'){
+   if(L.sent)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師公布。</p>';
+   else h+='<h1>1,000 元放哪個抽屜？</h1><div class="src">'+SRC[G].s+'<br>這 1,000 元可以自己安排。</div><p class="left">還沒放：<span style="color:#D95D39">'+(1000-sum(a))+'</span> 元</p>'+drawerUI(L,'a',1000)+'<button class="btn" data-act="send" '+(sum(a)===1000?'':'disabled')+'>放好了，送出</button>'}
+  else if(ST.ph==='fix'){var f=L.f||{};
+   if(!L.sent)h+='<h1>突發狀況！</h1><p class="lead">你剛剛沒有送出，這一關看大螢幕就好。</p>';
+   else if(L.fs)h+='<h1>送出了！</h1><p class="lead">看大螢幕。</p>';
+   else h+='<h1>突發狀況！</h1><div class="src">你的腳踏車壞了，修理要 <b>400 元</b>。從你剛剛分好的抽屜裡拿出 400 元。</div><p class="left">還要拿：<span style="color:#D95D39">'+(FIX-sum(f))+'</span> 元</p>'+drawerUI(L,'f',FIX,a)+'<button class="btn" data-act="fsend" '+(sum(f)===FIX?'':'disabled')+'>拿好了，送出</button>'}
+  else if(ST.ph==='reveal'||ST.ph==='end')h+='<h1>看大螢幕！</h1><div class="card"><p class="lead">你的 1,000 元是「'+SRC[G].t+'」。你放了 '+D.map(function(d){return d[1].replace(/（.*）/,'')+' '+(a[d[0]]||0)}).join('、')+'。</p></div>';
+  else h+='<h1>等老師開始</h1><p class="lead">等一下你會拿到 1,000 元。</p>';
+  return h},
+ sact:(function(){function upd(ST,api,f){var k='d'+(ST.g||{}).t0,L=api.local[k]||{};f(L);var o={};o[k]=L;api.local=o;api.save()}
+  function step(dir){return function(ST,me,api,arg){var p=arg.split('_'),key=p[0],d=p[1];if((key==='a'&&ST.ph!=='play')||(key==='f'&&ST.ph!=='fix'))return;upd(ST,api,function(L){var o=L[key]=L[key]||{},cap=key==='a'?1000:FIX,v=o[d]||0;
+   if(dir>0){if(sum(o)>=cap)return;if(key==='f'&&v>=((L.a||{})[d]||0))return;o[d]=v+100}else if(v>0)o[d]=v-100})}}
+  return {up:step(1),dn:step(-1),
+  send:function(ST,me,api){var L=api.local['d'+ST.g.t0]||{};if(sum(L.a||{})!==1000)return;api.send({t:'a',o:L.a});upd(ST,api,function(L){L.sent=1})},
+  fsend:function(ST,me,api){var L=api.local['d'+ST.g.t0]||{};if(sum(L.f||{})!==FIX)return;api.send({t:'f',o:L.f});upd(ST,api,function(L){L.fs=1})}}})()
+});
+</script>
+</body>
+</html>
