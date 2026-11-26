@@ -29,6 +29,7 @@ var CSS=':root{--bg:#FAF7F2;--ink:#1E242B;--co:#D95D39;--te:#2A6F68;--mu:#475569
 'input.code{font:inherit;font-size:44px;font-weight:900;letter-spacing:12px;text-align:center;width:100%;border:3px solid var(--ln);border-radius:16px;padding:8px}'+
 '.seats{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}.seat{font:inherit;font-size:24px;font-weight:900;border:3px solid var(--ln);background:#fff;border-radius:14px;padding:10px 0;cursor:pointer}.seat.taken{background:#EEE;color:#AAA;cursor:default}'+
 '.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}.roomcode{font-size:64px;font-weight:900;letter-spacing:10px;color:var(--te);line-height:1}'+
+'.me{width:min(30vw,140px)}.me svg{display:block;width:100%;height:auto;max-height:26vh}'+
 '.crowd{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.av{width:88px;display:flex;flex-direction:column;align-items:center;gap:2px}.av svg{width:66px;height:84px}.av .tag{font-weight:900;font-size:17px;border-radius:999px;padding:0 10px;min-height:26px}'+
 '.big{font-size:clamp(56px,12vw,110px);font-weight:900;line-height:1;text-align:center}.stat{font-size:30px;font-weight:900}'+
 '.bar{position:fixed;left:0;right:0;bottom:0;z-index:9;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding:12px;background:rgba(30,36,43,.94)}'+
@@ -103,7 +104,7 @@ R.start=function(cfg){
    else if(!ST)h+='<h2>正在連線……</h2><p class="lead">如果一直停在這裡，請確認老師已經打開大螢幕。</p>'+(K?'':'<button class="btn gh" data-act="again">重新輸入房號</button>');
    else if(!mine){h+='<h1>按下你的座號</h1><p class="lead">灰色的座號已經有人選了。按錯了請舉手告訴老師。</p><div class="seats">';
     for(var i=1;i<=35;i++){var tk=ST.seats[i]&&ST.seats[i]!==CID;h+='<button class="seat'+(tk?' taken':'')+'" '+(tk?'disabled':'')+' data-act="pick" data-arg="'+i+'">'+i+'</button>'}h+='</div>'+(S.seat?'<p class="lead">正在進場……</p>':'')}
-   else if(ST.ph==='lobby')h+='<div class="card" style="align-items:center">'+R.person('#2A6F68',S.seat)+'<h2>你已經進場了！</h2><p class="lead">看看大螢幕，你的小人出現了嗎？等老師開始。</p></div>';
+   else if(ST.ph==='lobby')h+='<div class="card" style="align-items:center"><div class="me">'+R.person('#2A6F68',S.seat)+'</div><h2>你已經進場了！</h2><p class="lead">看看大螢幕，你的小人出現了嗎？等老師開始。</p></div>';
    else h+=cfg.studentView(ST,S.seat,api);
    app.innerHTML=h+(conn2?net(conn2.ok()):'')+'</div>'}
   R.redraw=draw;

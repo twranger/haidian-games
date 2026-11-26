@@ -61,7 +61,7 @@ h2{font-size:clamp(23px,3.6vw,32px);font-weight:900;margin:0;line-height:1.45}
 <div class="wrap" id="app"></div>
 <script src="live.js"></script>
 <script>
-var KEY='u2c-glasses-v1';
+var KEY='u2c-glasses-v2';
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}}
 function save(v){try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}}
 function rnd(n){var a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n}
@@ -79,11 +79,12 @@ var IC={
  red:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#D95D39"/></svg>',
  blue:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="#2A6F68"/></svg>'
 };
+/* past＝紅組看到的（已經花掉、拿不回來的）；pb＝藍組看到的（什麼都還沒花）；now 兩組一樣 */
 var CASES=[
- {who:'阿傑在夾娃娃機店',past:'阿傑已經投了 50 元，娃娃還是沒有夾起來。',now:'這台機器的爪子很鬆，剛剛連續五次都夾不起來。他的口袋裡只剩下 10 元，本來打算放學後買一瓶飲料。',go:'再投 10 元，繼續夾',stop:'不夾了，留著 10 元買飲料'},
- {who:'小美和她的新鞋',past:'小美已經花了很多零用錢，買了這雙新鞋。',now:'可是她每次穿這雙鞋，腳都會磨破皮。明天校外教學要走很遠的路，家裡還有一雙舊的、很好走的鞋。',go:'明天還是穿新鞋',stop:'明天換穿舊的好走的鞋'},
- {who:'阿凱和一本很厚的小說',past:'阿凱已經花了三個星期，才讀完這本厚小說的前半本。',now:'可是後半本越來越無聊，他每次打開就想睡覺。剛好圖書館來了一本他很想看的新書。',go:'硬著頭皮讀完這本',stop:'先換成那本想看的新書'},
- {who:'小安在吃到飽餐廳',past:'小安的家人已經付了吃到飽餐廳的錢。',now:'小安已經吃得很飽了，再吃下去肚子會痛。而且晚上他還要去上游泳課。',go:'再拿一盤，把錢吃回本',stop:'不吃了，休息一下'}
+ {who:'阿傑在夾娃娃機店',past:'阿傑已經投了 50 元，娃娃還是沒有夾起來。',pb:'阿傑剛走進夾娃娃機店，一塊錢都還沒投。',now:'這台機器的爪子很鬆，今天已經連續五次有人夾不起來。他的口袋裡只有 10 元，本來打算放學後買一瓶飲料。',go:'投 10 元，夾夾看',stop:'不夾了，留著 10 元買飲料',lb:'阿傑：投 10 元夾',xp:'小新一塊錢都還沒投。',xn:'小新在夾娃娃機店。這台機器的爪子很鬆，今天已經連續五次有人夾不起來。他的口袋裡只有 10 元，本來打算放學後買一瓶飲料。'},
+ {who:'小美和她的新鞋',past:'小美花了很多零用錢，買了這雙新鞋。',pb:'小美抽獎抽到這雙新鞋，一塊錢都沒花。',now:'她每次穿這雙鞋，腳都會磨破皮。明天校外教學要走很遠的路，家裡還有一雙舊的、很好走的鞋。',go:'明天還是穿新鞋',stop:'明天換穿舊的好走的鞋',lb:'小美：還是穿新鞋',xp:'這雙新鞋是別人送小新的，他沒花錢。',xn:'小新每次穿這雙新鞋，腳都會磨破皮。明天校外教學要走很遠的路，家裡還有一雙舊的、很好走的鞋。'},
+ {who:'阿凱和一本很厚的小說',past:'阿凱已經花了三個星期，才讀完這本厚小說的前半本。',pb:'阿凱昨天才借到這本厚小說，只翻了幾頁。',now:'這本小說他越讀越無聊，每次打開就想睡覺。剛好圖書館來了一本他很想看的新書。',go:'硬著頭皮讀完這本',stop:'先換成那本想看的新書',lb:'阿凱：硬著頭皮讀完',xp:'小新昨天才借到這本厚小說。',xn:'這本小說小新越讀越無聊，每次打開就想睡覺。剛好圖書館來了一本他很想看的新書。'},
+ {who:'小安在吃到飽餐廳',past:'小安的家人已經付了吃到飽的錢，一個人 600 元。',pb:'小安今天是去朋友的慶生會，吃到飽的錢是朋友家請客。',now:'小安已經吃得很飽了，再吃下去肚子會痛。而且晚上他還要去上游泳課。',go:'再拿一盤',stop:'不吃了，休息一下',lb:'小安：再拿一盤',xp:'這一餐是朋友家請客，小新沒花錢。',xn:'小新在吃到飽餐廳，已經吃得很飽了，再吃下去肚子會痛。而且晚上他還要去上游泳課。'}
 ];
 function tag(){return st.g==='red'?'<span class="tag red">'+IC.red+'你是紅組</span>':'<span class="tag blue">'+IC.blue+'你是藍組</span>'}
 function go(n){st.step=n;save(st);render();try{window.scrollTo(0,0)}catch(e){}}
@@ -92,7 +93,7 @@ function render(){
  var s=st.step,h='';
  if(s===0){
   h='<p class="kick">UNIT 2 第 3 課・活動一</p><h1>歸零再選一次</h1>'+
-  '<p class="lead">這個遊戲有三個部分。第一部分：兩場週末活動撞期了，你只能選一場。第二部分：四位同學都卡在「要繼續，還是停下來」，請你替他們做決定。第三部分：按下「歸零」，把已經花掉、拿不回來的東西先放一邊，再決定一次。</p>'+
+  '<p class="lead">這個遊戲有三個部分。第一部分：兩場週末活動撞期了，你只能選一場。第二部分：四位同學都卡在「要繼續，還是停下來」，請你替他們做決定。第三部分：換一個人想一想，替一位「什麼都還沒花」的同學出主意。</p>'+
   '<div class="card"><p>平板已經偷偷幫你分好組了：'+tag()+'</p><p class="mini">請不要告訴旁邊的同學你是哪一組。等一下，老師會揭曉兩組有什麼不一樣。</p></div>'+
   '<button class="btn" onclick="go(1)">開始</button>';
  } else if(s===1){
@@ -108,25 +109,23 @@ function render(){
  } else if(s>=2&&s<=5){
   var k=s-2,c=CASES[k];
   h='<p class="kick">第二部分・幫同學做決定</p><p class="prog">第 '+(k+1)+' 件，共 4 件</p><h2>'+c.who+'</h2>'+
-  '<div class="card"><div class="past">'+c.past+'</div><div class="now">'+c.now+'</div></div>'+
+  '<div class="card"><div class="past">'+(st.g==='red'?c.past:c.pb)+'</div><div class="now">'+c.now+'</div></div>'+
   '<p class="lead">如果你是這位同學，你會怎麼做？這裡沒有標準答案，兩個選擇都可以選。</p>'+
   '<div class="two">'+opt('a1',k,'go',c.go)+opt('a1',k,'stop',c.stop)+'</div>'+
   '<button class="btn" '+(st.a1[k]?'':'disabled')+' onclick="go('+(s+1)+')">下一件</button>';
  } else if(s===6){
-  h='<p class="kick">第三部分・歸零，再決定一次</p><h2>剛才那四件事，現在換一種方法再想一次。</h2>'+
-  '<div class="def"><p><b>歸零思考：</b>假設今天才第一次遇到這件事。已經花掉、拿不回來的先不算，只問：「從現在開始，哪一個選擇比較好？」</p></div>'+
-  '<p class="lead">花下去的錢和時間，就像潑出去的水，收不回來了。請按下面的「歸零」：每件事裡「已經花掉、拿不回來」的那一行會被遮起來，你只會看到從現在開始的情形。</p>'+
-  '<button class="zero'+(st.worn?' done':'')+'" aria-pressed="'+(!!st.worn)+'" onclick="wear()">'+IC.zero+'<span>'+(st.worn?'已經歸零':'歸零')+'</span></button>'+
-  '<p class="lead" style="text-align:center;font-weight:700">'+(st.worn?'已經歸零了。接下來，請只看從現在開始的情形。':'還沒有歸零，請按一下上面的「歸零」。')+'</p>'+
-  '<button class="btn te" '+(st.worn?'':'disabled')+' onclick="go(7)">從現在開始算，再看一次這四件事</button>';
+  h='<p class="kick">第三部分・換一個人想一想</p><h2>已經花掉的東西，很難說不想就不想。</h2>'+
+  '<div class="def"><p><b>一個好用的方法：</b>想像有一位同學<b>剛好走進來</b>，他什麼都還沒花，可是<b>現在的情形和你一模一樣</b>。你會建議他怎麼做？</p></div>'+
+  '<p class="lead">接下來，路人小新會一件一件來問你。只看「現在」的情形，替他出主意。出完主意，再和你自己剛剛的決定比一比。</p>'+
+  '<button class="btn te" onclick="go(7)">好，讓小新來問我</button>';
  } else if(s===7){
-  h='<p class="kick">第三部分・歸零以後，再決定一次</p><p class="lead">每一件事裡，「已經花掉、拿不回來」的那一行已經遮起來，先不算了。請只看從現在開始的情形，每一件都再選一次。你可以選得和剛才一樣，也可以改變。</p>';
+  h='<p class="kick">第三部分・小新來問你</p><p class="lead">小新什麼都還沒花，可是現在的情形和這幾位同學一模一樣。你會建議小新怎麼做？</p>';
   for(var i=0;i<4;i++){var c2=CASES[i];
-   h+='<div class="card on"><h2>'+c2.who+'</h2><div class="past">'+c2.past+'<div class="fog">'+IC.zero+'已經花掉、拿不回來，先不算</div></div><div class="now">'+c2.now+'</div>'+
+   h+='<div class="card on"><h2>第 '+(i+1)+' 件：小新來問你</h2><div class="past">'+c2.xp+'</div><div class="now">'+c2.xn+'</div>'+
    '<div class="two">'+opt('a2',i,'go',c2.go)+opt('a2',i,'stop',c2.stop)+'</div>'+
-   (st.a2[i]&&st.a2[i]!==st.a1[i]?'<p class="chg">你改變了這一件的決定。</p>':'')+'</div>';}
+   (st.a2[i]?'<p class="chg">'+(st.a2[i]!==st.a1[i]?'你給小新的建議，和你自己剛剛的決定<b>不一樣</b>。':'你給小新的建議，和你自己剛剛的決定一樣。')+'</p>':'')+'</div>';}
   var done=st.a2.every(function(x){return x});
-  h+='<button class="btn" '+(done?'':'disabled')+' onclick="go(8)">四件都選好了，看結果</button>';
+  h+='<button class="btn" '+(done?'':'disabled')+' onclick="go(8)">四件都出好主意了，看結果</button>';
  } else {
   var g1=st.a1.filter(function(x){return x==='go'}).length,g2=st.a2.filter(function(x){return x==='go'}).length;
   var ch=0;for(var j=0;j<4;j++)if(st.a1[j]!==st.a2[j])ch++;
@@ -134,15 +133,15 @@ function render(){
   '<div class="card sum">'+
   '<div class="row"><span>你的組別</span><b>'+(st.g==='red'?IC.red+'紅組':IC.blue+'藍組')+'</b></div>'+
   '<div class="row"><span>第一題：星期六下午，你選了哪一場活動？</span><b>'+(st.ticket==='a'?'七股潟湖搭膠筏':'四草綠色隧道坐竹筏')+'</b></div>'+
-  '<div class="row"><span>第二題：按下「歸零」、再決定一次以後，你改變了幾個決定？</span><b>'+ch+' 個</b></div>'+
+  '<div class="row"><span>第二題：你給小新的建議，有幾件和自己的決定不一樣？</span><b>'+ch+' 件</b></div>'+
   '<div class="row"><span>第一次決定的時候，你選「繼續」的有幾件？</span><b>'+g1+' 件</b></div>'+
-  '<div class="row"><span>歸零以後，你選「繼續」的有幾件？</span><b>'+g2+' 件</b></div></div>'+
-  '<p class="lead">等一下，紅組和藍組會分別舉手。先想一想：第一次做選擇的時候，你是不是有點捨不得那些已經花掉、拿不回來的東西？</p>'+
+  '<div class="row"><span>你建議小新「繼續」的有幾件？</span><b>'+g2+' 件</b></div></div>'+
+  '<p class="lead">等一下，紅組和藍組會分別舉手。先想一想：你自己的決定和給小新的建議不一樣的地方，是不是因為捨不得那些已經花掉、拿不回來的東西？（藍組的「過去」是什麼都沒花，老師會揭曉。）</p>'+
   '';
  }
  app.innerHTML=h;
  if(st.step>=8&&window.LIVE){var g1=st.a1.filter(function(x){return x==='go'}).length,ch=0;for(var j=0;j<4;j++)if(st.a1[j]!==st.a2[j])ch++;
-  app.appendChild(LIVE.box('glasses',{g:st.g,rows:[st.ticket==='a',st.ticket==='b',ch===0,ch===1,ch>=2]}))}
+  app.appendChild(LIVE.box('glasses',{g:st.g,rows:[st.ticket==='a',st.ticket==='b',st.a1[0]==='go',st.a1[1]==='go',st.a1[2]==='go',st.a1[3]==='go',ch>=1]}))}
 }
 function tk(id,icon,name,priceHtml){return '<button class="ticket'+(st.ticket===id?' pick':'')+'" onclick="pickT(\''+id+'\')" aria-pressed="'+(st.ticket===id)+'">'+icon+'<b>'+name+'</b>'+priceHtml+'<span class="mini">星期六下午</span></button>'}
 function pickT(id){st.ticket=id;save(st);render()}
