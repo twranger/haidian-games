@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>省 100 元，走不走？・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.shop{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.st{background:#fff;border:3px solid #E3DED7;border-radius:18px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:4px}
+.st .nm{font-size:20px;font-weight:700;color:#64748B}.st .pr{font-size:clamp(30px,7vw,46px);font-weight:900}
+.st.b{border-color:#2A6F68}.st.b .pr{color:#2A6F68}
+.walk{font-size:clamp(18px,3.6vw,22px);font-weight:900;color:#64748B;text-align:center}
+.item{font-size:clamp(28px,6vw,40px);font-weight:900;text-align:center}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two .btn{font-size:clamp(22px,4.6vw,30px);padding:18px 4px}
+.huge{font-size:clamp(46px,6.4vw,90px);font-weight:900;line-height:1.15}
+.pair{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pair .card h2{font-size:26px}
+.hb{display:flex;flex-direction:column;gap:4px}
+.hb .lb{font-size:22px;font-weight:900}
+.hb .bw{background:#EEE9E1;border-radius:10px;height:44px;overflow:hidden;display:flex}
+.hb .bw i{display:flex;align-items:center;justify-content:flex-end;padding-right:10px;color:#fff;font-style:normal;font-weight:900;font-size:22px;height:100%;border-radius:10px}
+.steps{display:flex;gap:6px;justify-content:center}.steps i{width:14px;height:14px;border-radius:7px;background:#E3DED7}.steps i.on{background:#D95D39}
+</style>
+</head>
+<body>
+<script>
+/* 三組商品，每組都是「走 5 分鐘到 B 店，少付 100 元」。依進場座號順序，一半的人看到貴的、一半看到便宜的，每題輪流換 */
+var P=[{b:['手機',36900],s:['手機殼',200]},{b:['遊戲主機',12000],s:['遊戲點數卡',300]},{b:['腳踏車',5600],s:['運動水壺',180]}];
+function players(H){return Object.keys(H.seats).length}
+function idx(g,seat){var i=(g.order||[]).indexOf(+seat);return i<0?0:i}
+function big(g,seat,i){return (idx(g,seat)+i)%2===0}
+function money(n){return n.toLocaleString('en-US')}
+function item(g,seat,i){var x=big(g,seat,i)?P[i].b:P[i].s;return {n:x[0],a:x[1],b:x[1]-100}}
+function stat(g){return P.map(function(p,i){var o={b:{y:0,n:0},s:{y:0,n:0}};Object.keys(g.c||{}).forEach(function(k){var v=g.c[k][i];if(v==null)return;var G=o[big(g,k,i)?'b':'s'];G.n++;if(v===1)G.y++});return o})}
+function hbar(lab,G,col){var p=G.n?Math.round(G.y/G.n*100):0;return '<div class="hb"><span class="lb" style="display:flex;justify-content:space-between"><span>'+lab+'</span><span style="color:'+col+'">'+(G.n?p+'%':'—')+'</span></span><div class="bw"><i style="width:'+p+'%;background:'+col+'"></i></div><span style="font-size:18px;color:#64748B">'+G.y+' / '+G.n+' 人走過去</span></div>'}
+ROOM.start({
+ key:'walk100',title:'省 100 元，走不走？',kick:'第 6 節・全班連線',studentUrl:'walk100.html',
+ rules:'<p>你要去買 3 樣東西。每一次，<b>走路 5 分鐘</b>到另一家店，同款、同規格，就能<b>少付 100 元</b>。</p><p>你會走過去嗎？沒有對錯，照你真的會怎麼做選。</p>',
+ init:function(H){H.g={c:{}}},
+ onStart:function(H){H.g={c:{},t0:Date.now(),order:Object.keys(H.seats).map(Number).sort(function(a,b){return a-b})};H.ph='play'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,order:g.order}}},
+ onMsg:function(H,d,seat){if(d.t==='c'&&H.ph==='play'&&d.v&&d.v.length===3){H.g.c[seat]=d.v.map(function(x){return x===1?1:0});return true}},
+ act:{reveal:function(H){H.ph='reveal'}},
+ bar:function(H){if(H.ph==='play')return '<button class="btn" data-act="reveal">揭曉：大家拿到的題目</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='';
+  if(H.ph==='play')h+='<div class="card dark"><p class="huge">走 5 分鐘，少付 100 元</p><p class="stat">你會走過去嗎？在平板上選。</p></div><div class="card"><p class="stat">已經送出：'+Object.keys(g.c).length+' / '+N+' 人</p></div>';
+  else{var S=stat(g);
+   h+='<div class="card warm"><p class="huge" style="font-size:clamp(36px,4.6vw,64px)">其實全班拿到的題目不一樣！</p><p class="stat">一半的人看到貴的東西，一半的人看到便宜的東西。可是每一題，<b style="color:#D95D39">走過去都是少付 100 元</b>。</p></div><div class="pair">'+
+    P.map(function(p,i){return '<div class="card"><h2>第 '+(i+1)+' 題</h2>'+hbar(p.b[0]+' '+money(p.b[1])+' → '+money(p.b[1]-100),S[i].b,'#2A6F68')+hbar(p.s[0]+' '+money(p.s[1])+' → '+money(p.s[1]-100),S[i].s,'#D95D39')+'</div>'}).join('')+'</div>'+
+    '<div class="card dark"><p class="stat">一樣是 100 元，放在 36,900 裡和放在 200 裡，感覺一樣大嗎？</p><p style="font-size:22px">這是我們班一次的結果，不一定每一班都一樣。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='w'+g.t0,L=api.local[k]||{v:[]},h='',i=L.v.length;
+  if(ST.ph==='play'){
+   if(L.sent)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師揭曉。</p>';
+   else if(i<3){var it=item(g,me,i);
+    h+='<div class="steps">'+[0,1,2].map(function(j){return '<i class="'+(j<=i?'on':'')+'"></i>'}).join('')+'</div><h1>第 '+(i+1)+' 題：買'+it.n+'</h1><p class="item">'+it.n+'</p>'+
+     '<div class="shop"><div class="st"><span class="nm">你在 A 店</span><span class="pr">'+money(it.a)+' 元</span></div><div class="walk">走路<br>5 分鐘<br>→</div><div class="st b"><span class="nm">B 店（同款、同規格）</span><span class="pr">'+money(it.b)+' 元</span></div></div>'+
+     '<p class="lead" style="text-align:center">走過去，可以少付 <b>100 元</b>。你會走過去 B 店買嗎？</p><div class="two"><button class="btn gh" data-act="c" data-arg="1">走過去 B 店</button><button class="btn gh" data-act="c" data-arg="0">不走，在 A 店買</button></div>'}
+   else h+='<h1>3 題都選好了</h1><p class="lead">你的選擇：'+L.v.map(function(v,j){return item(g,me,j).n+(v?' 走過去':' 不走')}).join('、')+'</p><button class="btn" data-act="send">送出</button>'}
+  else if(ST.ph==='reveal')h+='<h1>看大螢幕！</h1><div class="card"><p class="lead">你拿到的是：'+[0,1,2].map(function(j){return item(g,me,j).n}).join('、')+'。<br>別人拿到的可能是另一樣東西，可是每一題都是少付 100 元。</p></div>';
+  else h+='<h1>等老師開始</h1><p class="lead">等一下要去買 3 樣東西。</p>';
+  return h},
+ sact:{
+  c:function(ST,me,api,v){if(ST.ph!=='play')return;var k='w'+ST.g.t0,L=api.local[k]||{v:[]};if(L.sent||L.v.length>=3)return;L.v.push(+v);var o={};o[k]=L;api.local=o;api.save()},
+  send:function(ST,me,api){if(ST.ph!=='play')return;var k='w'+ST.g.t0,L=api.local[k]||{v:[]};if(L.v.length<3)return;api.send({t:'c',v:L.v});L.sent=1;var o={};o[k]=L;api.local=o;api.save()}}
+});
+</script>
+</body>
+</html>

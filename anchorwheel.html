@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>幸運輪盤估估看・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.wh{position:relative;width:min(78vw,360px);margin:6px auto}
+.wh svg.w{display:block;width:100%;height:auto}
+.wh .ptr{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #1E242B}
+.spin{transform-origin:50% 50%;animation:sp 3.6s cubic-bezier(.12,.7,.18,1) both}
+@keyframes sp{from{transform:rotate(0)}to{transform:rotate(var(--r))}}
+.num{font-size:clamp(56px,14vw,96px);font-weight:900;text-align:center;color:#D95D39;line-height:1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two .btn{font-size:clamp(22px,4.6vw,30px);padding:16px 4px}
+.g7{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.g7 .btn,.g4 .btn{font-size:clamp(18px,3.8vw,24px);padding:12px 0}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.q{font-size:clamp(21px,3.8vw,27px);font-weight:900;line-height:1.5}
+.tag{background:#fff;border:3px solid #E3DED7;border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.tag .old{font-size:24px;color:#64748B;text-decoration:line-through;font-weight:700}
+.tag .bx{width:120px;height:80px;border-radius:10px;background:linear-gradient(160deg,#9FC7E0,#205E86)}
+.huge{font-size:clamp(46px,6.4vw,90px);font-weight:900;line-height:1.15}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.vb{display:flex;align-items:flex-end;gap:18px;height:230px}
+.vb .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-weight:900;font-size:26px}
+.vb .c span.b{display:block;width:100%;border-radius:10px 10px 0 0}
+.rank{display:flex;flex-direction:column;gap:6px}
+.rk{display:flex;align-items:center;gap:10px;font-weight:900;font-size:24px}
+.rk .no{width:40px;text-align:right;color:#94A3B8}.rk .who{width:90px}
+</style>
+</head>
+<body>
+<script>
+/* 每台平板自己轉輪盤，但依進場座號順序，一半停在 10、一半停在 65（學生不知道）。
+   第 2 題的「原價」標籤反過來分：輪盤 10 的人看到原價 1,200，輪盤 65 的人看到原價 300 */
+var NUMS=[];for(var n=0;n<100;n+=5)NUMS.push(n);
+var PCT=[];for(var n2=0;n2<=100;n2+=5)PCT.push(n2);
+var PRICE=[100,200,300,400,500,600,700,800,900,1000,1100,1200],TRUE=28,SPIN=3800;
+function players(H){return Object.keys(H.seats).length}
+function grp(g,seat){var i=(g.order||[]).indexOf(+seat);return (i<0?0:i)%2===0?'lo':'hi'}
+function wheelNum(gr){return gr==='lo'?10:65}
+function oldPrice(gr){return gr==='lo'?1200:300}
+function wheel(target,el){var k=NUMS.indexOf(target),r=360*6-k*18,cols=['#F2A65A','#9FC7E0','#C4B5FD','#A7D3C9'];
+ var s='<svg class="w spin" viewBox="-100 -100 200 200" style="--r:'+r+'deg;animation-delay:'+(-el/1000)+'s">';
+ NUMS.forEach(function(v,i){var a0=(i*18-9-90)*Math.PI/180,a1=(i*18+9-90)*Math.PI/180;s+='<path d="M0 0 L'+(96*Math.cos(a0)).toFixed(2)+' '+(96*Math.sin(a0)).toFixed(2)+' A96 96 0 0 1 '+(96*Math.cos(a1)).toFixed(2)+' '+(96*Math.sin(a1)).toFixed(2)+' Z" fill="'+cols[i%4]+'" stroke="#FAF7F2" stroke-width="1"/><text x="0" y="-78" transform="rotate('+(i*18)+')" text-anchor="middle" font-size="11" font-weight="900" fill="#1E242B">'+v+'</text>'});
+ return s+'<circle r="14" fill="#1E242B"/></svg>'}
+function med(a){if(!a.length)return null;a=a.slice().sort(function(x,y){return x-y});var m=a.length>>1;return a.length%2?a[m]:Math.round((a[m-1]+a[m])/2)}
+function stats(g){var o={lo:{e:[],p:[]},hi:{e:[],p:[]}};Object.keys(g.a||{}).forEach(function(k){var A=g.a[k],G=o[grp(g,k)];G.e.push(A.e);G.p.push(A.p)});return {lo:{e:med(o.lo.e),p:med(o.lo.p),n:o.lo.e.length},hi:{e:med(o.hi.e),p:med(o.hi.p),n:o.hi.e.length}}}
+function vbars(items,mx,unit){return '<div class="vb">'+items.map(function(x){var v=x[1];return '<div class="c"><span>'+(v==null?'—':v+unit)+'</span><span class="b" style="height:'+(v==null?0:Math.max(4,v/mx*170))+'px;background:'+x[2]+'"></span><small style="font-size:20px;text-align:center">'+x[0]+'</small></div>'}).join('')+'</div>'}
+ROOM.start({
+ key:'anchorwheel',title:'幸運輪盤估估看',kick:'第 6 節・全班連線',studentUrl:'anchorwheel.html',
+ rules:'<p>先在平板上<b>轉一次幸運輪盤</b>，記住停下來的數字。</p><p>然後回答 2 題「估估看」。第 1 題有正確答案，<b>估得越接近，排行榜越前面</b>。</p>',
+ init:function(H){H.g={a:{}}},
+ onStart:function(H){H.g={a:{},t0:Date.now(),order:Object.keys(H.seats).map(Number).sort(function(a,b){return a-b})};H.ph='play'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,order:g.order}}},
+ onMsg:function(H,d,seat){if(d.t==='a'&&H.ph==='play'&&PCT.indexOf(+d.e)>=0&&PRICE.indexOf(+d.p)>=0){H.g.a[seat]={e:+d.e,p:+d.p,hl:d.hl==='h'?'h':'l'};return true}},
+ act:{reveal:function(H){H.ph='reveal'}},
+ bar:function(H){if(H.ph==='play')return '<button class="btn" data-act="reveal">公布結果</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='';
+  if(H.ph==='play')h+='<div class="card dark"><p class="huge">轉輪盤，估估看</p><p class="stat">每個人在自己的平板上轉一次，再回答 2 題。</p></div><div class="card"><p class="stat">已經送出：'+Object.keys(g.a).length+' / '+N+' 人</p></div>';
+  else{var S=stats(g),A=g.a,lb=Object.keys(A).map(function(k){return {s:+k,d:Math.abs(A[k].e-TRUE)}}).sort(function(x,y){return x.d-y.d||x.s-y.s});
+   h+='<div class="card warm"><p class="huge" style="font-size:clamp(34px,4.4vw,60px)">輪盤是設定好的！</p><p class="stat">一半的人一定停在 <b style="color:#2A6F68">10</b>，一半的人一定停在 <b style="color:#D95D39">65</b>。輪盤的數字，和非洲國家有幾個一點關係都沒有。</p></div>'+
+    '<div class="cmp"><div class="card"><h2>第 1 題：非洲國家占聯合國會員國幾 %？（中位數）</h2>'+vbars([['我們班<br>轉到 10',S.lo.e,'#2A6F68'],['我們班<br>轉到 65',S.hi.e,'#D95D39'],['1974 研究<br>看到 10',25,'#94A3B8'],['1974 研究<br>看到 65',45,'#94A3B8']],70,'%')+'<p class="stat">真正的答案：193 國裡有 54 國，大約 <b>28%</b></p></div>'+
+    '<div class="card"><h2>第 2 題：同一個收納盒，你覺得值多少？（中位數）</h2>'+vbars([['標「原價 1,200」<br>的人',S.lo.p,'#2A6F68'],['標「原價 300」<br>的人',S.hi.p,'#D95D39']],1200,' 元')+'<p class="stat">兩邊是<b>同一個</b>收納盒，只差上面先看到的「原價」。</p></div></div>'+
+    '<div class="cmp"><div class="card dark"><p class="stat">先看到的數字，可能把後面的估計拉過去。</p><p style="font-size:22px">這是我們班一次的結果（轉到 10：'+S.lo.n+' 人、轉到 65：'+S.hi.n+' 人），不一定每一班都一樣。</p></div><div class="card"><h2>估計王（最接近 28%）</h2><div class="rank">'+lb.slice(0,5).map(function(x,i){return '<div class="rk"><span class="no">'+(i+1)+'</span><span class="who">'+x.s+' 號</span><span>猜 '+A[x.s].e+'%</span></div>'}).join('')+'</div></div></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='a'+g.t0,L=api.local[k]||{},gr=grp(g,me),w=wheelNum(gr),h='';
+  if(ST.ph==='play'){
+   if(L.sent)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師公布。</p>';
+   else if(!L.ts)h+='<h1>轉一次幸運輪盤</h1><div class="wh"><div class="ptr"></div>'+wheel(w,0).replace(' spin','')+'</div><button class="btn" data-act="spin">轉！</button>';
+   else if(Date.now()-L.ts<SPIN)h+='<h1>轉呀轉……</h1><div class="wh"><div class="ptr"></div>'+wheel(w,Date.now()-L.ts)+'</div>';
+   else if(!L.hl)h+='<p class="lead" style="text-align:center">輪盤停在</p><p class="num">'+w+'</p><h2 style="margin-top:8px">第 1 題</h2><p class="q">聯合國的會員國裡，非洲國家占的比例，比 '+w+'% <b>高</b>還是<b>低</b>？</p><div class="two"><button class="btn gh" data-act="hl" data-arg="h">比 '+w+'% 高</button><button class="btn gh" data-act="hl" data-arg="l">比 '+w+'% 低</button></div>';
+   else if(L.e==null)h+='<h2>第 1 題（續）</h2><p class="q">你估計，非洲國家大約占聯合國會員國的幾 %？</p><div class="g7">'+PCT.map(function(v){return '<button class="btn gh" data-act="e" data-arg="'+v+'">'+v+'</button>'}).join('')+'</div>';
+   else if(L.p==null)h+='<h2>第 2 題</h2><div class="tag"><div class="bx"></div><span style="font-size:22px;font-weight:900">收納盒（三格、可疊放）</span><span class="old">原價 '+money(oldPrice(gr))+' 元</span></div><p class="q">不看現在賣多少，你覺得這個收納盒<b>值</b>多少錢？</p><div class="g4">'+PRICE.map(function(v){return '<button class="btn gh" data-act="p" data-arg="'+v+'">'+money(v)+'</button>'}).join('')+'</div>';
+   else h+='<h1>都答好了</h1><div class="card"><p class="lead">第 1 題：'+L.e+'%　第 2 題：'+money(L.p)+' 元</p></div><button class="btn" data-act="send">送出</button>'}
+  else if(ST.ph==='reveal')h+='<h1>看大螢幕！</h1><div class="card"><p class="lead">你的輪盤停在 <b>'+w+'</b>，你估 '+(L.e!=null?L.e+'%':'—')+'。真正的答案大約 28%。</p><p class="lead">你看到的收納盒「原價」是 '+money(oldPrice(gr))+' 元，你覺得值 '+(L.p!=null?money(L.p)+' 元':'—')+'。</p></div>';
+  else h+='<h1>等老師開始</h1><p class="lead">等一下要轉幸運輪盤。</p>';
+  return h},
+ sact:(function(){function upd(ST,api,f){var k='a'+(ST.g||{}).t0,L=api.local[k]||{};f(L);var o={};o[k]=L;api.local=o;api.save()}
+  return {
+  spin:function(ST,me,api){if(ST.ph!=='play')return;upd(ST,api,function(L){if(!L.ts)L.ts=Date.now()});setTimeout(function(){ROOM.redraw&&ROOM.redraw()},SPIN+80)},
+  hl:function(ST,me,api,v){upd(ST,api,function(L){L.hl=v})},
+  e:function(ST,me,api,v){upd(ST,api,function(L){L.e=+v})},
+  p:function(ST,me,api,v){upd(ST,api,function(L){L.p=+v})},
+  send:function(ST,me,api){var L=api.local['a'+ST.g.t0]||{};if(L.e==null||L.p==null)return;api.send({t:'a',e:L.e,p:L.p,hl:L.hl});upd(ST,api,function(L){L.sent=1})}}})()
+});
+function money(n){return n.toLocaleString('en-US')}
+</script>
+</body>
+</html>
