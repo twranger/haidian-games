@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<script src="icons.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>百分比搶答王・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.huge{font-size:clamp(38px,5vw,74px);font-weight:900;line-height:1.2}
+.qn{font-size:clamp(20px,2.2vw,30px);font-weight:900;color:#B67A12}
+.qt{font-size:clamp(34px,4vw,60px);font-weight:900;line-height:1.35}
+.og{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.oc{display:flex;align-items:center;gap:16px;border-radius:18px;padding:18px 22px;font-size:clamp(28px,3vw,44px);font-weight:900;color:#fff}
+.oc b{flex:none;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center}
+.c0{background:#205E86}.c1{background:#A8441A}.c2{background:#2A6F68}.c3{background:#7C5CC4}
+.oc.dim{opacity:.35}.oc.ok{box-shadow:0 0 0 6px #F2B544}
+.oc .ct{margin-left:auto;font-size:.8em}
+.sg{display:grid;grid-template-columns:1fr;gap:10px}
+.sg .btn{display:flex;align-items:center;gap:14px;text-align:left;font-size:clamp(22px,4.6vw,30px);padding:16px 18px;min-height:64px;color:#fff}
+.sg .btn b{flex:none;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center}
+.sg .btn.c0{background:#205E86}.sg .btn.c1{background:#A8441A}.sg .btn.c2{background:#2A6F68}.sg .btn.c3{background:#7C5CC4}
+.tmr{font-size:clamp(28px,6vw,44px);font-weight:900;color:#D95D39;text-align:right}
+.why{font-size:clamp(22px,2.4vw,32px);font-weight:700;line-height:1.5}
+.rk{display:flex;flex-direction:column;gap:6px}
+.rk div{display:flex;gap:12px;align-items:center;font-size:26px;font-weight:900}
+.rk i{font-style:normal;color:#64748B;width:100px;white-space:nowrap}.rk span{margin-left:auto;color:#B67A12}
+.cmp{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+@media (max-width:900px){.cmp,.og{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script>
+/* 百分比搶答王（第 8 節）：8 題四選一，全班同時搶答。答對 100 分，再加速度分（越快越多，最多 100）。 */
+var Q=[
+ {q:'社團去年 2 人，今年 6 人。人數增加了百分之多少？',o:['200%','300%','4%','66.7%'],a:0,w:'多了 4 人，分母是去年的 2 人：4÷2＝200%。今年是去年的 300%，但「增加」是 200%。'},
+ {q:'公告說「比去年增加 200%」。如果去年 50 人，今年幾人？',o:['150 人','100 人','250 人','200 人'],a:0,w:'增加 50×200%＝100 人，今年 50＋100＝150 人。'},
+ {q:'一個班 30 人，有 12 人戴眼鏡。戴眼鏡的占幾 %？',o:['12%','40%','30%','25%'],a:1,w:'部分÷整體：12÷30＝0.4＝40%。'},
+ {q:'參加率從 20% 變成 35%，增加了幾個百分點？',o:['15 個百分點','75 個百分點','35 個百分點','55 個百分點'],a:0,w:'百分點：35%－20%＝15 個百分點。'},
+ {q:'同一題：參加率從 20% 變 35%，「相對」增加了百分之多少？',o:['15%','75%','35%','175%'],a:1,w:'相對變化：15÷20＝75%。15 個百分點和相對增加 75%，回答的是不同問題。'},
+ {q:'飲料從 60 元漲到 75 元，漲了百分之多少？',o:['15%','20%','25%','80%'],a:2,w:'多 15 元，分母是原來的 60 元：15÷60＝25%。'},
+ {q:'再從 75 元降回 60 元，降了百分之多少？',o:['25%','20%','15%','80%'],a:1,w:'少 15 元，分母變成 75 元：15÷75＝20%。漲 25%、降 20%，不會互相抵消。'},
+ {q:'A 社 30 人有 9 人得獎，B 社 70 人有 14 人得獎。哪一社的「得獎率」比較高？',o:['A 社','B 社','一樣高','不能比'],a:0,w:'A：9÷30＝30%；B：14÷70＝20%。A 的得獎率高，B 的得獎人數多。'}];
+var SEC=20,L4='ABCD';
+function players(H){return Object.keys(H.seats).length}
+function total(g,s){var t=0;Object.keys(g.pt||{}).forEach(function(i){t+=(g.pt[i][s]||0)});return t}
+function rank(g,H){return Object.keys(H.seats).map(Number).map(function(s){return [s,total(g,s)]}).sort(function(a,b){return b[1]-a[1]||a[0]-b[0]})}
+ROOM.start({
+ key:'pctrace',title:'百分比搶答王',kick:'第 8 節・全班連線',studentUrl:'pctrace.html',
+ rules:'<p>一共 <b>8 題</b>，每題 <b>20 秒</b>，四選一。</p><p>答對得 100 分，<b>越快答對，加分越多</b>（最多再加 100 分）。答錯 0 分。可以先在紙上算。</p>',
+ init:function(H){H.g={i:-1,ans:{},pt:{}}},
+ onStart:function(H){H.g={i:-1,ans:{},pt:{},t0:Date.now()};H.ph='lobby2'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,i:g.i,ts:g.ts}}},
+ onMsg:function(H,d,seat){var g=H.g;if(d.t==='a'&&H.ph==='q'&&d.i===g.i&&d.v>=0&&d.v<4){var el=Math.min(SEC,(Date.now()-g.ts)/1000);g.ans[g.i]=g.ans[g.i]||{};g.ans[g.i][seat]={v:d.v,el:el};return true}},
+ tick:function(H){if(H.ph==='q'&&Date.now()-H.g.ts>=SEC*1000){H.ph='show';score(H);return true}},
+ tickText:function(H){if(H.ph==='q')return Math.max(0,Math.ceil(SEC-(Date.now()-H.g.ts)/1000))+' 秒';return ''},
+ act:{next:function(H){var g=H.g;g.i++;g.ts=Date.now();H.ph='q'},show:function(H){H.ph='show';score(H)},end:function(H){H.ph='end'}},
+ bar:function(H){var g=H.g;if(H.ph==='lobby2')return '<button class="btn" data-act="next">第 1 題開始</button>';if(H.ph==='q')return '<button class="btn gh" data-act="show">提早公布答案</button>';
+  if(H.ph==='show')return g.i<Q.length-1?'<button class="btn" data-act="next">第 '+(g.i+2)+' 題</button>':'<button class="btn" data-act="end">總排行榜</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='',x=Q[g.i];
+  if(H.ph==='lobby2')h+='<div class="card dark"><p class="huge">百分比搶答王</p><p class="stat">8 題，每題 20 秒。答對 100 分，越快加分越多。</p></div>';
+  else if(H.ph==='q'){var n=Object.keys((g.ans[g.i]||{})).length;
+   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="qn">第 '+(g.i+1)+' / '+Q.length+' 題</span><span class="tmr" id="hdtick"></span></div><p class="qt">'+x.q+'</p></div><div class="og">'+x.o.map(function(o,k){return '<div class="oc c'+k+'"><b>'+L4[k]+'</b>'+o+'</div>'}).join('')+'</div><div class="card"><p class="stat">已經作答：'+n+' / '+N+'</p></div>'}
+  else if(H.ph==='show'){var A=g.ans[g.i]||{},cnt=[0,0,0,0],R=rank(g,H);Object.keys(A).forEach(function(s){cnt[A[s].v]++});
+   h+='<div class="card"><span class="qn">第 '+(g.i+1)+' 題答案</span><p class="qt" style="font-size:clamp(28px,3vw,44px)">'+x.q+'</p></div><div class="og">'+x.o.map(function(o,k){return '<div class="oc c'+k+(k===x.a?' ok':' dim')+'"><b>'+(k===x.a?ICON('check'):L4[k])+'</b>'+o+'<span class="ct">'+cnt[k]+' 人</span></div>'}).join('')+'</div>'+
+    '<div class="cmp"><div class="card warm"><p class="why">'+x.w+'</p></div><div class="card"><h2>目前排行榜</h2><div class="rk">'+R.slice(0,5).map(function(r,i){return '<div><i>第 '+(i+1)+' 名</i>'+r[0]+' 號<span>'+r[1]+' 分</span></div>'}).join('')+'</div></div></div>'}
+  else{var R2=rank(g,H),miss=Q.map(function(q,i){var A=g.ans[i]||{},n=Object.keys(A).length,ok=Object.keys(A).filter(function(s){return A[s].v===q.a}).length;return [i,n?Math.round(ok/n*100):null]}).filter(function(m){return m[1]!=null}).sort(function(a,b){return a[1]-b[1]});
+   h+='<div class="card dark"><p class="huge">百分比搶答王：'+(R2[0]?R2[0][0]+' 號':'—')+'</p></div><div class="cmp"><div class="card"><h2>總排行榜</h2><div class="rk">'+R2.slice(0,8).map(function(r,i){return '<div><i>第 '+(i+1)+' 名</i>'+r[0]+' 號<span>'+r[1]+' 分</span></div>'}).join('')+'</div></div>'+
+    '<div class="card"><h2>全班最容易錯的題目</h2><div class="rk">'+miss.slice(0,3).map(function(m){return '<div><i>第 '+(m[0]+1)+' 題</i>答對率<span>'+m[1]+'%</span></div>'}).join('')+'</div></div></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='p'+g.t0,L=api.local[k]||{},my=(L.a||{})[g.i],h='',x=Q[g.i];
+  if(ST.ph==='lobby2')h+='<h1>準備搶答！</h1><p class="lead">題目出現在大螢幕，平板上點答案。可以先在紙上算。</p>';
+  else if(ST.ph==='q'){if(my!=null)h+='<h1>已作答：'+L4[my]+'</h1><p class="lead">等大家作答，看大螢幕。</p>';
+   else h+='<h1>第 '+(g.i+1)+' 題</h1><p class="lead" style="font-weight:700">'+x.q+'</p><div class="sg">'+x.o.map(function(o,j){return '<button class="btn c'+j+'" data-act="a" data-arg="'+j+'"><b>'+L4[j]+'</b>'+o+'</button>'}).join('')+'</div>'}
+  else if(ST.ph==='show'){var ok=my===x.a;h+='<h1>'+(my==null?'這題沒有作答':ok?ICON('check',{color:'#2A6F68'})+' 答對了！':'答錯了')+'</h1><p class="lead">正確答案：'+L4[x.a]+' '+x.o[x.a]+'</p><p class="lead">'+x.w+'</p>'}
+  else if(ST.ph==='end')h+='<h1>看大螢幕！</h1><p class="lead">總排行榜出爐了。</p>';
+  else h+='<h1>等老師開始</h1>';
+  return h},
+ sact:{a:function(ST,me,api,v){if(ST.ph!=='q')return;var g=ST.g,k='p'+g.t0,L=api.local[k]||{};L.a=L.a||{};L.a[g.i]=+v;var o={};o[k]=L;api.local=o;api.save();api.send({t:'a',i:g.i,v:+v})}}
+});
+function score(H){var g=H.g,x=Q[g.i],A=g.ans[g.i]||{};g.pt[g.i]={};Object.keys(A).forEach(function(s){g.pt[g.i][s]=A[s].v===x.a?100+Math.round(100*(1-A[s].el/SEC)):0})}
+</script>
+</body>
+</html>

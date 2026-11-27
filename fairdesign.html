@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<script src="icons.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>公平實驗設計師・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.huge{font-size:clamp(36px,4.8vw,70px);font-weight:900;line-height:1.2}
+.rq{background:#FFF8E8;border:3px solid #E9A23B;border-radius:18px;padding:14px 18px;font-size:clamp(21px,4.4vw,28px);font-weight:900;line-height:1.5}
+.dz{display:flex;flex-direction:column;gap:10px}
+.rw{background:#fff;border:2px solid #E3DED7;border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.rw .nm{font-size:clamp(19px,4vw,24px);font-weight:900;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.rw .nm small{font-size:16px;color:#B67A12;font-weight:900}
+.ab{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cy{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:2px solid #CBD5E1;border-radius:12px;background:#F8FAFC;padding:8px 12px;font:inherit;font-size:clamp(18px,3.8vw,22px);font-weight:900;color:#1E242B;cursor:pointer;min-height:56px;text-align:left}
+.cy span{font-size:15px;color:#475569;font-weight:700}
+.cy:focus-visible,.rd:focus-visible{outline:4px solid #205E86;outline-offset:2px}
+.rds{display:flex;flex-direction:column;gap:6px}
+.rd{border:2px solid #CBD5E1;border-radius:12px;background:#F8FAFC;padding:10px 12px;font:inherit;font-size:clamp(18px,3.8vw,22px);font-weight:700;text-align:left;cursor:pointer;min-height:48px;color:#1E242B}
+.rd.on{border-color:#2A6F68;background:#F0F7F6;font-weight:900}
+.rw.ok{border-color:#2A6F68}.rw.bad{border-color:#C8372D}
+.mk{font-size:17px;font-weight:900}.mk.ok{color:#2A6F68}.mk.bad{color:#C8372D}
+.pc{display:flex;flex-direction:column;gap:8px}
+.pc .r{display:grid;grid-template-columns:260px 1fr 90px;gap:14px;align-items:center;font-size:24px;font-weight:900}
+.pc .bw{background:#EEE9E1;border-radius:10px;height:40px;overflow:hidden}.pc .bw i{display:block;height:100%;border-radius:10px;background:#2A6F68}
+.pc .r.low .bw i{background:#C8372D}
+.rk{display:flex;flex-direction:column;gap:6px}
+.rk div{display:flex;gap:12px;align-items:center;font-size:24px;font-weight:900}
+.rk i{font-style:normal;color:#64748B;width:76px}.rk span{margin-left:auto;color:#B67A12}
+.cmp{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+@media (max-width:900px){.cmp{grid-template-columns:1fr}.pc .r{grid-template-columns:1fr 1fr 60px}}
+</style>
+</head>
+<body>
+<script>
+/* 公平實驗設計師（第 8 節）：兩個任務。每個任務一開始的設計故意不公平，學生自己改：
+   「要比的做法」那一列，A、B 兩組要不一樣；其他條件兩組要一樣；分組要抽籤；結果要量得到、對得上問題。
+   每列對了得 10 分，全部對再加 10 分；全部對的人，越早送出名次越前面。 */
+var M=[
+ {q:'減少閱讀時的干擾（安靜、手機收起來），閱讀理解會不會更好？',rows:[
+  {k:'env',n:'閱讀環境',m:1,v:['安靜、手機收起來','平常的教室'],s:[1,1]},
+  {k:'text',n:'文章難度',v:['簡單','普通','難'],s:[0,2]},
+  {k:'time',n:'閱讀時間',v:['5 分鐘','10 分鐘','15 分鐘'],s:[1,0]},
+  {k:'hint',n:'作答時',v:['旁邊有人提示','自己作答'],s:[0,1]},
+  {k:'who',n:'誰在哪一組',one:1,v:['老師挑會讀的人進 A 組','想參加的人自己選','抽籤決定'],ok:2},
+  {k:'res',n:'要量的結果',one:1,v:['覺得教室安不安靜','同樣 10 題閱讀理解，答對幾題','讀了幾頁'],ok:1}]},
+ {q:'新的跳繩技巧（手腕畫小圈），1 分鐘能跳更多下嗎？',rows:[
+  {k:'tech',n:'跳法',m:1,v:['新技巧：手腕畫小圈','原來的跳法'],s:[1,1]},
+  {k:'rope',n:'繩子長度',v:['短','剛好','長'],s:[1,0]},
+  {k:'ground',n:'場地',v:['PU 跑道','草地','沙地'],s:[0,1]},
+  {k:'warm',n:'先練習',v:['不練習','練 5 分鐘','練 15 分鐘'],s:[2,1]},
+  {k:'who',n:'誰在哪一組',one:1,v:['跳繩校隊進新技巧組','想試的人自己選','抽籤決定'],ok:2},
+  {k:'res',n:'要量的結果',one:1,v:['1 分鐘內跳了幾下','覺得自己變厲害了嗎','跳的樣子好不好看'],ok:0}]}];
+function players(H){return Object.keys(H.seats).length}
+function rowOK(r,d){var x=d[r.k];if(r.one)return x===r.ok;if(!x)return false;return r.m?x[0]!==x[1]:x[0]===x[1]}
+function grade(m,d){var n=0;M[m].rows.forEach(function(r){if(rowOK(r,d))n++});return n}
+function pts(m,d){var n=grade(m,d);return n*10+(n===M[m].rows.length?10:0)}
+function init(m){var d={};M[m].rows.forEach(function(r){d[r.k]=r.one?null:r.s.slice()});return d}
+function total(g,s){var t=0;[0,1].forEach(function(m){var D=(g.sub[m]||{})[s];if(D)t+=D.p+(D.rk||0)});return t}
+ROOM.start({
+ key:'fairdesign',title:'公平實驗設計師',kick:'第 8 節・全班連線',studentUrl:'fairdesign.html',
+ rules:'<p>你是實驗設計師！每個任務，平板會給你一份<b>不公平</b>的實驗設計，請你改到公平。</p><p>每改對一列得 10 分，全部對再加 10 分；全部對的人，<b>越早送出加越多分</b>。一共 2 個任務。</p>',
+ init:function(H){H.g={m:0,sub:{0:{},1:{}}}},
+ onStart:function(H){H.g={m:0,sub:{0:{},1:{}},t0:Date.now()};H.ph='brief'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,m:g.m}}},
+ onMsg:function(H,d,seat){var g=H.g;if(d.t==='sub'&&H.ph==='work'&&d.m===g.m&&d.d&&!g.sub[g.m][seat]){var p=pts(g.m,d.d),all=grade(g.m,d.d)===M[g.m].rows.length,order=Object.keys(g.sub[g.m]).filter(function(s){return g.sub[g.m][s].all}).length;
+   g.sub[g.m][seat]={d:d.d,p:p,all:all,rk:all?Math.max(0,20-2*order):0};return true}},
+ act:{go:function(H){H.ph='work'},reveal:function(H){H.ph='reveal'},next:function(H){H.g.m=1;H.ph='brief'},end:function(H){H.ph='end'}},
+ bar:function(H){var m=H.g.m;if(H.ph==='brief')return '<button class="btn" data-act="go">開始任務 '+(m+1)+'</button>';if(H.ph==='work')return '<button class="btn" data-act="reveal">停止作答，看大家的設計</button>';
+  if(H.ph==='reveal')return m===0?'<button class="btn" data-act="next">任務 2</button>':'<button class="btn" data-act="end">總排行榜</button>';return ''},
+ hostView:function(H){var g=H.g,m=g.m,N=players(H),h='',S=g.sub[m]||{},ks=Object.keys(S);
+  if(H.ph==='brief')h+='<div class="card dark"><p class="huge">任務 '+(m+1)+'：改成公平的實驗</p><p class="stat">研究問題：'+M[m].q+'</p></div><div class="card"><p class="stat">平板上的設計一開始故意不公平。只有<b>要比的做法</b>兩組不一樣，其他都要一樣；還要選好分組方法和要量的結果。</p></div>';
+  else if(H.ph==='work'){var al=ks.filter(function(s){return S[s].all}).length;h+='<div class="card dark"><p class="huge">設計中……</p><p class="stat">研究問題：'+M[m].q+'</p></div><div class="card"><p class="stat">已經送出：'+ks.length+' / '+N+'　全部改對：'+al+' 人</p></div>'}
+  else if(H.ph==='reveal'){var R=Object.keys(H.seats).map(Number).map(function(s){return [s,total(g,s)]}).sort(function(a,b){return b[1]-a[1]||a[0]-b[0]});
+   h+='<div class="card"><h2>任務 '+(m+1)+'：每一列，全班改對的比例（'+ks.length+' 人）</h2><div class="pc">'+M[m].rows.map(function(r){var ok=ks.filter(function(s){return rowOK(r,S[s].d)}).length,p=ks.length?Math.round(ok/ks.length*100):0;
+     return '<div class="r'+(p<60?' low':'')+'"><span>'+r.n+(r.m?'（要比的做法）':'')+'</span><div class="bw"><i style="width:'+p+'%"></i></div><span>'+p+'%</span></div>'}).join('')+'</div></div>'+
+    '<div class="cmp"><div class="card warm"><h2>公平的設計長這樣</h2><p class="stat">'+M[m].rows.map(function(r){return '<b>'+r.n+'</b>：'+(r.one?r.v[r.ok]:r.m?'A、B 兩組不一樣（這就是要比的）':'兩組一樣')}).join('<br>')+'</p></div>'+
+    '<div class="card"><h2>排行榜</h2><div class="rk">'+R.slice(0,5).map(function(r,i){return '<div><i>第 '+(i+1)+' 名</i>'+r[0]+' 號<span>'+r[1]+' 分</span></div>'}).join('')+'</div></div></div>'}
+  else{var R2=Object.keys(H.seats).map(Number).map(function(s){return [s,total(g,s)]}).sort(function(a,b){return b[1]-a[1]||a[0]-b[0]});
+   h+='<div class="card dark"><p class="huge">公平實驗設計師：'+(R2[0]?R2[0][0]+' 號':'—')+'</p></div><div class="card"><h2>總排行榜</h2><div class="rk">'+R2.slice(0,8).map(function(r,i){return '<div><i>第 '+(i+1)+' 名</i>'+r[0]+' 號<span>'+r[1]+' 分</span></div>'}).join('')+'</div></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},m=g.m||0,k='d'+g.t0+'_'+m,L=api.local[k]||{},d=L.d||init(m),h='';
+  if(ST.ph==='brief')h+='<h1>任務 '+(m+1)+'</h1><div class="rq">研究問題：'+M[m].q+'</div><p class="lead">看大螢幕，等老師按開始。</p>';
+  else if(ST.ph==='work'||ST.ph==='reveal'){var shown=ST.ph==='reveal'||L.sent;
+   h+='<h1>任務 '+(m+1)+'：改成公平的實驗</h1><div class="rq">'+M[m].q+'</div>'+(L.sent?'<p class="lead">已送出：'+grade(m,d)+' / '+M[m].rows.length+' 列改對。</p>':'<p class="lead">點 A 組、B 組的格子可以換內容。</p>')+'<div class="dz">'+
+    M[m].rows.map(function(r,ri){var ok=rowOK(r,d),mk=ST.ph==='reveal'?'<span class="mk '+(ok?'ok':'bad')+'">'+(ok?ICON('check')+' 對':ICON('x')+' 再想想')+'</span>':'';
+     if(r.one)return '<div class="rw'+(ST.ph==='reveal'?(ok?' ok':' bad'):'')+'"><div class="nm">'+r.n+mk+'</div><div class="rds">'+r.v.map(function(v,j){return '<button class="rd'+(d[r.k]===j?' on':'')+'" data-act="one" data-arg="'+ri+'_'+j+'" '+(shown?'disabled':'')+' aria-pressed="'+(d[r.k]===j)+'">'+v+'</button>'}).join('')+'</div></div>';
+     return '<div class="rw'+(ST.ph==='reveal'?(ok?' ok':' bad'):'')+'"><div class="nm"><span>'+r.n+(r.m?' <small>要比的做法</small>':'')+'</span>'+mk+'</div><div class="ab">'+[0,1].map(function(side){return '<button class="cy" data-act="cy" data-arg="'+ri+'_'+side+'" '+(shown?'disabled':'')+'><span>'+(side?'B 組':'A 組')+'</span>'+r.v[d[r.k][side]]+'</button>'}).join('')+'</div></div>'}).join('')+'</div>'+
+    (L.sent?'':'<button class="btn" data-act="send" '+(M[m].rows.every(function(r){return !r.one||d[r.k]!=null})?'':'disabled')+'>設計好了，送出</button>')}
+  else if(ST.ph==='end')h+='<h1>看大螢幕！</h1><p class="lead">總排行榜出爐了。</p>';
+  else h+='<h1>等老師開始</h1>';
+  return h},
+ sact:(function(){function upd(ST,api,f){var m=ST.g.m||0,k='d'+ST.g.t0+'_'+m,L=api.local[k]||{};if(L.sent)return;L.d=L.d||init(m);f(L.d,m);var o={};o[k]=L;api.local=o;api.save()}
+  return {
+   cy:function(ST,me,api,a){if(ST.ph!=='work')return;var p=a.split('_');upd(ST,api,function(d,m){var r=M[m].rows[+p[0]];d[r.k][+p[1]]=(d[r.k][+p[1]]+1)%r.v.length})},
+   one:function(ST,me,api,a){if(ST.ph!=='work')return;var p=a.split('_');upd(ST,api,function(d,m){d[M[m].rows[+p[0]].k]=+p[1]})},
+   send:function(ST,me,api){if(ST.ph!=='work')return;var m=ST.g.m||0,k='d'+ST.g.t0+'_'+m,L=api.local[k]||{};if(L.sent)return;var d=L.d||init(m);if(!M[m].rows.every(function(r){return !r.one||d[r.k]!=null}))return;api.send({t:'sub',m:m,d:d});L.d=d;L.sent=1;var o={};o[k]=L;api.local=o;api.save()}}})()
+});
+</script>
+</body>
+</html>

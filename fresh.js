@@ -17,7 +17,7 @@ var setW=Storage.prototype.setItem;
 /* 按錯了可以改：只用在「點選答案」的題目型遊戲。
    只有在「有好幾個選項的題目頁」點了答案、畫面換到下一頁時，右上角才出現一個小小的「↩ 改上一題」，
    底下一條細線慢慢縮短，8 秒後自動消失，答案就確定。「開始」「下一步」這類只有一顆按鈕的頁面不會出現。 */
-var UNDO=/^(glasses|cookiejar|label|rewrite|coinstall|forkraft|souvenir|pondwall|pursepig|robotlens|tidefield|notice|passball|mathbreak|analysislive|splitlive|wordrecall|witness|knewit|walk100|anchorwheel|lostticket|moneydrawer)\.html$/,SEC=8;
+var UNDO=/^(glasses|cookiejar|label|rewrite|coinstall|forkraft|souvenir|pondwall|pursepig|robotlens|tidefield|notice|passball|mathbreak|analysislive|splitlive|wordrecall|witness|knewit|walk100|anchorwheel|lostticket|moneydrawer|pctrace)\.html$/,SEC=8;
 var page=(location.pathname.split('/').pop()||'');
 if(UNDO.test(page)&&location.hash.indexOf('host')<0&&location.hash.indexOf('teacher')<0){
  var lastTap=0,tapQ=false,snapTap=-1,ub=null,uT=null;
