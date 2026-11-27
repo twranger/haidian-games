@@ -5,7 +5,7 @@
 <script src="fresh.js"></script>
 <script src="icons.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>百分比搶答王・全班連線</title>
+<title>標題偵探・全班連線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
 <script src="live.js"></script>
@@ -13,76 +13,113 @@
 <style>
 .huge{font-size:clamp(38px,5vw,74px);font-weight:900;line-height:1.2}
 .qn{font-size:clamp(20px,2.2vw,30px);font-weight:900;color:#B67A12}
-.qt{font-size:clamp(34px,4vw,60px);font-weight:900;line-height:1.35}
-.og{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.oc{display:flex;align-items:center;gap:16px;border-radius:18px;padding:18px 22px;font-size:clamp(28px,3vw,44px);font-weight:900;color:#fff}
-.oc b{flex:none;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center}
-.c0{background:#205E86}.c1{background:#A8441A}.c2{background:#2A6F68}.c3{background:#7C5CC4}
-.oc.dim{opacity:.35}.oc.ok{box-shadow:0 0 0 6px #F2B544}
-.oc .ct{margin-left:auto;font-size:.8em}
-.sg{display:grid;grid-template-columns:1fr;gap:10px}
-.sg .btn{display:flex;align-items:center;gap:14px;text-align:left;font-size:clamp(22px,4.6vw,30px);padding:16px 18px;min-height:64px;color:#fff}
-.sg .btn b{flex:none;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center}
-.sg .btn.c0{background:#205E86}.sg .btn.c1{background:#A8441A}.sg .btn.c2{background:#2A6F68}.sg .btn.c3{background:#7C5CC4}
-.tmr{font-size:clamp(28px,6vw,44px);font-weight:900;color:#D95D39;text-align:right}
+.qt{font-size:clamp(32px,3.8vw,56px);font-weight:900;line-height:1.35}
+.hg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.hc{background:#fff;border:4px solid #D5D2C6;border-radius:20px;padding:20px 26px;display:flex;flex-direction:column;gap:6px}
+.hc .nm{font-size:clamp(22px,2.2vw,32px);font-weight:900;color:#56605C}
+.hc .hl{font-size:clamp(30px,3.4vw,52px);font-weight:900;line-height:1.25;color:#A8441A}
+.hc .rl{font-size:clamp(22px,2.2vw,32px);font-weight:700;line-height:1.4}
+.hc .gn{font-size:clamp(30px,3.2vw,48px);font-weight:900;color:#205E86}
+.hc .ft{display:flex;justify-content:space-between;gap:12px;font-size:clamp(18px,1.8vw,26px);font-weight:700;color:#56605C;margin-top:auto}
+.hc.ok{border-color:#2A6F68;background:#F0F7F6}.hc.ok .gn{color:#2A6F68}
+.hc.dim{opacity:.8}
+.hs .hc{padding:14px 22px;gap:2px}.hs .hc .gn{font-size:clamp(26px,2.6vw,40px)}.hs .hc .rl{font-size:clamp(20px,2vw,28px)}
+.tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 16px;font-size:clamp(18px,1.6vw,24px);font-weight:900;color:#fff;background:#2A6F68;align-self:flex-start}
+.tag.bt{background:#A8441A}
+.tmr{font-size:clamp(28px,6vw,44px);font-weight:900;color:#A8441A;text-align:right}
 .why{font-size:clamp(22px,2.4vw,32px);font-weight:700;line-height:1.5}
 .rk{display:flex;flex-direction:column;gap:6px}
 .rk div{display:flex;gap:12px;align-items:center;font-size:26px;font-weight:900}
-.rk i{font-style:normal;color:#64748B;width:100px;white-space:nowrap}.rk span{margin-left:auto;color:#B67A12}
+.rk i{font-style:normal;color:#56605C;width:100px;white-space:nowrap}.rk span{margin-left:auto;color:#B67A12}
 .cmp{display:grid;grid-template-columns:3fr 2fr;gap:16px}
-@media (max-width:900px){.cmp,.og{grid-template-columns:1fr}}
+.lens{display:flex;gap:8px;align-items:center;font-size:clamp(20px,4.6vw,26px);font-weight:900;color:#205E86}
+.sc{background:#fff;border:3px solid #D5D2C6;border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.sc .nm{font-size:20px;font-weight:900;color:#56605C}
+.sc .hl{font-size:clamp(24px,6vw,30px);font-weight:900;color:#A8441A;line-height:1.3}
+.sc .rl{font-size:20px;font-weight:700;background:#EEF4F8;border-radius:12px;padding:8px 12px;line-height:1.45}
+.sc .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sc .btn{min-height:56px;display:flex;align-items:center;justify-content:center;gap:8px}
+.sc.pick{border-color:#205E86;background:#EEF4F8}
+@media (max-width:900px){.cmp,.hg{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <script>
-/* 百分比搶答王（第 8 節）：8 題四選一，全班同時搶答。答對 100 分，再加速度分（越快越多，最多 100）。 */
-var Q=[
- {q:'社團去年 2 人，今年 6 人。人數增加了百分之多少？',o:['200%','300%','4%','66.7%'],a:0,w:'多了 4 人，分母是去年的 2 人：4÷2＝200%。今年是去年的 300%，但「增加」是 200%。'},
- {q:'公告說「比去年增加 200%」。如果去年 50 人，今年幾人？',o:['150 人','100 人','250 人','200 人'],a:0,w:'增加 50×200%＝100 人，今年 50＋100＝150 人。'},
- {q:'一個班 30 人，有 12 人戴眼鏡。戴眼鏡的占幾 %？',o:['12%','40%','30%','25%'],a:1,w:'部分÷整體：12÷30＝0.4＝40%。'},
- {q:'參加率從 20% 變成 35%，增加了幾個百分點？',o:['15 個百分點','75 個百分點','35 個百分點','55 個百分點'],a:0,w:'百分點：35%－20%＝15 個百分點。'},
- {q:'同一題：參加率從 20% 變 35%，「相對」增加了百分之多少？',o:['15%','75%','35%','175%'],a:1,w:'相對變化：15÷20＝75%。15 個百分點和相對增加 75%，回答的是不同問題。'},
- {q:'飲料從 60 元漲到 75 元，漲了百分之多少？',o:['15%','20%','25%','80%'],a:2,w:'多 15 元，分母是原來的 60 元：15÷60＝25%。'},
- {q:'再從 75 元降回 60 元，降了百分之多少？',o:['25%','20%','15%','80%'],a:1,w:'少 15 元，分母變成 75 元：15÷75＝20%。漲 25%、降 20%，不會互相抵消。'},
- {q:'A 社 30 人有 9 人得獎，B 社 70 人有 14 人得獎。哪一社的「得獎率」比較高？',o:['A 社','B 社','一樣高','不能比'],a:0,w:'A：9÷30＝30%；B：14÷70＝20%。A 的得獎率高，B 的得獎人數多。'}];
-var SEC=20,L4='ABCD';
-function players(H){return Object.keys(H.seats).length}
+/* 標題偵探（第 8 節）：每回合 4 則醒目的標題，找出「真的最多」的那一個。
+   每回合 2 個放大鏡，可以偷看標題背後的真實人數。答對 100 分，每個沒用掉的放大鏡 +30 分。
+   檔名沿用 pctrace.html，投影片和備忘稿的連結不用改。 */
+var R=[
+ {q:'哪個社團，今年真的多了最多人？',a:3,bait:0,c:[
+   ['桌遊社','人數暴增 300%！','去年 1 人 → 今年 4 人','多 3 人'],
+   ['籃球社','人數翻倍！','去年 12 人 → 今年 24 人','多 12 人'],
+   ['合唱團','比去年多 40 人','去年 60 人 → 今年 100 人','多 40 人'],
+   ['圍棋社','成長 50%','去年 100 人 → 今年 150 人','多 50 人']],
+  w:'「暴增 300%」最醒目，其實只多 3 人：去年才 1 人。<br>「成長 50%」看起來最小，可是去年有 100 人，多了 50 人。'},
+ {q:'哪一班，準時交作業的人真的多了最多？',a:1,bait:0,c:[
+   ['甲班','準時率大增 50%！','全班 20 人：4 人 → 6 人','多 2 人'],
+   ['乙班','進步 15 個百分點','全班 40 人：24 人 → 30 人','多 6 人'],
+   ['丙班','多了 5 人','全班 30 人：10 人 → 15 人','多 5 人'],
+   ['丁班','準時率從 30% 衝到 40%！','全班 20 人：6 人 → 8 人','多 2 人']],
+  w:'「大增 50%」只多 2 人：原本才 4 人。<br>「15 個百分點」聽起來普通，可是全班 40 人，多了 6 人。'},
+ {q:'哪一個讀書會，昨天真的來了最多人？',a:3,bait:0,c:[
+   ['A 讀書會','出席率 100%！','全班 5 人，來了 5 人','來 5 人'],
+   ['B 讀書會','九成都到了！','全班 10 人，來了 9 人','來 9 人'],
+   ['C 讀書會','八成出席','全班 20 人，來了 16 人','來 16 人'],
+   ['D 讀書會','出席率 40%','全班 50 人，來了 20 人','來 20 人']],
+  w:'「出席率 100%」的讀書會只有 5 個人。<br>出席率最低的 D，全班 50 人，來了 20 人。比例高，不代表人數多。'}];
+var SEC=60,LENS=2,BONUS=30;
 function total(g,s){var t=0;Object.keys(g.pt||{}).forEach(function(i){t+=(g.pt[i][s]||0)});return t}
 function rank(g,H){return Object.keys(H.seats).map(Number).map(function(s){return [s,total(g,s)]}).sort(function(a,b){return b[1]-a[1]||a[0]-b[0]})}
+function rkHtml(L){return '<div class="rk">'+L.map(function(r,i){return '<div><i>第 '+(i+1)+' 名</i>'+r[0]+' 號<span>'+r[1]+' 分</span></div>'}).join('')+'</div>'}
+function lensTxt(n){var h='';for(var i=0;i<LENS;i++)h+=ICON('search',{size:26,color:i<n?'#205E86':'#C9C4B8'});return h}
 ROOM.start({
- key:'pctrace',title:'百分比搶答王',kick:'第 8 節・全班連線',studentUrl:'pctrace.html',
- rules:'<p>一共 <b>8 題</b>，每題 <b>20 秒</b>，四選一。</p><p>答對得 100 分，<b>越快答對，加分越多</b>（最多再加 100 分）。答錯 0 分。可以先在紙上算。</p>',
- init:function(H){H.g={i:-1,ans:{},pt:{}}},
- onStart:function(H){H.g={i:-1,ans:{},pt:{},t0:Date.now()};H.ph='lobby2'},
- pub:function(H){var g=H.g;return {g:{t0:g.t0,i:g.i,ts:g.ts}}},
- onMsg:function(H,d,seat){var g=H.g;if(d.t==='a'&&H.ph==='q'&&d.i===g.i&&d.v>=0&&d.v<4){var el=Math.min(SEC,(Date.now()-g.ts)/1000);g.ans[g.i]=g.ans[g.i]||{};g.ans[g.i][seat]={v:d.v,el:el};return true}},
+ key:'pctrace',title:'標題偵探',kick:'第 8 節・全班連線',studentUrl:'pctrace.html',
+ rules:'<p>每回合大螢幕有 <b>4 則醒目的標題</b>，找出「<b>真的最多</b>」的那一個。一共 3 回合。</p><p>每回合你有 <b>2 個放大鏡</b>：點一下，就能看到那則標題背後的真實人數。</p><p>答對得 100 分，<b>每個沒用掉的放大鏡再加 30 分</b>。要先查清楚，還是賭一把？</p>',
+ init:function(H){H.g={i:-1,ans:{},pk:{},pt:{}}},
+ onStart:function(H){H.g={i:-1,ans:{},pk:{},pt:{},t0:Date.now()};H.ph='lobby2'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,i:g.i}}},
+ onMsg:function(H,d,seat){var g=H.g;if(H.ph!=='q'||d.i!==g.i)return;
+  if(d.t==='pk'&&d.c>=0&&d.c<4){g.pk[g.i]=g.pk[g.i]||{};var P=g.pk[g.i][seat]=g.pk[g.i][seat]||[];if(P.indexOf(d.c)<0&&P.length<LENS)P.push(d.c);return true}
+  if(d.t==='a'&&d.v>=0&&d.v<4){g.ans[g.i]=g.ans[g.i]||{};if(g.ans[g.i][seat])return;g.ans[g.i][seat]={v:d.v};return true}},
  tick:function(H){if(H.ph==='q'&&Date.now()-H.g.ts>=SEC*1000){H.ph='show';score(H);return true}},
  tickText:function(H){if(H.ph==='q')return Math.max(0,Math.ceil(SEC-(Date.now()-H.g.ts)/1000))+' 秒';return ''},
  act:{next:function(H){var g=H.g;g.i++;g.ts=Date.now();H.ph='q'},show:function(H){H.ph='show';score(H)},end:function(H){H.ph='end'}},
- bar:function(H){var g=H.g;if(H.ph==='lobby2')return '<button class="btn" data-act="next">第 1 題開始</button>';if(H.ph==='q')return '<button class="btn gh" data-act="show">提早公布答案</button>';
-  if(H.ph==='show')return g.i<Q.length-1?'<button class="btn" data-act="next">第 '+(g.i+2)+' 題</button>':'<button class="btn" data-act="end">總排行榜</button>';return ''},
- hostView:function(H){var g=H.g,N=players(H),h='',x=Q[g.i];
-  if(H.ph==='lobby2')h+='<div class="card dark"><p class="huge">百分比搶答王</p><p class="stat">8 題，每題 20 秒。答對 100 分，越快加分越多。</p></div>';
-  else if(H.ph==='q'){var n=Object.keys((g.ans[g.i]||{})).length;
-   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="qn">第 '+(g.i+1)+' / '+Q.length+' 題</span><span class="tmr" id="hdtick"></span></div><p class="qt">'+x.q+'</p></div><div class="og">'+x.o.map(function(o,k){return '<div class="oc c'+k+'"><b>'+L4[k]+'</b>'+o+'</div>'}).join('')+'</div><div class="card"><p class="stat">已經作答：'+n+' / '+N+'</p></div>'}
-  else if(H.ph==='show'){var A=g.ans[g.i]||{},cnt=[0,0,0,0],R=rank(g,H);Object.keys(A).forEach(function(s){cnt[A[s].v]++});
-   h+='<div class="card"><span class="qn">第 '+(g.i+1)+' 題答案</span><p class="qt" style="font-size:clamp(28px,3vw,44px)">'+x.q+'</p></div><div class="og">'+x.o.map(function(o,k){return '<div class="oc c'+k+(k===x.a?' ok':' dim')+'"><b>'+(k===x.a?ICON('check'):L4[k])+'</b>'+o+'<span class="ct">'+cnt[k]+' 人</span></div>'}).join('')+'</div>'+
-    '<div class="cmp"><div class="card warm"><p class="why">'+x.w+'</p></div><div class="card"><h2>目前排行榜</h2><div class="rk">'+R.slice(0,5).map(function(r,i){return '<div><i>第 '+(i+1)+' 名</i>'+r[0]+' 號<span>'+r[1]+' 分</span></div>'}).join('')+'</div></div></div>'}
-  else{var R2=rank(g,H),miss=Q.map(function(q,i){var A=g.ans[i]||{},n=Object.keys(A).length,ok=Object.keys(A).filter(function(s){return A[s].v===q.a}).length;return [i,n?Math.round(ok/n*100):null]}).filter(function(m){return m[1]!=null}).sort(function(a,b){return a[1]-b[1]});
-   h+='<div class="card dark"><p class="huge">百分比搶答王：'+(R2[0]?R2[0][0]+' 號':'—')+'</p></div><div class="cmp"><div class="card"><h2>總排行榜</h2><div class="rk">'+R2.slice(0,8).map(function(r,i){return '<div><i>第 '+(i+1)+' 名</i>'+r[0]+' 號<span>'+r[1]+' 分</span></div>'}).join('')+'</div></div>'+
-    '<div class="card"><h2>全班最容易錯的題目</h2><div class="rk">'+miss.slice(0,3).map(function(m){return '<div><i>第 '+(m[0]+1)+' 題</i>答對率<span>'+m[1]+'%</span></div>'}).join('')+'</div></div></div>'}
+ bar:function(H){var g=H.g;if(H.ph==='lobby2')return '<button class="btn" data-act="next">第 1 回合開始</button>';if(H.ph==='q')return '<button class="btn gh" data-act="show">停止作答，揭曉真相</button>';
+  if(H.ph==='show')return g.i<R.length-1?'<button class="btn" data-act="next">第 '+(g.i+2)+' 回合</button>':'<button class="btn" data-act="end">總排行榜</button>';return ''},
+ hostView:function(H){var g=H.g,N=Object.keys(H.seats).length,h='',x=R[g.i];
+  if(H.ph==='lobby2')h+='<div class="card dark"><p class="huge">標題偵探</p><p class="stat">標題越醒目，真的越多嗎？3 回合，每回合 2 個放大鏡。</p></div>';
+  else if(H.ph==='q'){var A=g.ans[g.i]||{},P=g.pk[g.i]||{},pc=[0,0,0,0];Object.keys(P).forEach(function(s){P[s].forEach(function(c){pc[c]++})});
+   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="qn">第 '+(g.i+1)+' / '+R.length+' 回合</span><span class="tmr" id="hdtick"></span></div><p class="qt">'+x.q+'</p></div>'+
+    '<div class="hg">'+x.c.map(function(c,k){return '<div class="hc"><span class="nm">'+c[0]+'</span><span class="hl">'+c[1]+'</span><span class="ft"><span>'+ICON('search')+' 被查了 '+pc[k]+' 次</span></span></div>'}).join('')+'</div>'+
+    '<div class="card"><p class="stat">已經選好：'+Object.keys(A).length+' / '+N+'</p></div>'}
+  else if(H.ph==='show'){var A2=g.ans[g.i]||{},cnt=[0,0,0,0];Object.keys(A2).forEach(function(s){cnt[A2[s].v]++});
+   h+='<div class="card"><span class="qn">第 '+(g.i+1)+' 回合・真相</span><p class="why" style="font-size:clamp(24px,2.6vw,36px)">'+x.w+'</p></div>'+
+    '<div class="hg hs">'+x.c.map(function(c,k){return '<div class="hc'+(k===x.a?' ok':' dim')+'">'+(k===x.a?'<span class="tag">'+ICON('check')+' 真的最多</span>':k===x.bait?'<span class="tag bt">最醒目的標題</span>':'')+'<span class="nm">'+c[0]+'：'+c[1]+'</span><span class="rl">'+c[2]+'</span><span class="gn">'+c[3]+'</span><span class="ft"><span>'+cnt[k]+' 人選這個</span></span></div>'}).join('')+'</div>'+
+    '<div class="card"><h2>目前排行榜</h2>'+rkHtml(rank(g,H).slice(0,5))+'</div>'}
+  else{var R2=rank(g,H),st=lensStat(g);
+   h+='<div class="card dark"><p class="huge">最強標題偵探：'+(R2[0]?R2[0][0]+' 號':'—')+'</p></div><div class="cmp"><div class="card"><h2>總排行榜</h2>'+rkHtml(R2.slice(0,8))+'</div>'+
+    '<div class="card"><h2>放大鏡有沒有用？</h2><div class="rk"><div><i>有用</i>答對率<span>'+st[0]+'</span></div><div><i>沒用</i>答對率<span>'+st[1]+'</span></div></div><p class="why" style="margin-top:12px">只看標題，很容易被大數字騙。<br>先查「原本有多少」，才知道真的差多少。</p></div></div>'}
   return h},
- studentView:function(ST,me,api){var g=ST.g||{},k='p'+g.t0,L=api.local[k]||{},my=(L.a||{})[g.i],h='',x=Q[g.i];
-  if(ST.ph==='lobby2')h+='<h1>準備搶答！</h1><p class="lead">題目出現在大螢幕，平板上點答案。可以先在紙上算。</p>';
-  else if(ST.ph==='q'){if(my!=null)h+='<h1>已作答：'+L4[my]+'</h1><p class="lead">等大家作答，看大螢幕。</p>';
-   else h+='<h1>第 '+(g.i+1)+' 題</h1><p class="lead" style="font-weight:700">'+x.q+'</p><div class="sg">'+x.o.map(function(o,j){return '<button class="btn c'+j+'" data-act="a" data-arg="'+j+'"><b>'+L4[j]+'</b>'+o+'</button>'}).join('')+'</div>'}
-  else if(ST.ph==='show'){var ok=my===x.a;h+='<h1>'+(my==null?'這題沒有作答':ok?ICON('check',{color:'#2A6F68'})+' 答對了！':'答錯了')+'</h1><p class="lead">正確答案：'+L4[x.a]+' '+x.o[x.a]+'</p><p class="lead">'+x.w+'</p>'}
+ studentView:function(ST,me,api){var g=ST.g||{},k='d'+g.t0,L=api.local[k]||{},r=(L.r||{})[g.i]||{pk:[]},h='',x=R[g.i];
+  if(ST.ph==='lobby2')h+='<h1>準備當偵探！</h1><p class="lead">每回合 4 則標題，找出「真的最多」的那一個。每回合有 2 個放大鏡。</p>';
+  else if(ST.ph==='q'){var left=LENS-r.pk.length;
+   if(r.v!=null)h+='<h1>你選了：'+x.c[r.v][0]+'</h1><p class="lead">用了 '+r.pk.length+' 個放大鏡。等老師揭曉真相，看大螢幕。</p>';
+   else{h+='<h1>第 '+(g.i+1)+' 回合</h1><p class="lead" style="font-weight:700">'+x.q+'</p><p class="lens">放大鏡 '+lensTxt(left)+' 還有 '+left+' 個</p>';
+    x.c.forEach(function(c,j){var seen=r.pk.indexOf(j)>=0;
+     h+='<div class="sc"><span class="nm">'+c[0]+'</span><span class="hl">'+c[1]+'</span>'+(seen?'<span class="rl">'+ICON('search')+' '+c[2]+'</span>':'')+
+      '<div class="row">'+(seen?'<span></span>':'<button class="btn gh" data-act="pk" data-arg="'+j+'"'+(left?'':' disabled')+'>'+ICON('search')+' 查看真實人數</button>')+'<button class="btn" data-act="a" data-arg="'+j+'">選這個</button></div></div>'})}}
+  else if(ST.ph==='show'){var ok=r.v===x.a,pt=ok?100+BONUS*(LENS-r.pk.length):0;
+   h+='<h1>'+(r.v==null?'這回合沒有選':ok?ICON('check',{color:'#2A6F68'})+' 答對了！':'被標題騙了！')+'</h1>'+(r.v!=null?'<p class="lead">這回合 '+pt+' 分'+(ok&&r.pk.length<LENS?'（含放大鏡加分 '+BONUS*(LENS-r.pk.length)+'）':'')+'</p>':'')+'<p class="lead">真的最多：'+x.c[x.a][0]+'，'+x.c[x.a][2]+'。</p>'}
   else if(ST.ph==='end')h+='<h1>看大螢幕！</h1><p class="lead">總排行榜出爐了。</p>';
   else h+='<h1>等老師開始</h1>';
   return h},
- sact:{a:function(ST,me,api,v){if(ST.ph!=='q')return;var g=ST.g,k='p'+g.t0,L=api.local[k]||{};L.a=L.a||{};L.a[g.i]=+v;var o={};o[k]=L;api.local=o;api.save();api.send({t:'a',i:g.i,v:+v})}}
+ sact:{
+  pk:function(ST,me,api,v){if(ST.ph!=='q')return;var g=ST.g,k='d'+g.t0,L=api.local[k]||{};L.r=L.r||{};var r=L.r[g.i]=L.r[g.i]||{pk:[]};v=+v;if(r.v!=null||r.pk.length>=LENS||r.pk.indexOf(v)>=0)return;r.pk.push(v);var o={};o[k]=L;api.local=o;api.save();api.send({t:'pk',i:g.i,c:v})},
+  a:function(ST,me,api,v){if(ST.ph!=='q')return;var g=ST.g,k='d'+g.t0,L=api.local[k]||{};L.r=L.r||{};var r=L.r[g.i]=L.r[g.i]||{pk:[]};if(r.v!=null)return;r.v=+v;var o={};o[k]=L;api.local=o;api.save();api.send({t:'a',i:g.i,v:+v})}}
 });
-function score(H){var g=H.g,x=Q[g.i],A=g.ans[g.i]||{};g.pt[g.i]={};Object.keys(A).forEach(function(s){g.pt[g.i][s]=A[s].v===x.a?100+Math.round(100*(1-A[s].el/SEC)):0})}
+function score(H){var g=H.g,x=R[g.i],A=g.ans[g.i]||{},P=g.pk[g.i]||{};g.pt[g.i]={};Object.keys(A).forEach(function(s){var n=(P[s]||[]).length;g.pt[g.i][s]=A[s].v===x.a?100+BONUS*(LENS-n):0})}
+function lensStat(g){var a=[0,0],b=[0,0];Object.keys(g.ans).forEach(function(i){var A=g.ans[i],P=g.pk[i]||{};Object.keys(A).forEach(function(s){var used=(P[s]||[]).length>0,ok=A[s].v===R[i].a?1:0;if(used){a[0]+=ok;a[1]++}else{b[0]+=ok;b[1]++}})});
+ function f(x){return x[1]?Math.round(x[0]/x[1]*100)+'%（'+x[1]+' 次）':'—'}return [f(a),f(b)]}
 </script>
 </body>
 </html>

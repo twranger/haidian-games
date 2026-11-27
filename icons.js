@@ -1,6 +1,6 @@
 /* 海佃小遊戲共用圖示（同一套線條粗細的 SVG，取代 emoji 和符號字元）。
    用法：ICON('star') 回傳一段 SVG 字串；ICON('star',{size:28,color:'#B67A12'})。
-   預設跟著文字大小（1em）和文字顏色。名稱：star heart gem check x undo backspace up down left right leftright
+   預設跟著文字大小（1em）和文字顏色。名稱：star heart gem check x undo backspace up down left right leftright search
    線條型的圖示：stroke 2.25、圓角端點；star／heart 是實心。 */
 (function(){
  var P={
@@ -15,7 +15,8 @@
   down:['<path d="M12 5v14M19 12l-7 7-7-7"/>',0],
   left:['<path d="M19 12H5M12 19l-7-7 7-7"/>',0],
   right:['<path d="M5 12h14M12 5l7 7-7 7"/>',0],
-  leftright:['<path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/>',0]
+  leftright:['<path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/>',0],
+  search:['<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>',0]
  };
  window.ICON=function(n,o){o=o||{};var p=P[n];if(!p)return '';var s=o.size?o.size+'px':'1em',c=o.color||'currentColor';
   return '<svg class="ic" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" aria-hidden="true" focusable="false" fill="'+(p[1]?c:'none')+'" stroke="'+c+'" stroke-width="'+(p[1]?1.5:2.25)+'" stroke-linecap="round" stroke-linejoin="round">'+p[0]+'</svg>'};
