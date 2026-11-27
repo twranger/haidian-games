@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<script src="icons.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>祕訣真的有效嗎？・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.huge{font-size:clamp(40px,5.4vw,80px);font-weight:900;line-height:1.15}
+.big{font-size:clamp(44px,6vw,84px);font-weight:900;line-height:1}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tm{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-weight:900}
+.tm .t{font-size:clamp(30px,7vw,44px);color:#D95D39}.tm .n{font-size:clamp(22px,4.8vw,30px)}
+.gd{display:grid;gap:6px;background:#EEE9E1;border-radius:18px;padding:8px;touch-action:manipulation}
+.gd button{aspect-ratio:1;border:0;border-radius:12px;background:#fff;font:900 clamp(28px,8vw,52px)/1 "Noto Sans TC",sans-serif;color:#1E242B;cursor:pointer;min-height:44px}
+.gd button:focus-visible{outline:4px solid #205E86;outline-offset:2px}
+.gd.miss{animation:sh .3s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.tip{background:#FFF8E8;border:3px solid #E9A23B;border-radius:18px;padding:14px 16px;font-size:clamp(20px,4.2vw,26px);font-weight:700;line-height:1.55}
+.tag{display:inline-block;border-radius:999px;padding:4px 16px;font-weight:900;color:#fff}
+.tg-tip{background:#B67A12}.tg-plain{background:#475569}
+.hb{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.hb .lb{font-size:26px;font-weight:900;display:flex;justify-content:space-between;gap:10px}
+.hb .bw{background:#EEE9E1;border-radius:12px;height:52px;overflow:hidden}
+.hb .bw i{display:block;height:100%;border-radius:10px}
+.ut{width:100%;border-collapse:collapse;font-size:26px}
+.ut th,.ut td{padding:12px 14px;border-bottom:2px solid #E3DED7;text-align:left}
+.ut th{color:#475569;font-size:22px}
+.ut .bad{color:#C8372D;font-weight:900}.ut .ok{color:#2A6F68;font-weight:900}
+.rk{display:flex;flex-direction:column;gap:6px}
+.rk div{display:flex;gap:12px;align-items:center;font-size:24px;font-weight:900}
+.rk i{font-style:normal;color:#64748B;width:76px}.rk span{margin-left:auto;color:#B67A12}
+@media (max-width:900px){.cmp{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.gd.miss{animation:none}}
+</style>
+</head>
+<body>
+<script>
+/* 祕訣真的有效嗎？（第 8 節・公平的比較）
+   遊戲：找出 1 個不一樣的字，限時內找越多越好。
+   第 1 回合（前測）：大家 4×4、30 秒。
+   第 2 回合（不公平的比較）：第 1 回合前一半高分的人進「祕訣組」，而且偷偷拿到比較簡單的 3×3、40 秒；一般組 4×4、30 秒。
+     公布最後分數，再揭穿三個不公平：起點、題目、時間。
+   第 3 回合（比較公平）：電腦隨機重新分組，兩組都 4×4、30 秒，只有祕訣組多看一句祕訣。比較「進步多少」。 */
+var PAIRS=[['己','已'],['未','末'],['人','入'],['土','士'],['天','夭'],['王','玉'],['千','干'],['大','太'],['木','本'],['田','由'],['鳥','烏'],['免','兔'],['侯','候'],['折','拆'],['白','自'],['日','目'],['刀','力']];
+var TIP='祕訣：先看四個角，再一排一排從左往右看。';
+function cfg(r,grp){return r===2&&grp==='tip'?{n:3,s:40}:{n:4,s:30}}
+function players(H){return Object.keys(H.seats).length}
+function sh(v){return v==null?'—':v}
+function avg(a){return a.length?Math.round(a.reduce(function(s,x){return s+x},0)/a.length*10)/10:null}
+function grpOf(g,r,seat){var m=r===3?g.gF:g.gU;return m&&m[seat]?m[seat]:'plain'}
+function sc(g,r,seat){var o=(g.sc||{})[r]||{};return o[seat]}
+function groupAvg(g,r,map,grp){var a=[];Object.keys(map||{}).forEach(function(k){if(map[k]===grp&&sc(g,r,k)!=null)a.push(sc(g,r,k))});return avg(a)}
+function gain(g,map,grp,r){var a=[];Object.keys(map||{}).forEach(function(k){if(map[k]===grp&&sc(g,r,k)!=null&&sc(g,1,k)!=null)a.push(sc(g,r,k)-sc(g,1,k))});return avg(a)}
+function hbar(lab,v,mx,col,note){var p=mx&&v!=null?Math.max(2,Math.round(Math.max(0,v)/mx*100)):0;return '<div class="hb"><span class="lb"><span>'+lab+'</span><span style="color:'+col+'">'+note+'</span></span><div class="bw"><i style="width:'+p+'%;background:'+col+'"></i></div></div>'}
+/* 題目由座號、回合、已找到題數決定（畫面和點擊算出同一題，不用另外存） */
+function puzzle(n,seed){var x=Math.abs(seed)%233280||7;function rnd(){x=(x*9301+49297)%233280;return x/233280}rnd();var p=PAIRS[Math.floor(rnd()*PAIRS.length)],sw=rnd()<0.5;return {b:sw?p[1]:p[0],o:sw?p[0]:p[1],at:Math.floor(rnd()*n*n)}}
+function seedOf(g,me,r,k){return (g.t0%100000)+me*7919+r*1301+k*173}
+ROOM.start({
+ key:'fairtest',title:'祕訣真的有效嗎？',kick:'第 8 節・全班連線',studentUrl:'fairtest.html',
+ rules:'<p>每一題有一格的字和別的字<b>不一樣</b>，點它！限時內找到越多越好。</p><p>一共 <b>3 回合</b>。老師會請一些同學試用「找字祕訣」。</p>',
+ init:function(H){H.g={sc:{1:{},2:{},3:{}},r:1}},
+ onStart:function(H){H.g={t0:Date.now(),sc:{1:{},2:{},3:{}},r:1,order:Object.keys(H.seats).map(Number).sort(function(a,b){return a-b})};H.ph='brief'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,r:g.r,ts:g.ts,gU:g.gU,gF:g.gF}}},
+ onMsg:function(H,d,seat){var g=H.g;if(d.t==='sc'&&[1,2,3].indexOf(d.r)>=0&&(H.ph==='run'||H.ph==='res')&&d.r===g.r){g.sc[d.r][seat]=Math.max(0,Math.min(99,d.n|0));return true}},
+ tick:function(H){if(H.ph==='run'&&Date.now()-H.g.ts>=(H.g.r===2?41:31)*1000){H.ph='res';return true}},
+ tickText:function(H){if(H.ph==='run')return '還剩 '+Math.max(0,Math.ceil((H.g.r===2?40:30)-(Date.now()-H.g.ts)/1000))+' 秒';return ''},
+ act:{
+  go:function(H){H.g.ts=Date.now();H.ph='run'},
+  stop:function(H){H.ph='res'},
+  unfair:function(H){var g=H.g,list=Object.keys(g.sc[1]).map(Number).sort(function(a,b){return g.sc[1][b]-g.sc[1][a]||a-b}),half=Math.ceil(list.length/2);g.gU={};
+   Object.keys(H.seats).forEach(function(s){g.gU[s]='plain'});list.forEach(function(s,i){g.gU[s]=i<half?'tip':'plain'});g.r=2;H.ph='brief'},
+  show2:function(H){H.ph='res2'},unmask:function(H){H.ph='unmask'},
+  fair:function(H){var g=H.g,s=Object.keys(H.seats).map(Number);for(var i=s.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=s[i];s[i]=s[j];s[j]=t}g.gF={};s.forEach(function(x,i){g.gF[x]=i%2===0?'tip':'plain'});g.r=3;H.ph='brief'},
+  final:function(H){H.ph='final'}},
+ bar:function(H){var r=H.g.r;
+  if(H.ph==='brief')return '<button class="btn" data-act="go">開始第 '+r+' 回合（'+(r===2?'最多 40':'30')+' 秒）</button>';
+  if(H.ph==='run')return '<button class="btn gh" data-act="stop">提早結束</button>';
+  if(H.ph==='res'&&r===1)return '<button class="btn" data-act="unfair">請一些同學試用祕訣，進入第 2 回合</button>';
+  if(H.ph==='res'&&r===2)return '<button class="btn" data-act="show2">公布：祕訣組和一般組</button>';
+  if(H.ph==='res2')return '<button class="btn" data-act="unmask">等一下，這樣比公平嗎？</button>';
+  if(H.ph==='unmask')return '<button class="btn" data-act="fair">重新抽籤，公平地再比一次</button>';
+  if(H.ph==='res'&&r===3)return '<button class="btn" data-act="final">公布：祕訣讓大家進步多少？</button>';return ''},
+ hostView:function(H){var g=H.g,r=g.r,N=players(H),h='',done=Object.keys(g.sc[r]||{}).length;
+  if(H.ph==='brief'){
+   if(r===1)h+='<div class="card dark"><p class="huge">第 1 回合：找不同字</p><p class="stat">每一題有一格的字不一樣，點它。30 秒內找到越多越好。</p></div>';
+   else if(r===2){var nT=Object.keys(g.gU).filter(function(k){return g.gU[k]==='tip'}).length;h+='<div class="card dark"><p class="huge">第 2 回合：試用祕訣</p><p class="stat">老師請 <b style="color:#F2B544">'+nT+'</b> 位同學試用「找字祕訣」（祕訣組），其他 '+(N-nT)+' 位照平常的方法找（一般組）。</p></div>'}
+   else h+='<div class="card dark"><p class="huge">第 3 回合：重新抽籤</p><p class="stat">這一次用<b style="color:#F2B544">電腦隨機</b>分組。兩組的題目一樣、時間一樣（30 秒），只有祕訣組多看一句祕訣。</p></div>'+
+    '<div class="card"><p class="stat">新的兩組，第 1 回合的平均：祕訣組 <b>'+sh(groupAvg(g,1,g.gF,'tip'))+'</b> 個、一般組 <b>'+sh(groupAvg(g,1,g.gF,'plain'))+'</b> 個（起點差不多嗎？）</p></div>'}
+  else if(H.ph==='run')h+='<div class="card dark"><p class="huge">第 '+r+' 回合：找！</p><p class="stat"><span id="hdtick" style="color:#F2B544"></span>　已經送出成績：'+done+' / '+N+'</p></div>';
+  else if(H.ph==='res'){var list=Object.keys(g.sc[r]).map(Number).sort(function(a,b){return g.sc[r][b]-g.sc[r][a]||a-b});
+   h+='<div class="card dark"><p class="huge">第 '+r+' 回合結束</p><p class="stat">全班平均找到 <b style="color:#F2B544">'+(avg(list.map(function(s){return g.sc[r][s]}))||0)+'</b> 個（'+list.length+' 人）</p></div><div class="card"><h2>這一回合的找字王</h2><div class="rk">'+list.slice(0,5).map(function(s,i){return '<div><i>第 '+(i+1)+' 名</i>'+s+' 號<span>'+g.sc[r][s]+' 個</span></div>'}).join('')+'</div></div>'}
+  else if(H.ph==='res2'){var a=groupAvg(g,2,g.gU,'tip'),b=groupAvg(g,2,g.gU,'plain'),mx=Math.max(1,a||0,b||0);
+   h+='<div class="card dark"><p class="huge">祕訣組比一般組多找到 <span style="color:#F2B544">'+(a!=null&&b!=null?Math.round((a-b)*10)/10:'—')+'</span> 個！</p><p class="stat">所以……祕訣很有效？</p></div>'+
+    '<div class="card"><h2>第 2 回合平均找到幾個</h2>'+hbar('祕訣組',a,mx,'#B67A12',(a==null?'—':a)+' 個')+hbar('一般組',b,mx,'#475569',(b==null?'—':b)+' 個')+'</div>'}
+  else if(H.ph==='unmask'){var a1=groupAvg(g,1,g.gU,'tip'),b1=groupAvg(g,1,g.gU,'plain');
+   h+='<div class="card warm"><p class="huge" style="font-size:clamp(32px,4.2vw,58px)">剛剛的比較，有三個地方不公平</p></div><div class="card"><table class="ut"><tr><th></th><th>祕訣組</th><th>一般組</th><th></th></tr>'+
+    '<tr><td><b>起點</b>：誰被選進祕訣組？</td><td>第 1 回合前一半高分的人<br>（平均 '+sh(a1)+' 個）</td><td>其他人<br>（平均 '+sh(b1)+' 個）</td><td class="bad">本來就比較會找</td></tr>'+
+    '<tr><td><b>題目</b>：一題有幾格？</td><td>3×3＝9 格</td><td>4×4＝16 格</td><td class="bad">祕訣組的題目比較簡單</td></tr>'+
+    '<tr><td><b>時間</b>：可以找多久？</td><td>40 秒</td><td>30 秒</td><td class="bad">祕訣組多 10 秒</td></tr></table>'+
+    '<p class="stat" style="margin-top:10px">祕訣組多找到的，可能是祕訣的功勞，也可能是起點、題目或時間的功勞。<b>分不出來。</b></p></div>'}
+  else if(H.ph==='final'){var ga=gain(g,g.gF,'tip',3),gb=gain(g,g.gF,'plain',3),m2=Math.max(1,Math.abs(ga||0),Math.abs(gb||0)),L=Object.keys(g.sc[3]).filter(function(s){return g.sc[1][s]!=null}).map(Number).map(function(s){return [s,g.sc[3][s]-g.sc[1][s]]}).sort(function(a,b){return b[1]-a[1]||a[0]-b[0]});
+   function sg(v){return v==null?'—':(v>0?'+':'')+v}
+   h+='<div class="card dark"><p class="huge" style="font-size:clamp(32px,4.2vw,58px)">公平一點的比較：看「進步了多少」</p><p class="stat">隨機分組、同樣 4×4、同樣 30 秒。進步＝第 3 回合 − 第 1 回合。</p></div>'+
+    '<div class="cmp"><div class="card"><h2>平均進步幾個</h2>'+hbar('祕訣組',ga,m2,'#B67A12',sg(ga)+' 個')+hbar('一般組',gb,m2,'#475569',sg(gb)+' 個')+
+    '<p class="stat" style="margin-top:10px">兩組都多玩了兩回合，可能都因為「越玩越熟」而進步。祕訣的功勞，要看兩組進步的<b>差距</b>。</p></div>'+
+    '<div class="card"><h2>進步王</h2><div class="rk">'+L.slice(0,5).map(function(x,i){return '<div><i>第 '+(i+1)+' 名</i>'+x[0]+' 號<span>'+sg(x[1])+' 個</span></div>'}).join('')+'</div></div></div>'+
+    '<div class="card"><p class="stat">這是我們班一次的結果，人數不多，差 1、2 個可能只是運氣。想更確定，就要更多人、更多次。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},r=g.r||1,k='f'+g.t0,L=api.local[k]||{},R=(L.r||{})[r]||{},grp=r===1?'':grpOf(g,r,me),c=cfg(r,grp),h='';
+  var tag=grp?'<span class="tag tg-'+grp+'">'+(grp==='tip'?'祕訣組':'一般組')+'</span>':'';
+  if(ST.ph==='brief'){
+   if(r===1)h+='<h1>第 1 回合：找不同字</h1><p class="lead">每一題有一格的字和別的不一樣，點它。答對就換下一題，30 秒內找到越多越好。</p><p class="lead">看大螢幕，等老師按開始。</p>';
+   else h+='<h1>第 '+r+' 回合</h1><p class="lead">'+(r===3?'電腦重新抽籤了。':'')+'你在 '+tag+'</p>'+(grp==='tip'?'<div class="tip">'+TIP+'</div>':'<p class="lead">照你平常的方法找就好。</p>')+'<p class="lead">看大螢幕，等老師按開始。</p>'}
+  else if(ST.ph==='run'){/* 用學生平板自己的時鐘計時（各台平板的時間可能不一樣） */var st=R.st||Date.now();if(!R.st){setTimeout(function(){var L2=api.local[k]||{};L2.r=L2.r||{};var R2=L2.r[r]=L2.r[r]||{};if(!R2.st){R2.st=st;var o={};o[k]=L2;api.local=o;api.save()}},0)}var left=Math.max(0,Math.ceil(c.s-(Date.now()-st)/1000));
+   if(R.sent||left<=0){h+='<h1>時間到！</h1><p class="lead">你這一回合找到 <b>'+(R.n||0)+'</b> 個。看大螢幕。</p>'}
+   else{var P=puzzle(c.n,seedOf(g,me,r,R.n||0));
+    h+='<div class="tm"><span>第 '+r+' 回合 '+tag+'</span><span class="t">'+left+' 秒</span></div>'+(grp==='tip'?'<div class="tip" style="font-size:18px;padding:8px 12px">'+TIP+'</div>':'')+
+     '<div class="tm"><span class="n">找出不一樣的字</span><span class="n">已經找到 '+(R.n||0)+' 個</span></div><div class="gd'+(R.ms&&Date.now()-R.ms<400?' miss':'')+'" style="grid-template-columns:repeat('+c.n+',1fr)" role="group" aria-label="找出不一樣的字">'+
+     Array.apply(null,Array(c.n*c.n)).map(function(_,i){return '<button data-act="tap" data-arg="'+i+'">'+(i===P.at?P.o:P.b)+'</button>'}).join('')+'</div>'}}
+  else if(ST.ph==='res'||ST.ph==='res2'||ST.ph==='unmask'||ST.ph==='final'){var s1=((L.r||{})[1]||{}).n,s3=((L.r||{})[3]||{}).n;
+   h+='<h1>看大螢幕！</h1><div class="card"><p class="lead">第 1 回合：'+(s1!=null?s1:'—')+' 個'+(g.gU?'　第 2 回合：'+((((L.r||{})[2]||{}).n)!=null?L.r[2].n:'—')+' 個（'+(grpOf(g,2,me)==='tip'?'祕訣組':'一般組')+'）':'')+(g.gF?'　第 3 回合：'+(s3!=null?s3:'—')+' 個（'+(grpOf(g,3,me)==='tip'?'祕訣組':'一般組')+'）':'')+'</p>'+
+    (ST.ph==='final'&&s1!=null&&s3!=null?'<p class="lead">你進步了 <b>'+(s3-s1>0?'+':'')+(s3-s1)+'</b> 個。</p>':'')+'</div>'}
+  else h+='<h1>等老師開始</h1>';
+  if(ST.ph==='run'&&!window._ftT){window._ftT=setInterval(function(){ROOM.redraw&&ROOM.redraw()},1000)}
+  if(ST.ph!=='run'&&window._ftT){clearInterval(window._ftT);window._ftT=null}
+  var left2=ST.ph==='run'?Math.ceil(c.s-(Date.now()-(R.st||Date.now()))/1000):0;if(((ST.ph==='run'&&left2<=0)||(ST.ph==='res'&&R.st))&&!R.sent){if(true){setTimeout(function(){var L2=api.local[k]||{};L2.r=L2.r||{};var R2=L2.r[r]=L2.r[r]||{};if(R2.sent)return;R2.sent=1;api.send({t:'sc',r:r,n:R2.n||0});var o={};o[k]=L2;api.local=o;api.save()},0)}}
+  return h},
+ sact:{
+  tap:function(ST,me,api,i){if(ST.ph!=='run')return;var g=ST.g,r=g.r,k='f'+g.t0,L=api.local[k]||{},grp=r===1?'':grpOf(g,r,me),c=cfg(r,grp);L.r=L.r||{};var R=L.r[r]=L.r[r]||{n:0};
+   if(R.sent||!R.st||Date.now()-R.st>c.s*1000)return;var P=puzzle(c.n,seedOf(g,me,r,R.n||0));
+   if(+i===P.at){R.n=(R.n||0)+1;R.ms=0}else R.ms=Date.now();
+   var o={};o[k]=L;api.local=o;api.save()}}
+});
+</script>
+</body>
+</html>

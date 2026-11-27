@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<script src="icons.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>幸運襪見證牆・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.huge{font-size:clamp(40px,5.4vw,80px);font-weight:900;line-height:1.15}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sock{display:flex;align-items:center;gap:14px;background:#fff;border:3px solid #E3DED7;border-radius:18px;padding:12px 16px}
+.sock svg{width:72px;height:88px;flex:none}
+.sock b{font-size:clamp(24px,5vw,32px)}
+.coin{width:min(46vw,190px);aspect-ratio:1;border-radius:50%;border:0;margin:6px auto;display:flex;align-items:center;justify-content:center;font:900 clamp(34px,8vw,54px)/1 "Noto Sans TC",sans-serif;cursor:pointer;touch-action:manipulation;background:#F2B544;color:#7A4A06;box-shadow:inset 0 0 0 8px #D9A12F}
+.coin.t{background:#CBD5E1;color:#334155;box-shadow:inset 0 0 0 8px #94A3B8}
+.coin:disabled{cursor:default}
+.coin:focus-visible{outline:4px solid #205E86;outline-offset:3px}
+.coin.spin{animation:fl .55s ease-out}
+@keyframes fl{0%{transform:rotateY(0)}100%{transform:rotateY(720deg)}}
+.row5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.row5 i{aspect-ratio:1;border-radius:50%;border:3px dashed #CBD5E1;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:900;font-size:clamp(20px,4.6vw,28px)}
+.row5 i.h{background:#F2B544;border:0;color:#7A4A06}.row5 i.t{background:#CBD5E1;border:0;color:#334155}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.post{background:#FFF8E8;border:2px solid #E9A23B;border-radius:16px;padding:10px 14px;font-size:22px;font-weight:700;line-height:1.45}
+.post .who{display:flex;justify-content:space-between;color:#B67A12;font-size:18px;font-weight:900}
+.hist{display:flex;align-items:flex-end;gap:10px;height:200px}
+.hist .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-weight:900;font-size:22px}
+.hist .c span.b{display:block;width:100%;border-radius:10px 10px 0 0}
+.hist small{font-size:18px;color:#475569}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opts .btn{font-size:clamp(19px,4vw,24px);text-align:left}
+@media (max-width:900px){.cmp{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.coin.spin{animation:none}}
+</style>
+</head>
+<body>
+<script>
+/* 幸運襪見證牆（第 8 節・個案和比較）
+   依進場座號輪流：一半穿「幸運襪」，一半穿「普通襪」。每個人丟 5 次硬幣（真的隨機，襪子不會影響）。
+   穿幸運襪、又丟出 4 個以上正面的人，可以在見證牆留言。大螢幕先只放見證牆，像廣告一樣。
+   最後揭曉：普通襪那一組丟出 4 個以上正面的人一樣多，只是沒有人替他們寫見證。 */
+var FL=5,POST=['穿了幸運襪，5 次丟出 {h} 個正面！真的有用！','幸運襪好神，我第一次丟這麼好！','大推幸運襪，穿了運氣變超好！'];
+function sockSVG(lucky){var c=lucky?'#D95D39':'#94A3B8',d=lucky?'#F2B544':'#CBD5E1';return '<svg viewBox="0 0 60 74" aria-hidden="true"><path d="M18 4h22v34l12 14a10 10 0 0 1-14 14L16 48V4z" fill="'+c+'"/><rect x="18" y="4" width="22" height="10" fill="'+d+'"/>'+(lucky?'<path d="M29 24l2 4.2 4.6.6-3.3 3.2.8 4.6-4.1-2.2-4.1 2.2.8-4.6-3.3-3.2 4.6-.6z" fill="#FFF4D6"/>':'')+'</svg>'}
+function players(H){return Object.keys(H.seats).length}
+function grp(g,seat){var i=(g.order||[]).indexOf(+seat);return (i<0?0:i)%2===0?'luck':'plain'}
+function stat(g,G){var o={n:0,s:0,big:0,hist:[0,0,0,0,0,0]};Object.keys(g.res||{}).forEach(function(k){if(grp(g,k)!==G)return;var h=g.res[k].h;o.n++;o.s+=h;o.hist[h]++;if(h>=4)o.big++});o.avg=o.n?Math.round(o.s/o.n*10)/10:null;return o}
+function hist(o,col){var mx=Math.max(1,Math.max.apply(null,o.hist));return '<div class="hist">'+o.hist.map(function(v,i){return '<div class="c"><span>'+(v||'')+'</span><span class="b" style="height:'+(v/mx*140)+'px;background:'+(i>=4?col:'#CBD5E1')+'"></span><small>'+i+' 個</small></div>'}).join('')+'</div>'}
+function posts(g){return Object.keys(g.res||{}).filter(function(k){return g.res[k].p!=null}).map(function(k){return '<div class="post"><div class="who"><span>'+k+' 號</span>'+STARS(5,{color:'#E0A21B'})+'</div>'+POST[g.res[k].p].replace('{h}',g.res[k].h)+'</div>'}).join('')}
+ROOM.start({
+ key:'luckysock',title:'幸運襪見證牆',kick:'第 8 節・全班連線',studentUrl:'luckysock.html',
+ rules:'<p>今天每個人都穿了一雙襪子。看看平板：你穿的是<b>幸運襪</b>，還是<b>普通襪</b>？</p><p>然後丟 <b>5 次硬幣</b>，看能丟出幾個正面。</p>',
+ init:function(H){H.g={res:{}}},
+ onStart:function(H){H.g={t0:Date.now(),res:{},order:Object.keys(H.seats).map(Number).sort(function(a,b){return a-b})};H.ph='flip'},
+ pub:function(H){var g=H.g;return {g:{t0:g.t0,order:g.order}}},
+ onMsg:function(H,d,seat){if(d.t==='res'&&(H.ph==='flip'||H.ph==='wall')&&d.h>=0&&d.h<=FL){var p=(grp(H.g,seat)==='luck'&&d.h>=4&&d.p>=0&&d.p<POST.length)?+d.p:null;H.g.res[seat]={h:d.h|0,p:p};return true}},
+ act:{wall:function(H){H.ph='wall'},reveal:function(H){H.ph='reveal'}},
+ bar:function(H){if(H.ph==='flip')return '<button class="btn" data-act="wall">看見證牆</button>';if(H.ph==='wall')return '<button class="btn" data-act="reveal">揭曉：穿普通襪的人呢？</button>';return ''},
+ hostView:function(H){var g=H.g,N=players(H),h='',n=Object.keys(g.res).length,np=Object.keys(g.res).filter(function(k){return g.res[k].p!=null}).length;
+  if(H.ph==='flip')h+='<div class="card dark"><p class="huge">丟硬幣大挑戰</p><p class="stat">每個人丟 5 次硬幣。丟完的人：'+n+' / '+N+'</p></div>'+(np?'<div class="card"><h2>見證牆（'+np+' 則）</h2><div class="wall">'+posts(g)+'</div></div>':'');
+  else if(H.ph==='wall')h+='<div class="card dark"><p class="huge"><span style="color:#F2B544">'+np+'</span> 位同學見證：幸運襪真的有效！</p><p class="stat">你相信嗎？還想知道什麼，才能判斷？</p></div><div class="card"><div class="wall">'+(posts(g)||'<p class="stat">這一次還沒有人留言。</p>')+'</div></div>';
+  else{var A=stat(g,'luck'),B=stat(g,'plain');
+   h+='<div class="card warm"><p class="huge" style="font-size:clamp(32px,4.2vw,58px)">另一半的同學，穿的是普通襪</p><p class="stat">硬幣是電腦隨機丟的，襪子不會影響結果。可是見證牆上，只看得到「穿幸運襪、又剛好丟得好」的人。</p></div>'+
+    '<div class="cmp"><div class="card"><h2>幸運襪組（'+A.n+' 人）：丟出幾個正面</h2>'+hist(A,'#D95D39')+'<p class="stat">平均 '+(A.avg==null?'—':A.avg)+' 個；4 個以上：'+A.big+' 人</p></div>'+
+    '<div class="card"><h2>普通襪組（'+B.n+' 人）：丟出幾個正面</h2>'+hist(B,'#475569')+'<p class="stat">平均 '+(B.avg==null?'—':B.avg)+' 個；4 個以上：'+B.big+' 人（沒有人替他們寫見證）</p></div></div>'+
+    '<div class="card dark"><p class="stat">一則一則的見證（個案），可以很多、很真心。要知道幸運襪有沒有用，還得看<b style="color:#F2B544">沒穿的人</b>怎麼樣。</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},k='s'+g.t0,L=api.local[k]||{},G=grp(g,me),f=L.f||[],h='',hd=f.filter(function(x){return x}).length;
+  var sk='<div class="sock">'+sockSVG(G==='luck')+'<div><span class="lead">你今天穿的是</span><br><b style="color:'+(G==='luck'?'#D95D39':'#475569')+'">'+(G==='luck'?'幸運襪':'普通襪')+'</b></div></div>';
+  if(ST.ph==='flip'||ST.ph==='wall'){
+   if(L.sent)h+='<h1>送出了！</h1>'+sk+'<p class="lead">你丟出 <b>'+hd+'</b> 個正面。看大螢幕。</p>';
+   else if(f.length<FL){var last=f.length?f[f.length-1]:null,spin=L.at&&Date.now()-L.at<600;
+    h+='<h1>丟硬幣：第 '+(f.length+1)+' 次</h1>'+sk+'<button class="coin'+(last===0?' t':'')+(spin?' spin':'')+'" data-act="flip" aria-label="丟硬幣">'+(last==null?'丟！':last?'正':'反')+'</button>'+
+     '<div class="row5">'+[0,1,2,3,4].map(function(i){return '<i class="'+(i<f.length?(f[i]?'h':'t'):'')+'">'+(i<f.length?(f[i]?'正':'反'):'')+'</i>'}).join('')+'</div><p class="lead" style="text-align:center">點硬幣，丟 5 次。</p>'}
+   else if(G==='luck'&&hd>=4&&L.p==null)h+='<h1>哇！'+hd+' 個正面！</h1>'+sk+'<p class="lead">要不要在大螢幕的見證牆留一句話？</p><div class="opts">'+POST.map(function(p,i){return '<button class="btn gh" data-act="post" data-arg="'+i+'">'+p.replace('{h}',hd)+'</button>'}).join('')+'<button class="btn gh" data-act="post" data-arg="-1" style="color:#475569">不留言</button></div>';
+   else h+='<h1>丟完了！</h1>'+sk+'<div class="row5">'+f.map(function(x){return '<i class="'+(x?'h':'t')+'">'+(x?'正':'反')+'</i>'}).join('')+'</div><p class="lead">一共 <b>'+hd+'</b> 個正面。</p><button class="btn" data-act="send">送出</button>'}
+  else if(ST.ph==='reveal')h+='<h1>看大螢幕！</h1>'+sk+'<p class="lead">你丟出 '+hd+' 個正面。襪子不會影響硬幣，硬幣是電腦隨機丟的。</p>';
+  else h+='<h1>等老師開始</h1>';
+  return h},
+ sact:(function(){function upd(ST,api,fn){var k='s'+(ST.g||{}).t0,L=api.local[k]||{};fn(L);var o={};o[k]=L;api.local=o;api.save()}
+  return {
+   flip:function(ST,me,api){upd(ST,api,function(L){L.f=L.f||[];if(L.f.length>=FL||(L.at&&Date.now()-L.at<600))return;L.f.push(Math.random()<0.5?1:0);L.at=Date.now()});setTimeout(function(){ROOM.redraw&&ROOM.redraw()},650)},
+   post:function(ST,me,api,v){var L=api.local['s'+ST.g.t0]||{},hd=(L.f||[]).filter(function(x){return x}).length;upd(ST,api,function(L){L.p=+v;L.sent=1});api.send({t:'res',h:hd,p:+v})},
+   send:function(ST,me,api){var L=api.local['s'+ST.g.t0]||{},hd=(L.f||[]).filter(function(x){return x}).length;if((L.f||[]).length<FL)return;upd(ST,api,function(L){L.sent=1});api.send({t:'res',h:hd,p:-1})}}})()
+});
+</script>
+</body>
+</html>
