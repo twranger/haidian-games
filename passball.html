@@ -29,12 +29,17 @@ var DUR=32,ANS=15;
 // 黑衣隊 15 次、白衣隊 14 次傳球的時間（秒）
 var TB=[1.2,3.1,4.8,6.6,8.3,10.0,11.9,13.6,15.4,17.3,19.0,21.0,23.1,25.2,27.4];
 var TW=[2.0,3.9,5.7,7.5,9.2,11.0,12.8,14.6,16.4,18.3,20.1,22.2,24.3,26.5];
-var SB=[0,1,2,0,2,1,0,1,2,1,0,2,0,1,2,0],SW=[0,2,1,0,1,2,0,2,1,0,2,1,0,2,1];
+var SB=[0,1,2,0,2,1,0,1,2,1,0,2,0,1,2,0],SW=[0,2,1,0,1,2,0,2,1,0,1,0,1,0,1];
+// 另外兩個沒有預告的變化（參考 Simons 2010「猴子把戲」）：後面的布條慢慢由紅變黃；白衣隊右邊那位走出畫面
+var BAN0=8,BAN1=24,LEAVE0=16.6,LEAVE1=21.5;
 var AB=[[230,190],[500,350],[770,200]],AW=[[360,330],[640,175],[880,340]];
 var BIRD0=11,BIRD1=21;
-var SEEN=[['bird','一隻黑面琵鷺走過去'],['dog','一隻小狗跑過去'],['ball3','多了第三顆球'],['adult','一個大人走過去']];
+var SEEN=[['bird','一隻黑面琵鷺走過去'],['banner','後面的布條換了顏色'],['leave','白衣隊有一個人離開了'],['dog','一隻小狗跑過去'],['ball3','多了第三顆球']];
+function has(a,k){var w=a&&a.what;return w&&w.indexOf?w.indexOf(k)>=0:false}
+function mix(u){u=Math.max(0,Math.min(1,u));var a=[196,98,74],b=[214,172,74];return 'rgb('+a.map(function(x,i){return Math.round(x+(b[i]-x)*u)}).join(',')+')'}
 function players(H){return Object.keys(H.seats).length}
 function pos(a,i,t){return [a[0]+46*Math.sin(t*0.6+i*1.9),a[1]+26*Math.cos(t*0.8+i*1.3)]}
+function wpos(i,t){var p=pos(AW[i],i,t);if(i===2&&t>LEAVE0){var u=Math.min(1,(t-LEAVE0)/(LEAVE1-LEAVE0));p=[p[0]+(1120-p[0])*u,p[1]]}return p}
 function ballAt(T,S,A,t){var k=0;while(k<T.length&&T[k]<=t)k++;var from=S[k],cur=pos(A[from],from,t);
  if(k<T.length&&T[k]-t<0.55){var to=S[k+1],p=1-(T[k]-t)/0.55,b=pos(A[to],to,t);return [cur[0]+(b[0]-cur[0])*p,cur[1]+(b[1]-cur[1])*p-50*Math.sin(p*Math.PI)]}
  return [cur[0]+22,cur[1]-8]}
@@ -45,8 +50,8 @@ function bird(x,y,ring){return '<g>'+(ring?'<circle cx="'+(x+10)+'" cy="'+(y-40)
  '<ellipse cx="'+(x+20)+'" cy="'+(y-20)+'" rx="42" ry="26" fill="#FFFFFF" stroke="#C9CDD2" stroke-width="2"/><path d="M'+(x-8)+' '+(y-30)+' q-14 -40 -2 -70" stroke="#FFFFFF" stroke-width="13" fill="none" stroke-linecap="round"/>'+
  '<circle cx="'+(x-8)+'" cy="'+(y-100)+'" r="15" fill="#FFFFFF" stroke="#C9CDD2" stroke-width="2"/><path d="M'+(x-20)+' '+(y-104)+' l-12 4 l12 6 z" fill="#1E242B"/><path d="M'+(x-22)+' '+(y-100)+' L'+(x-70)+' '+(y-86)+'" stroke="#1E242B" stroke-width="7" stroke-linecap="round"/><ellipse cx="'+(x-72)+'" cy="'+(y-86)+'" rx="10" ry="7" fill="#1E242B"/>'+
  '<path d="M'+(x+10)+' '+(y+4)+' l-4 42 M'+(x+30)+' '+(y+4)+' l4 42" stroke="#1E242B" stroke-width="5"/></g>'}
-function scene(t,ring){var o='<svg class="field" id="pbfield" viewBox="0 0 1000 500" role="img" aria-label="兩隊小朋友在操場傳球"><rect width="1000" height="500" fill="#CFE3C8"/><path d="M0 120 H1000" stroke="#FFFFFF" stroke-width="4" opacity=".7"/><circle cx="500" cy="300" r="90" fill="none" stroke="#FFFFFF" stroke-width="4" opacity=".7"/>';
- var all=[];AB.forEach(function(a,i){var p=pos(a,i,t);all.push([p[1],kid(p[0],p[1],true)])});AW.forEach(function(a,i){var p=pos(a,i,t);all.push([p[1],kid(p[0],p[1],false)])});
+function scene(t,ring){var o='<svg class="field" id="pbfield" viewBox="0 0 1000 500" role="img" aria-label="兩隊小朋友在操場傳球"><rect width="1000" height="500" fill="#CFE3C8"/><rect x="0" y="0" width="1000" height="54" fill="'+mix((t-BAN0)/(BAN1-BAN0))+'"/><text x="500" y="37" text-anchor="middle" font-size="24" font-weight="900" fill="#FFFFFF" font-family="Noto Sans TC, sans-serif">海佃國小運動會</text><path d="M0 120 H1000" stroke="#FFFFFF" stroke-width="4" opacity=".7"/><circle cx="500" cy="300" r="90" fill="none" stroke="#FFFFFF" stroke-width="4" opacity=".7"/>';
+ var all=[];AB.forEach(function(a,i){var p=pos(a,i,t);all.push([p[1],kid(p[0],p[1],true)])});AW.forEach(function(a,i){var p=wpos(i,t);if(p[0]<1060)all.push([p[1],kid(p[0],p[1],false)])});
  var bx=birdX(t);if(bx!=null||ring){var x=ring?440:bx;all.push([300,bird(x,300,ring)])}
  all.sort(function(a,b){return a[0]-b[0]}).forEach(function(z){o+=z[1]});
  var b1=ballAt(TB,SB,AB,t),b2=ballAt(TW,SW,AW,t);
@@ -63,46 +68,50 @@ ROOM.start({
  init:function(H){H.g={}},
  onStart:function(H){H.g={ans:{}};H.ph='ready'},
  pub:function(H){var g=H.g;return {g:{t0:g.t0,n:Object.keys(g.ans||{}).length,ans:H.ph==='reveal'||H.ph==='replay'||H.ph==='sum'?g.ans:null}}},
- onMsg:function(H,d,seat){if(d.t==='ans'&&(H.ph==='answer'||H.ph==='play')){H.g.ans[seat]={n:+d.n||0,saw:d.saw,what:d.what||''};return true}},
+ onMsg:function(H,d,seat){if(d.t==='ans'&&(H.ph==='answer'||H.ph==='play')){H.g.ans[seat]={n:+d.n||0,what:Array.isArray(d.what)?d.what.slice(0,6):[]};return true}},
  tick:function(H){var g=H.g;window._H=H;if((H.ph==='play'||H.ph==='replay')&&Date.now()-g.t0>=DUR*1000){H.ph=H.ph==='play'?'answer':'sum';return true}},
  act:{
   go:function(H){H.g.t0=Date.now();H.ph='play'},
   reveal:function(H){H.ph='reveal';H.g.step=1},
   step2:function(H){H.g.step=2},
+  step3:function(H){H.g.step=3},
   replay:function(H){H.g.t0=Date.now();H.ph='replay'},
   sum:function(H){H.ph='sum'}
  },
  keys:{},
  bar:function(H){var g=H.g;if(H.ph==='ready')return '<button class="btn" data-act="go">開始播放（約 30 秒）</button>';
   if(H.ph==='answer')return '<button class="btn" data-act="reveal">公布答案</button>';
-  if(H.ph==='reveal')return g.step===1?'<button class="btn te" data-act="step2">再問一題：你有看到奇怪的東西嗎？</button>':'<button class="btn te" data-act="replay">再播一次，看看中間</button><button class="btn gh" data-act="sum">直接看結論</button>';
+  if(H.ph==='reveal')return g.step===1?'<button class="btn te" data-act="step2">有沒有看到黑面琵鷺？</button>':g.step===2?'<button class="btn te" data-act="step3">還有兩件事也變了</button>':'<button class="btn te" data-act="replay">再播一次，這次看布條和白衣隊</button><button class="btn gh" data-act="sum">直接看結論</button>';
   return ''},
  hostView:function(H){var g=H.g,N=players(H),h='',A=g.ans||{},ks=Object.keys(A);window._H=H;if(!anim)loop();
   if(H.ph==='ready')h+='<div class="card dark"><p class="huge" style="color:#F2A65A">只數「黑衣隊」</p><p class="stat">傳了幾次球？在心裡數，不要說出來。</p></div>'+scene(0,false);
-  else if(H.ph==='play'||H.ph==='replay')h+=(H.ph==='replay'?'<div class="card warm"><p class="stat">再看一次，這次不用數，看看畫面中間。</p></div>':'<div class="card dark"><p class="stat">只數黑衣隊傳了幾次　<span id="pbtime" style="color:#F2A65A"></span></p></div>')+'<div id="pbwrap">'+scene((Date.now()-g.t0)/1000,false)+'</div>';
+  else if(H.ph==='play'||H.ph==='replay')h+=(H.ph==='replay'?'<div class="card warm"><p class="stat">再看一次，這次不用數：盯著上面的布條，和最右邊的白衣隊。</p></div>':'<div class="card dark"><p class="stat">只數黑衣隊傳了幾次　<span id="pbtime" style="color:#F2A65A"></span></p></div>')+'<div id="pbwrap">'+scene((Date.now()-g.t0)/1000,false)+'</div>';
   else if(H.ph==='answer')h+='<div class="card dark"><p class="huge">停！</p><p class="stat">請在平板上回答兩個問題。</p></div><div class="card"><p class="stat">已經回答：'+ks.length+' / '+N+' 人</p></div>';
   else if(H.ph==='reveal'){var cnt={};ks.forEach(function(k){var n=A[k].n;cnt[n]=(cnt[n]||0)+1});var keys=[];for(var i=11;i<=19;i++)keys.push(i);var mx=1;keys.forEach(function(k){mx=Math.max(mx,cnt[k]||0)});
    var ok=ks.filter(function(k){return Math.abs(A[k].n-ANS)<=1}).length;
    h+='<div class="card dark"><p class="stat">黑衣隊一共傳了 <span style="color:#F2A65A;font-size:60px">'+ANS+'</span> 次</p><p style="font-size:24px">數到 14～16 次的（差不多數對）：'+ok+' / '+ks.length+' 人</p></div>'+
-    '<div class="card"><h2>大家數到幾次</h2><div class="bars">'+keys.map(function(k){var v=cnt[k]||0;return '<div class="c'+(Math.abs(k-ANS)<=1?' ok':'')+'"><span>'+(v||'')+'</span><span class="b" style="height:'+(v/mx*150)+'px"></span><small>'+(k===11?'11 以下':k===19?'19 以上':k)+'</small></div>'}).join('')+'</div></div>';
-   if(g.step===2){var saw=ks.filter(function(k){return A[k].what==='bird'}).length;
-    h+='<div class="card warm"><p class="stat">剛剛畫面中間，有一隻<b style="color:#D95D39">黑面琵鷺</b>慢慢走過去，還停下來了！</p><p class="huge" style="color:#D95D39">'+(ks.length-saw)+' / '+ks.length+' 人</p><p class="stat">沒有看到牠。</p></div>'}}
-  else{var ks2=ks.filter(function(k){return A[k].what!=='bird'}).length;
-   h+='<div class="grid2" style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px"><div>'+scene(15,true)+'</div><div class="card dark"><p class="stat">全班 '+ks.length+' 人裡，有 <span style="color:#F2A65A">'+ks2+'</span> 人沒看到黑面琵鷺（'+pct(ks2,ks.length)+'%）。</p><p style="font-size:24px">牠走了 10 秒，還在中間停了一下。眼睛明明看著畫面，大腦忙著數黑衣隊，就沒有「看見」牠。</p><p style="font-size:26px;font-weight:900;color:#F2A65A">專心做一件事的時候，眼前明明出現了別的東西，大腦卻沒發現：這叫做「不注意盲視」。</p></div></div>'}
+    (g.step>=2?'':'<div class="card"><h2>大家數到幾次</h2><div class="bars">'+keys.map(function(k){var v=cnt[k]||0;return '<div class="c'+(Math.abs(k-ANS)<=1?' ok':'')+'"><span>'+(v||'')+'</span><span class="b" style="height:'+(v/mx*150)+'px"></span><small>'+(k===11?'11 以下':k===19?'19 以上':k)+'</small></div>'}).join('')+'</div></div>');
+   if(g.step>=2){var nb=ks.filter(function(k){return has(A[k],'bird')}).length;
+    h+='<div class="card warm"><p class="stat">畫面中間有一隻<b style="color:#A8441A">黑面琵鷺</b>走過去：<b>'+nb+' / '+ks.length+' 人</b>看到了。</p><p style="font-size:24px">這次很多人看到，因為剛剛數過魚、找過招潮蟹，大家早就在等「奇怪的東西」。</p></div>'}
+   if(g.step>=3){var nn=ks.filter(function(k){return has(A[k],'banner')}).length,nl=ks.filter(function(k){return has(A[k],'leave')}).length;
+    h+='<div class="card dark"><p class="stat">可是，還有兩件事也變了：</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px"><div><p style="font-size:28px;font-weight:900;color:#F2A65A">後面的布條：紅色慢慢變成黃色</p><p class="huge" style="color:#F2A65A">'+nn+' / '+ks.length+'</p><p>人發現</p></div><div><p style="font-size:28px;font-weight:900;color:#F2A65A">白衣隊：3 個人走掉 1 個</p><p class="huge" style="color:#F2A65A">'+nl+' / '+ks.length+'</p><p>人發現</p></div></div></div>'}}
+  else{var nb2=ks.filter(function(k){return has(A[k],'bird')}).length,nx=ks.filter(function(k){return has(A[k],'banner')||has(A[k],'leave')}).length;
+   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="card"><p class="stat">開始</p>'+scene(0,false)+'</div><div class="card"><p class="stat">結束</p>'+scene(DUR,false)+'</div></div>'+
+    '<div class="card dark"><p class="stat">全班 '+ks.length+' 人：看到黑面琵鷺 <span style="color:#F2A65A">'+nb2+'</span> 人；布條和白衣隊的變化<b>都沒發現</b> <span style="color:#F2A65A">'+(ks.length-nx)+'</span> 人。</p><p style="font-size:24px">早就知道會有怪東西，你就專心找「會走過去的怪東西」。注意力照到黑面琵鷺，就照不到慢慢變色的布條和悄悄離開的人。</p><p style="font-size:26px;font-weight:900;color:#F2A65A">專心做一件事時，眼前明明出現了別的東西，大腦卻沒發現：這叫做「不注意盲視」。知道有這回事，也不會讓你什麼都看得到。</p></div>'}
   return h},
  studentView:function(ST,me,api){var g=ST.g||{},h='',L=api.local['a'+g.t0]||{};
   if(ST.ph==='ready'||ST.ph==='play'||ST.ph==='replay')h+='<h1>看大螢幕！</h1><div class="card dark"><p class="stat">只數「黑衣隊」傳了幾次球。</p><p>在心裡數，不要說出來。平板先放著，播完再回答。</p></div>';
   else if(ST.ph==='answer'){if(L.done)h+='<h1>送出了！</h1><p class="lead">看大螢幕，等老師公布。</p>';
    else{h+='<h2>1. 黑衣隊傳了幾次球？</h2><div class="nums">';for(var i=10;i<=19;i++)h+='<button class="btn '+(L.n==i?'te on':'gh')+'" data-act="num" data-arg="'+i+'">'+(i===10?'10'+ICON('down'):i===19?'19'+ICON('up'):i)+'</button>';
-    h+='</div><h2>2. 剛剛的畫面裡，你有看到什麼奇怪的東西嗎？</h2><div class="opts">'+SEEN.map(function(s){return '<button class="btn '+(L.what===s[0]?'te on':'gh')+'" data-act="saw" data-arg="'+s[0]+'">'+s[1]+'</button>'}).join('')+
-     '<button class="btn '+(L.what==='none'?'te on':'gh')+'" data-act="saw" data-arg="none" style="grid-column:1/3">什麼都沒看到</button></div>'+
-     '<button class="btn" data-act="send" '+(L.n&&L.what?'':'disabled')+'>送出</button>'}}
+    h+='</div><h2>2. 剛剛的畫面裡，你發現哪些奇怪的事？（可以選好幾個）</h2><div class="opts">'+SEEN.map(function(s){var on=has(L,s[0]);return '<button class="btn '+(on?'te on':'gh')+'" data-act="saw" data-arg="'+s[0]+'" aria-pressed="'+on+'">'+(on?ICON('check')+' ':'')+s[1]+'</button>'}).join('')+
+     '<button class="btn '+(has(L,'none')?'te on':'gh')+'" data-act="saw" data-arg="none">'+(has(L,'none')?ICON('check')+' ':'')+'什麼都沒發現</button></div>'+
+     '<button class="btn" data-act="send" '+(L.n&&L.what&&L.what.length?'':'disabled')+'>送出</button>'}}
   else if(ST.ph==='reveal')h+='<h1>看大螢幕！</h1><p class="lead">你數了 '+(L.n||'—')+' 次。</p>';
   else h+='<h1>你有看到牠嗎？</h1><p class="lead">請看大螢幕。</p>';
   return h},
  sact:{num:function(ST,me,api,v){var g=ST.g,k='a'+g.t0,L=api.local[k]||{};L.n=+v;api.local={};api.local[k]=L;api.save()},
-  saw:function(ST,me,api,v){var g=ST.g,k='a'+g.t0,L=api.local[k]||{};L.what=v;api.local={};api.local[k]=L;api.save()},
-  send:function(ST,me,api){var g=ST.g,k='a'+g.t0,L=api.local[k]||{};if(!L.n||!L.what)return;api.send({t:'ans',n:L.n,what:L.what,saw:L.what==='none'?'n':'y'});L.done=1;api.save()}}
+  saw:function(ST,me,api,v){var g=ST.g,k='a'+g.t0,L=api.local[k]||{};var w=Array.isArray(L.what)?L.what:[];if(v==='none')w=['none'];else{w=w.filter(function(x){return x!=='none'});var j=w.indexOf(v);if(j>=0)w.splice(j,1);else w.push(v)}L.what=w;api.local={};api.local[k]=L;api.save()},
+  send:function(ST,me,api){var g=ST.g,k='a'+g.t0,L=api.local[k]||{};if(!L.n||!L.what||!L.what.length)return;api.send({t:'ans',n:L.n,what:L.what});L.done=1;api.save()}}
 });
 </script>
 </body>
