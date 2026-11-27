@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script src="fresh.js"></script>
+<script src="icons.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>傳話鏈・全班連線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="live.js"></script>
+<script src="room.js"></script>
+<style>
+.huge{font-size:clamp(38px,5vw,74px);font-weight:900;line-height:1.2}
+.story{font-size:clamp(22px,4.6vw,30px);font-weight:700;line-height:1.9}
+.story b{color:#A8441A;background:#FFF5F2;border-radius:6px;padding:0 4px}
+.story i{font-style:normal;color:#94A3B8;letter-spacing:4px}
+.tmr{font-size:clamp(28px,6vw,44px);font-weight:900;color:#A8441A}
+.q{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:2px solid #E3DED7}
+.q h3{margin:0;font-size:clamp(20px,4.4vw,24px);font-weight:900}
+.q .ops{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.q .btn{font-size:clamp(18px,4.2vw,22px);padding:12px 10px;min-height:56px;line-height:1.35}
+.q .btn.on{background:#2A6F68;color:#fff;border-color:#2A6F68;outline:none}
+.chains{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.ch{background:#fff;border:2px solid #E3DED7;border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.ch h3{margin:0;font-size:24px;font-weight:900}
+.dots{display:flex;flex-wrap:wrap;gap:8px}
+.dot{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:44px;border-radius:12px;font-size:20px;font-weight:900;border:3px solid #E3DED7;color:#56605C;background:#fff}
+.dot.done{background:#2A6F68;border-color:#2A6F68;color:#fff}
+.dot.now{border-color:#A8441A;color:#A8441A}
+table.cmp{border-collapse:collapse;width:100%;background:#fff;font-size:clamp(18px,1.7vw,24px)}
+table.cmp th,table.cmp td{border:2px solid #E3DED7;padding:10px 12px;text-align:left;vertical-align:top;line-height:1.4}
+table.cmp th{background:#F3EEE7}
+td.same{background:#F0F7F6;color:#1E5A54;font-weight:700}
+td.diff{background:#FFF5F2;color:#A8441A;font-weight:900}
+td.gone{background:#F1F2F4;color:#56605C}
+.key{display:flex;gap:18px;flex-wrap:wrap;font-size:20px;font-weight:700;color:#56605C}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:22px;height:22px;border-radius:6px;border:2px solid #E3DED7}
+</style>
+</head>
+<body>
+<script>
+/* 傳話鏈（第 4 節）：照座號排成幾條「傳話隊」，一棒接一棒。
+   每一棒只能讀上一棒留下的故事 20 秒，故事收起來以後，憑記憶把 7 個地方選回來，再傳給下一棒。
+   最後把每一隊的最後版本和原版並排：哪些細節被改成比較熟悉的樣子？（Bartlett 1932 的「連續傳述」研究） */
+var READ=20,PER=5,GONE=3;
+var SL=[
+ {q:'阿水怎麼出海？',o:['划著竹筏','開著漁船','坐著小船']},
+ {q:'他到沙洲上做什麼？',o:['挖文蛤','釣魚','撿貝殼']},
+ {q:'海上飄來什麼？',o:['一大片白霧','一場大雷雨','一陣強風']},
+ {q:'遠遠傳來什麼聲音？',o:['咚咚的鼓聲','嗚嗚的海螺聲','有人在唱歌']},
+ {q:'靠過來的是什麼船？',o:['一艘掛著黑帆的大船','一艘海盜船','一艘大漁船']},
+ {q:'船上的人喊什麼？',o:['跟我們去北邊打仗','上船來一起去尋寶','把你的漁獲交出來']},
+ {q:'回到家，發生什麼事？',o:['阿母說：「你已經離家三天了。」','阿母說：「你怎麼這麼晚才回來？」','阿母已經煮好晚餐等他。']}];
+var ORIG=[0,0,0,0,0,0,0];
+function ph(v,k,mark){var x=v[k];if(x==null||x===GONE)return '<i>……</i>';var t=SL[k].o[x];return mark?'<b>'+t+'</b>':t}
+function story(v,mark){return '很久以前，臺江內海邊的小村子裡，少年阿水'+ph(v,0,mark)+'到沙洲上'+ph(v,1,mark)+'。天色突然暗下來，海上飄來'+ph(v,2,mark)+'。接著，遠遠傳來'+ph(v,3,mark)+'，'+ph(v,4,mark)+'慢慢靠了過來。船上的人大喊：「'+ph(v,5,mark)+'！」阿水說：「我阿母還在等我。」他轉頭回到岸邊，再回頭看，船已經不見了。回到家，'+ph(v,6,mark)}
+function shortTxt(v,k){var x=v[k];if(x==null||x===GONE)return '（想不起來）';return SL[k].o[x]}
+function rnd(seed){return function(){seed=(seed*9301+49297)%233280;return seed/233280}}
+function order(seat,k){var r=rnd(seat*31+k*7+3),a=[0,1,2];for(var i=2;i>0;i--){var j=Math.floor(r()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function mkChains(seats){var s=seats.slice().sort(function(a,b){return a-b}),C=Math.max(1,Math.ceil(s.length/PER)),ch=[];for(var c=0;c<C;c++)ch.push([]);s.forEach(function(x,i){ch[i%C].push(x)});return ch}
+function latest(g,c,r){for(var i=r-1;i>=0;i--){var v=g.ver[c][i];if(v)return v}return ORIG}
+function cur(g,c){return latest(g,c,g.ch[c].length)}
+function kept(v){var n=0;v.forEach(function(x,k){if(x===ORIG[k])n++});return n}
+function cls(x,k){return x===ORIG[k]?'same':(x==null||x===GONE)?'gone':'diff'}
+function active(g,c){return g.ch[c][g.r]}
+function maxLen(g){return Math.max.apply(null,g.ch.map(function(c){return c.length}))}
+function roundDone(g){var n=0,t=0;g.ch.forEach(function(c,ci){if(c[g.r]!=null){t++;if(g.ver[ci][g.r])n++}});return [n,t]}
+var tmr=null;
+ROOM.start({
+ key:'tellchain',title:'傳話鏈',kick:'第 4 節・記憶　全班連線',studentUrl:'tellchain.html',
+ rules:'<p>全班照座號排成幾條<b>傳話隊</b>，每隊大約 5 個人，一棒接一棒。</p><p>輪到你的時候，平板會給你看<b>上一棒留下的故事，只有 20 秒</b>。故事收起來以後，憑記憶把 7 個地方選回來，傳給下一棒。</p><p>不能說話、不能偷看別人的平板。最後比一比：哪一隊傳到最後，故事還最接近原版？</p>',
+ init:function(H){H.g={}},
+ onStart:function(H){var ch=mkChains(Object.keys(H.seats).map(Number));H.g={t0:Date.now(),ch:ch,ver:ch.map(function(c){return c.map(function(){return null})}),r:-1,view:-1};H.ph='lobby2'},
+ pub:function(H){var g=H.g;if(!g.ch)return {g:{}};
+  return {g:{t0:g.t0,r:g.r,ch:g.ch,prev:g.ch.map(function(c,ci){return g.r>=0?latest(g,ci,g.r):null}),fin:H.ph==='show'?g.ch.map(function(c,ci){return cur(g,ci)}):null}}},
+ onMsg:function(H,d,seat){var g=H.g;if(H.ph!=='pass'||d.t!=='v'||d.r!==g.r||!Array.isArray(d.v)||d.v.length!==SL.length)return;
+  for(var c=0;c<g.ch.length;c++)if(g.ch[c][g.r]===seat&&!g.ver[c][g.r]){g.ver[c][g.r]=d.v.map(function(x){x=+x;return x>=0&&x<=GONE?x:GONE});return true}},
+ act:{
+  next:function(H){var g=H.g;if(g.r>=0)g.ch.forEach(function(c,ci){if(c[g.r]!=null&&!g.ver[ci][g.r])g.ver[ci][g.r]=latest(g,ci,g.r).slice()});
+   g.r++;if(g.r>=maxLen(g)){H.ph='show';g.view=-1}else H.ph='pass'},
+  show:function(H){var g=H.g;g.ch.forEach(function(c,ci){if(c[g.r]!=null&&!g.ver[ci][g.r])g.ver[ci][g.r]=latest(g,ci,g.r).slice()});H.ph='show';g.view=-1},
+  view:function(H){var g=H.g;g.view=g.view+1>=g.ch.length?-1:g.view+1}},
+ bar:function(H){var g=H.g;if(H.ph==='lobby2')return '<button class="btn" data-act="next">第 1 棒開始</button>';
+  if(H.ph==='pass'){var d=roundDone(g),last=g.r+1>=maxLen(g);return '<button class="btn'+(d[0]<d[1]?' gh':'')+'" data-act="next">'+(last?'揭曉：和原版比一比':'第 '+(g.r+2)+' 棒開始')+(d[0]<d[1]?'（還有人沒交，照原樣傳下去）':'')+'</button>'}
+  if(H.ph==='show')return '<button class="btn te" data-act="view">'+(g.view+1>=g.ch.length?'回到全部隊伍的比較':'看第 '+(g.view+2)+' 隊一棒一棒怎麼變')+'</button>';return ''},
+ hostView:function(H){var g=H.g,h='';
+  if(H.ph==='lobby2'){h+='<div class="card dark"><p class="huge">傳話鏈</p><p class="stat">一共 '+g.ch.length+' 隊。每一棒只能讀 20 秒，然後憑記憶把故事傳下去。</p></div>'+chainsView(g)}
+  else if(H.ph==='pass'){var d=roundDone(g);h+='<div class="card dark"><p class="huge">第 '+(g.r+1)+' 棒</p><p class="stat">輪到的同學：讀 20 秒，再憑記憶選回來。已經傳出去：'+d[0]+' / '+d[1]+' 隊</p></div>'+chainsView(g)+
+   '<div class="card"><p class="lead">還沒輪到的同學：安靜等，不要偷看別人的平板。已經傳完的同學：想一想，你剛剛是「記得」，還是「猜的」？</p></div>'}
+  else if(g.view<0){var F=g.ch.map(function(c,ci){return cur(g,ci)}),best=F.map(function(v,i){return [i,kept(v)]}).sort(function(a,b){return b[1]-a[1]});
+   h+='<div class="card"><h2>原版故事</h2><p class="story">'+story(ORIG,true)+'</p></div>'+
+    '<div class="card"><h2>傳到最後，每一隊的故事變成什麼？</h2>'+legend()+'<table class="cmp"><tr><th>原版</th>'+g.ch.map(function(c,i){return '<th>第 '+(i+1)+' 隊（'+c.length+' 棒）</th>'}).join('')+'</tr>'+
+    SL.map(function(s,k){return '<tr><td>'+s.o[0]+'</td>'+F.map(function(v){return '<td class="'+cls(v[k],k)+'">'+shortTxt(v,k)+'</td>'}).join('')+'</tr>'}).join('')+
+    '<tr><th>保留原版</th>'+F.map(function(v){return '<th>'+kept(v)+' / 7</th>'}).join('')+'</tr></table></div>'+
+    '<div class="card dark"><p class="stat">最接近原版：第 '+(best[0][0]+1)+' 隊（'+best[0][1]+' / 7）</p><p class="stat" style="font-size:24px">紅色的格子：被換成了什麼？是不是比原版更「常見」、更好懂的東西？</p></div>'}
+  else{var c=g.ch[g.view],ci=g.view;h+='<div class="card"><h2>第 '+(ci+1)+' 隊：一棒一棒怎麼變</h2>'+legend()+'<table class="cmp"><tr><th>原版</th>'+c.map(function(s,i){return '<th>第 '+(i+1)+' 棒（'+s+' 號）</th>'}).join('')+'</tr>'+
+    SL.map(function(s,k){return '<tr><td>'+s.o[0]+'</td>'+c.map(function(x,i){var v=g.ver[ci][i]||ORIG;return '<td class="'+cls(v[k],k)+'">'+shortTxt(v,k)+'</td>'}).join('')+'</tr>'}).join('')+'</table></div>'+
+    '<div class="card"><h2>第 '+(ci+1)+' 隊最後的故事</h2><p class="story">'+story(cur(g,ci),true)+'</p></div>'}
+  return h},
+ studentView:function(ST,me,api){var g=ST.g||{},h='';
+  if(!g.ch)return '<h1>等老師開始</h1>';
+  var ci=-1,pos=-1;g.ch.forEach(function(c,i){var p=c.indexOf(me);if(p>=0){ci=i;pos=p}});
+  if(ci<0)return '<h1>這一局已經開始了</h1><p class="lead">你進場的時候隊伍已經排好了，請看大螢幕。</p>';
+  var c=g.ch[ci],k='t'+g.t0,L=api.local[k]||{};
+  var who='<p class="lead">你在<b>第 '+(ci+1)+' 隊</b>，是第 '+(pos+1)+' 棒（一共 '+c.length+' 棒）。</p>';
+  if(ST.ph==='lobby2')return '<h1>準備傳話</h1>'+who+'<p class="lead">輪到你的時候，平板會提醒你。</p>';
+  if(ST.ph==='show'){var v=(g.fin||[])[ci]||ORIG;return '<h1>看大螢幕！</h1>'+who+'<div class="card"><h2>你們隊最後的故事</h2><p class="story">'+story(v,true)+'</p></div><div class="card cool"><h2>原版</h2><p class="story">'+story(ORIG,true)+'</p></div>'}
+  if(pos<g.r||L.sent===g.r&&pos===g.r)return '<h1>'+ICON('check',{color:'#2A6F68'})+' 你已經傳出去了</h1>'+who+'<p class="lead">接下來安靜等，看大螢幕。想一想：你剛剛選的，每一個都是真的記得，還是有幾個是猜的？</p>';
+  if(pos>g.r)return '<h1>還沒輪到你</h1>'+who+'<p class="lead">現在是第 '+(g.r+1)+' 棒。'+(pos===g.r+1?'<b>下一棒就是你！</b>':'')+'不要偷看別人的平板。</p>';
+  var R0=L.rs&&L.rs[g.r];
+  if(!R0)return '<h1>輪到你了！</h1>'+who+'<p class="lead">按下面的按鈕，上一棒的故事會出現 <b>20 秒</b>，然後收起來。準備好再按。</p><button class="btn te" data-act="go">開始讀故事（20 秒）</button>';
+  var left=READ-(Date.now()-R0)/1000;
+  if(left>0){if(!tmr)tmr=setInterval(function(){var e=document.getElementById('rleft'),l=READ-(Date.now()-R0)/1000;if(l<=0){clearInterval(tmr);tmr=null;ROOM.redraw()}else if(e)e.textContent=Math.ceil(l)+' 秒'},250);
+   return '<div style="display:flex;justify-content:space-between;align-items:baseline"><h2>'+(g.r===0?'原版故事':'上一棒傳給你的故事')+'</h2><span class="tmr" id="rleft">'+Math.ceil(left)+' 秒</span></div><div class="card"><p class="story">'+story(g.prev[ci],false)+'</p></div><p class="lead">時間到故事就會收起來。</p>'}
+  var A=L.a&&L.a[g.r]||[],all=SL.every(function(s,j){return A[j]!=null});
+  h+='<h1>故事收起來了</h1><p class="lead">憑記憶，把 7 個地方選回來。想不起來就選「想不起來」，下一棒會看到「……」。</p>';
+  SL.forEach(function(s,j){h+='<div class="q"><h3>'+(j+1)+'. '+s.q+'</h3><div class="ops">'+order(me,j).map(function(x){return '<button class="btn gh'+(A[j]===x?' on':'')+'" data-act="opt" data-arg="'+j+':'+x+'" aria-pressed="'+(A[j]===x)+'">'+s.o[x]+'</button>'}).join('')+
+   '<button class="btn gh'+(A[j]===GONE?' on':'')+'" data-act="opt" data-arg="'+j+':'+GONE+'" aria-pressed="'+(A[j]===GONE)+'">想不起來</button></div></div>'});
+  h+='<button class="btn" data-act="send" '+(all?'':'disabled')+'>傳給下一棒</button>';
+  return h},
+ sact:{
+  go:function(ST,me,api){var g=ST.g,k='t'+g.t0,L=api.local[k]||{};L.rs=L.rs||{};if(!L.rs[g.r])L.rs[g.r]=Date.now();var o={};o[k]=L;api.local=o;api.save()},
+  opt:function(ST,me,api,arg){var g=ST.g,k='t'+g.t0,L=api.local[k]||{},p=String(arg).split(':');L.a=L.a||{};var A=L.a[g.r]=L.a[g.r]||[];A[+p[0]]=+p[1];var o={};o[k]=L;api.local=o;api.save()},
+  send:function(ST,me,api){var g=ST.g,k='t'+g.t0,L=api.local[k]||{},A=L.a&&L.a[g.r]||[];if(!SL.every(function(s,j){return A[j]!=null}))return;api.send({t:'v',r:g.r,v:A.slice(0,SL.length)});L.sent=g.r;var o={};o[k]=L;api.local=o;api.save()}}
+});
+function chainsView(g){return '<div class="chains">'+g.ch.map(function(c,ci){return '<div class="ch"><h3>第 '+(ci+1)+' 隊</h3><div class="dots">'+c.map(function(s,i){var st=g.ver[ci][i]?'done':(i===g.r?'now':'');return '<span class="dot '+st+'">'+(st==='done'?ICON('check')+' ':'')+s+'</span>'}).join('')+'</div></div>'}).join('')+'</div>'}
+function legend(){return '<div class="key"><span><i class="sw" style="background:#F0F7F6"></i>和原版一樣</span><span><i class="sw" style="background:#FFF5F2"></i>被換掉了（紅字）</span><span><i class="sw" style="background:#F1F2F4"></i>想不起來</span></div>'}
+</script>
+</body>
+</html>
